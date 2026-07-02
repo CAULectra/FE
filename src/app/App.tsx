@@ -10,9 +10,9 @@ import {
   Sparkles, ChevronRight, ArrowRight, Upload, FileText,
   Mic, Image as ImageIcon, Brain, Layers, BookOpen, Pencil,
   Plus, Clock, Search, Bell, FolderOpen,
-  Check, ZoomIn, ZoomOut, ChevronLeft, X,
-  MoreHorizontal, MessageSquare, AlignLeft, Play,
-  Star, CheckCircle, Hash,
+  Check, ChevronLeft, X,
+  MoreHorizontal, MessageSquare, Play,
+  Star, CheckCircle,
   Activity, ListOrdered, Timer, Loader2,
   Bookmark, Pause, SkipBack, SkipForward, Languages, Send,
   type LucideIcon,
@@ -147,7 +147,7 @@ function SourceBadge({ Icon, label }: { Icon: LucideIcon; label: string }) {
   );
 }
 
-function JobCard({ job, onCancel, onOpen }: { job: Job; onCancel: (id: string) => void; onOpen: () => void }) {
+function JobCard({ job, onCancel, onOpen, onView }: { job: Job; onCancel: (id: string) => void; onOpen: () => void; onView: (id: string) => void }) {
   const done = job.progress >= 100;
   return (
     <div className="bg-white rounded-2xl border border-border p-5">
@@ -196,9 +196,9 @@ function JobCard({ job, onCancel, onOpen }: { job: Job; onCancel: (id: string) =
             className="flex items-center gap-1.5 px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">
             <X className="w-3.5 h-3.5" /> 취소
           </button>
-          <button onClick={onOpen} disabled={!done}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            {done ? "열기" : "진행 중"} <ArrowRight className="w-3.5 h-3.5" />
+          <button onClick={done ? onOpen : () => onView(job.id)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+            {done ? "열기" : "분석 화면"} <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -255,11 +255,12 @@ function CompletedCard({ job, onOpen }: { job: Job; onOpen: () => void }) {
   );
 }
 
-function WorkspaceView({ jobs, onNewLecture, onCancel, onOpen }: {
+function WorkspaceView({ jobs, onNewLecture, onCancel, onOpen, onView }: {
   jobs: Job[];
   onNewLecture: () => void;
   onCancel: (id: string) => void;
   onOpen: () => void;
+  onView: (id: string) => void;
 }) {
   const [view, setView] = useState<"active" | "completed">("active");
   const processing = jobs.filter(j => j.status === "processing");
@@ -319,7 +320,7 @@ function WorkspaceView({ jobs, onNewLecture, onCancel, onOpen }: {
               </div>
             ) : (
               <div className="space-y-4">
-                {processing.map(job => <JobCard key={job.id} job={job} onCancel={onCancel} onOpen={onOpen} />)}
+                {processing.map(job => <JobCard key={job.id} job={job} onCancel={onCancel} onOpen={onOpen} onView={onView} />)}
               </div>
             )}
 
@@ -850,12 +851,13 @@ function FavoriteButton({ active, onClick }: { active: boolean; onClick: (e: Rea
   );
 }
 
-function DashboardPage({ navigate, setProjectDraft, jobs, cancelJob, activeTab, setActiveTab }: NavProps & {
+function DashboardPage({ navigate, setProjectDraft, jobs, cancelJob, activeTab, setActiveTab, onViewAnalysis }: NavProps & {
   setProjectDraft: (d: ProjectDraft) => void;
   jobs: Job[];
   cancelJob: (id: string) => void;
   activeTab: DashTab;
   setActiveTab: (t: DashTab) => void;
+  onViewAnalysis: (id: string) => void;
 }) {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [showNewFolder, setShowNewFolder] = useState(false);
@@ -976,7 +978,7 @@ function DashboardPage({ navigate, setProjectDraft, jobs, cancelJob, activeTab, 
                   {subjects.map(subject => {
                     const meta = FOLDER_META[subject] ?? { iconBg: "bg-slate-50", iconText: "text-slate-500", dot: "bg-slate-400" };
                     const count = PROJECTS.filter(p => p.subject === subject).length;
-                    const latest = PROJECTS.filter(p => p.subject === subject).sort((a, b) => 0)[0];
+                    const latest = PROJECTS.filter(p => p.subject === subject)[0];
                     const lastModified = latest ? latest.lastModified : "방금 전";
                     return (
                       <motion.div key={subject} whileHover={{ y: -2 }} transition={{ duration: 0.2 }}
@@ -1091,6 +1093,7 @@ function DashboardPage({ navigate, setProjectDraft, jobs, cancelJob, activeTab, 
               onNewLecture={() => startNewProject(null)}
               onCancel={cancelJob}
               onOpen={() => navigate("study")}
+              onView={onViewAnalysis}
             />
           )}
 
@@ -1183,10 +1186,9 @@ function DashboardPage({ navigate, setProjectDraft, jobs, cancelJob, activeTab, 
 
 // ─── UPLOAD PAGE ──────────────────────────────────────────────────────────────
 
-function UploadPage({ navigate, projectDraft, addJob, goToWorkspace }: NavProps & {
+function UploadPage({ navigate, projectDraft, onAnalyze }: NavProps & {
   projectDraft: ProjectDraft;
-  addJob: (partial: Partial<Job>) => void;
-  goToWorkspace: () => void;
+  onAnalyze: (partial: Partial<Job>) => void;
 }) {
   const [files, setFiles] = useState<{ pdf: string[]; audio: string[]; image: string[] }>({
     pdf: ["강의슬라이드_1주차.pdf"],
@@ -1285,15 +1287,14 @@ function UploadPage({ navigate, projectDraft, addJob, goToWorkspace }: NavProps 
             </button>
             <button
               onClick={() => {
-                addJob({
-                  title: projectDraft.subject || "새 강의",
+                onAnalyze({
+                  title: projectDraft.name || projectDraft.subject || "새 강의",
                   slides: files.pdf.length > 0 ? 24 : 0,
                   audioMin: files.audio.length > 0 ? 45 : 0,
                   whiteboard: files.image.length,
                   hasPdf: files.pdf.length > 0,
                   hasAudio: files.audio.length > 0,
                 });
-                goToWorkspace();
               }}
               disabled={totalFiles === 0}
               className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2">
@@ -1306,93 +1307,168 @@ function UploadPage({ navigate, projectDraft, addJob, goToWorkspace }: NavProps 
   );
 }
 
-// ─── ANALYSIS PAGE ────────────────────────────────────────────────────────────
+// ─── ANALYSIS PAGE (원형 다이어그램) ───────────────────────────────────────────
 
-function AnalysisPage({ navigate }: NavProps) {
-  const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState(0);
+interface AnalysisStage {
+  label: string;
+  sub: string;
+  Icon: LucideIcon;
+}
 
-  const steps = [
-    { label: "PDF 슬라이드 분석", sub: "총 24페이지 분석 중", dur: 1800 },
-    { label: "음성(STT) 변환", sub: "1시간 2분 분량 변환 중", dur: 2800 },
-    { label: "판서 이미지 분석", sub: "3장의 이미지 인식 중", dur: 1400 },
-    { label: "AI 학습 노트 생성", sub: "구조화된 노트 작성 중", dur: 2000 },
-  ];
-  const total = steps.reduce((a, s) => a + s.dur, 0);
+const ANALYSIS_STAGES: AnalysisStage[] = [
+  { label: "PDF 분석", sub: "슬라이드 텍스트·구조 추출 중", Icon: FileText },
+  { label: "음성 STT", sub: "녹음 음성을 텍스트로 변환 중", Icon: Mic },
+  { label: "판서 분석", sub: "판서 이미지를 인식하는 중", Icon: ImageIcon },
+  { label: "RAG 인덱싱", sub: "검색용 벡터 인덱스 구성 중", Icon: Layers },
+  { label: "노트 생성", sub: "구조화된 학습 노트 작성 중", Icon: Sparkles },
+];
 
-  useEffect(() => {
-    let elapsed = 0;
-    const t = setInterval(() => {
-      elapsed += 60;
-      const pct = Math.min((elapsed / total) * 100, 100);
-      setProgress(pct);
-      let cum = 0;
-      for (let i = 0; i < steps.length; i++) {
-        cum += steps[i].dur;
-        if (elapsed < cum) { setCurrentStep(i); break; }
-        if (i === steps.length - 1) setCurrentStep(steps.length);
-      }
-      if (elapsed >= total) { clearInterval(t); setTimeout(() => navigate("study"), 700); }
-    }, 60);
-    return () => clearInterval(t);
-  }, []);
+// viewBox 0 0 100 100 기준. 각도 0° = 12시 방향, 시계방향 증가.
+function polar(r: number, deg: number): [number, number] {
+  const a = (deg * Math.PI) / 180;
+  return [50 + r * Math.sin(a), 50 - r * Math.cos(a)];
+}
+function donutSegment(rInner: number, rOuter: number, start: number, end: number) {
+  const [xo1, yo1] = polar(rOuter, start);
+  const [xo2, yo2] = polar(rOuter, end);
+  const [xi2, yi2] = polar(rInner, end);
+  const [xi1, yi1] = polar(rInner, start);
+  const large = end - start > 180 ? 1 : 0;
+  return `M ${xo1} ${yo1} A ${rOuter} ${rOuter} 0 ${large} 1 ${xo2} ${yo2} L ${xi2} ${yi2} A ${rInner} ${rInner} 0 ${large} 0 ${xi1} ${yi1} Z`;
+}
+
+type StageState = "done" | "active" | "pending";
+
+function AnalysisPage({ navigate, job, goToWorkspace }: NavProps & {
+  job?: Job;
+  goToWorkspace: () => void;
+}) {
+  const progress = job ? job.progress : 0;
+  const done = progress >= 100;
+  const N = ANALYSIS_STAGES.length;
+  const stageIndex = done ? N : Math.min(N - 1, Math.floor(progress / (100 / N)));
+  const seg = 360 / N;
+  const gap = 3.5; // 세그먼트 사이 각도 간격
+
+  const stateOf = (i: number): StageState =>
+    done || i < stageIndex ? "done" : i === stageIndex ? "active" : "pending";
+  const fillOf = (s: StageState) =>
+    s === "done" ? "#93C5FD" : s === "active" ? "#2563EB" : "#E7ECF3";
+
+  const current = ANALYSIS_STAGES[Math.min(stageIndex, N - 1)];
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="relative inline-flex">
-            <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center">
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
-                <Sparkles className="w-10 h-10 text-primary" />
-              </motion.div>
-            </div>
-            <span className="absolute inset-0 rounded-3xl bg-primary/15 animate-ping" />
-          </div>
-          <h2 className="text-xl font-bold mt-5 mb-1.5" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>AI 분석 진행 중</h2>
-          <p className="text-sm text-muted-foreground">강의 자료를 통합 분석하고 있습니다...</p>
-        </div>
+      className="min-h-screen bg-background flex flex-col">
+      {/* Header — 언제든 다른 화면으로 이동 가능 */}
+      <header className="border-b border-border bg-white px-6 py-3.5 flex items-center gap-3">
+        <button onClick={() => navigate("dashboard")} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <ChevronLeft className="text-muted-foreground" style={{ width: 18, height: 18 }} />
+        </button>
+        <LectraLogo compact className="block" />
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-foreground truncate">{job?.title ?? "AI 분석"}</span>
+        {job?.week && <span className="text-[11px] px-2 py-0.5 bg-muted rounded-md text-muted-foreground flex-shrink-0">{job.week}</span>}
+        <span className="ml-auto hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className={`w-1.5 h-1.5 rounded-full ${done ? "bg-emerald-500" : "bg-primary animate-pulse"}`} />
+          {done ? "분석 완료" : "백그라운드에서 계속 진행됩니다"}
+        </span>
+      </header>
 
-        <div className="bg-white rounded-2xl border border-border p-6 mb-4">
-          <div className="space-y-5">
-            {steps.map((step, i) => {
-              const status = i < currentStep ? "done" : i === currentStep ? "active" : "pending";
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full mb-4">
+          {done
+            ? <><Check className="w-3.5 h-3.5 text-emerald-600" /><span className="text-xs font-semibold text-emerald-600">분석이 완료되었습니다</span></>
+            : <><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /><span className="text-xs font-semibold text-primary">{N}단계 멀티모달 통합 분석 중</span></>}
+        </div>
+        <h1 className="text-2xl font-bold mb-1.5 text-center" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          {job?.title ?? "강의 분석"}
+        </h1>
+        <p className="text-sm text-muted-foreground text-center mb-8">
+          강의 슬라이드·음성·판서를 하나의 AI가 통합 분석합니다.
+        </p>
+
+        {/* 원형 다이어그램 */}
+        <div className="relative my-2" style={{ width: "min(88vw, 380px)", aspectRatio: "1 / 1" }}>
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            {ANALYSIS_STAGES.map((_, i) => {
+              const start = i * seg + gap / 2;
+              const end = (i + 1) * seg - gap / 2;
+              const state = stateOf(i);
               return (
-                <div key={i} className="flex items-start gap-3">
-                  <div className={`mt-0.5 w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center transition-all duration-500 ${
-                    status === "done" ? "bg-emerald-100" : status === "active" ? "bg-primary/10" : "bg-muted"
-                  }`}>
-                    {status === "done" && <Check className="w-3 h-3 text-emerald-600" />}
-                    {status === "active" && (
-                      <motion.div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent"
-                        animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
-                    )}
-                    {status === "pending" && <div className="w-2 h-2 rounded-full bg-muted-foreground/25" />}
-                  </div>
-                  <div className="flex-1">
-                    <div className={`text-sm font-medium transition-colors ${status === "pending" ? "text-muted-foreground" : "text-foreground"}`}>
-                      {step.label}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{step.sub}</div>
-                  </div>
-                  {status === "done" && <span className="text-xs text-emerald-600 font-semibold">완료</span>}
-                  {status === "active" && <span className="text-xs text-primary font-semibold">진행 중</span>}
-                </div>
+                <g key={i}>
+                  <path d={donutSegment(30, 47, start, end)} fill={fillOf(state)} />
+                  {state === "active" && (
+                    <motion.path d={donutSegment(30, 47, start, end)} fill="#1D4ED8"
+                      initial={{ opacity: 0.15 }}
+                      animate={{ opacity: [0.15, 0.5, 0.15] }}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }} />
+                  )}
+                </g>
               );
             })}
+          </svg>
+
+          {/* 세그먼트 라벨 (아이콘 + 텍스트) */}
+          {ANALYSIS_STAGES.map((s, i) => {
+            const mid = i * seg + seg / 2;
+            const [lx, ly] = polar(38.5, mid);
+            const state = stateOf(i);
+            const Icon = s.Icon;
+            const tone = state === "done" ? "text-white" : state === "active" ? "text-white" : "text-slate-400";
+            return (
+              <div key={i}
+                className="absolute flex flex-col items-center gap-0.5 pointer-events-none"
+                style={{ left: `${lx}%`, top: `${ly}%`, transform: "translate(-50%, -50%)" }}>
+                <Icon className={`w-4 h-4 ${tone}`} />
+                <span className={`text-[10px] font-semibold leading-none ${tone}`}>{s.label}</span>
+              </div>
+            );
+          })}
+
+          {/* 중앙 허브 */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white border border-border shadow-sm flex flex-col items-center justify-center text-center"
+            style={{ width: "52%", height: "52%" }}>
+            {done
+              ? <Check className="w-6 h-6 text-emerald-500 mb-1" />
+              : <Loader2 className="w-5 h-5 text-primary mb-1 animate-spin" />}
+            <div className="text-3xl font-bold leading-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              {Math.round(progress)}%
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-1 px-2 truncate max-w-full">
+              {done ? "완료" : current.label}
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-muted-foreground text-xs font-medium">전체 진행률</span>
-            <span className="font-bold text-primary">{Math.round(progress)}%</span>
-          </div>
+        {/* 전체 진행률 + 현재 단계 설명 */}
+        <div className="w-full mt-6" style={{ maxWidth: "min(88vw, 380px)" }}>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <motion.div className="h-full bg-gradient-to-r from-primary to-blue-400 rounded-full"
-              style={{ width: `${progress}%` }} transition={{ duration: 0.08 }} />
+              animate={{ width: `${progress}%` }} transition={{ duration: 0.4 }} />
           </div>
+          <p className="text-xs text-muted-foreground mt-2.5 text-center">
+            {done ? "학습 노트가 준비되었습니다." : current.sub}
+          </p>
+        </div>
+
+        {/* 액션 */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+          <button onClick={goToWorkspace}
+            className="flex items-center gap-1.5 px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors">
+            <Layers className="w-4 h-4" /> 워크스페이스에서 보기
+          </button>
+          {done ? (
+            <button onClick={() => navigate("study")}
+              className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md hover:shadow-primary/25">
+              <BookOpen className="w-4 h-4" /> 노트 열기 <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : (
+            <button onClick={() => navigate("dashboard")}
+              className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md hover:shadow-primary/25">
+              백그라운드로 계속 <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
@@ -1735,7 +1811,9 @@ function StudyPage({ navigate }: NavProps) {
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
   const toggleBookmark = (n: number) => setBookmarks(prev => {
-    const s = new Set(prev); s.has(n) ? s.delete(n) : s.add(n); return s;
+    const s = new Set(prev);
+    if (s.has(n)) s.delete(n); else s.add(n);
+    return s;
   });
 
   const activeCh = STUDY_CHAPTERS[activeChapter];
@@ -2035,6 +2113,7 @@ export default function App() {
   const [projectDraft, setProjectDraft] = useState<ProjectDraft>(EMPTY_DRAFT);
   const [dashTab, setDashTab] = useState<DashTab>("lectures");
   const [jobs, setJobs] = useState<Job[]>(makeInitialJobs);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
 
   // 전역 타이머: 어느 화면에 있든 분석 작업이 백그라운드에서 계속 진행된다
   useEffect(() => {
@@ -2078,14 +2157,34 @@ export default function App() {
       },
       ...prev,
     ]);
+    return id;
   };
 
-  const cancelJob = (id: string) => setJobs(prev => prev.filter(j => j.id !== id));
+  const cancelJob = (id: string) => {
+    setJobs(prev => prev.filter(j => j.id !== id));
+    setActiveJobId(prev => (prev === id ? null : prev));
+  };
 
   const navigate = (s: Screen) => {
     window.scrollTo(0, 0);
     setScreen(s);
   };
+
+  // 업로드 완료 → 새 작업 생성 후 분석 화면으로 이동
+  const beginAnalysis = (partial: Partial<Job>) => {
+    const id = addJob(partial);
+    setActiveJobId(id);
+    navigate("analysis");
+  };
+
+  // 워크스페이스 등에서 특정 작업의 분석 화면 다시 열기
+  const viewAnalysis = (id: string) => {
+    setActiveJobId(id);
+    navigate("analysis");
+  };
+
+  const goToWorkspace = () => { setDashTab("workspace"); navigate("dashboard"); };
+  const activeJob = jobs.find(j => j.id === activeJobId);
 
   return (
     <div className="min-h-screen" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
@@ -2094,13 +2193,16 @@ export default function App() {
         {screen === "login" && <LoginPage key="login" navigate={navigate} />}
         {screen === "dashboard" && (
           <DashboardPage key="dashboard" navigate={navigate} setProjectDraft={setProjectDraft}
-            jobs={jobs} cancelJob={cancelJob} activeTab={dashTab} setActiveTab={setDashTab} />
+            jobs={jobs} cancelJob={cancelJob} activeTab={dashTab} setActiveTab={setDashTab}
+            onViewAnalysis={viewAnalysis} />
         )}
         {screen === "upload" && (
           <UploadPage key="upload" navigate={navigate} projectDraft={projectDraft}
-            addJob={addJob} goToWorkspace={() => { setDashTab("workspace"); navigate("dashboard"); }} />
+            onAnalyze={beginAnalysis} />
         )}
-        {screen === "analysis" && <AnalysisPage key="analysis" navigate={navigate} />}
+        {screen === "analysis" && (
+          <AnalysisPage key="analysis" navigate={navigate} job={activeJob} goToWorkspace={goToWorkspace} />
+        )}
         {screen === "study" && <StudyPage key="study" navigate={navigate} />}
       </AnimatePresence>
     </div>
