@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lectra — One app for every lecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* =====================================================================
+   Lectra v3 — Jeton-style editorial fintech theme
+   백지 캔버스 · 시그널 오렌지 단일 액센트 · 초대형 타이트 타이포
+   ===================================================================== */
+:root{
+  --orange:#f73b20; --orange-tint:#f84d35; --ink:#360802; --white:#ffffff;
+  --black:#000; --ash:#ababab; --sand:#e7dcdb; --blush:#fdedea;
+  --citrus:#f5ffbb; --mint:#bcffbb;
+  --coral:#fb2d54; --cobalt:#477ee9; --emerald:#34c771;
+  --cat-tint:rgba(247,59,32,.05);
+  --sh-lg:rgba(247,59,32,.1) 0 8px 24px 0, rgba(247,59,32,.05) 0 2px 8px 0;
+  --sh-md:rgba(0,0,0,.05) 0 -4px 16px 0;
+  --font:'DM Sans','Pretendard Variable',Pretendard,ui-sans-serif,system-ui,sans-serif;
+  --maxw:1200px;
+  --ease:cubic-bezier(.76,0,.24,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scrollbar-width:thin}
+html.lenis{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto}
+body{font-family:var(--font);color:var(--ink);background:var(--white);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
+input{font-family:inherit}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+::selection{background:var(--blush)}
+
+/* ---------- type scale (Jeton tokens) ---------- */
+.t-display{font-size:clamp(58px,11vw,155px);line-height:.9;font-weight:500;letter-spacing:.01em}
+.t1{font-size:clamp(52px,8.5vw,110px);line-height:1;font-weight:500;letter-spacing:.01em}
+.t3{font-size:clamp(38px,5.6vw,72px);line-height:1;font-weight:500;letter-spacing:.01em}
+.t4{font-size:clamp(32px,4.2vw,54px);line-height:1.1;font-weight:500;letter-spacing:.01em}
+.t5{font-size:clamp(26px,3.2vw,44px);line-height:1.2;font-weight:500;letter-spacing:.44px}
+.sub1{font-size:clamp(19px,2vw,28px);line-height:1.3;font-weight:500;letter-spacing:.23px}
+.sub2{font-size:clamp(17px,1.6vw,23px);line-height:1.35;font-weight:500;letter-spacing:.23px}
+.body-s{font-size:14px;line-height:1.4;letter-spacing:.42px;font-weight:450}
+.caption{font-size:12px;line-height:1.5;letter-spacing:.36px;font-weight:450}
+
+/* ---------- tag pill ---------- */
+._tag{display:inline-block;position:relative;font-size:14px;letter-spacing:.42px;font-weight:450;padding:7px 16px;border-radius:9999px}
+._tag .outline{position:absolute;inset:0;border:1px solid currentColor;border-radius:inherit;opacity:.4}
+
+/* ---------- rolling-label button ---------- */
+._button{display:inline-flex;align-items:center;gap:10px;border-radius:12px;padding:12px 22px;font-size:15px;font-weight:450;letter-spacing:.42px;line-height:1;transition:background .25s,color .25s,border-color .25s,transform .2s}
+._button:active{transform:scale(.97)}
+._button.fill-orange{background:var(--orange);color:#fff}
+._button.fill-orange:hover{background:var(--orange-tint)}
+._button.fill-white{background:#fff;color:var(--orange)}
+._button.fill-ink{background:var(--ink);color:#fff}
+._button.ghost{color:inherit}
+._button.ghost:hover{background:rgba(0,0,0,.05)}
+._button.ghost-white{color:#fff;border:1px solid rgba(255,255,255,.6);border-radius:84px}
+._button.ghost-white:hover{border-color:#fff}
+._button.pill{border-radius:84px}
+.roll{position:relative;display:inline-block;overflow:hidden}
+.roll .line{display:inline-block;white-space:nowrap}
+.roll .c{display:inline-block;transition:transform .55s var(--ease);transition-delay:calc(var(--i)*16ms)}
+.roll .clone{position:absolute;left:0;top:100%}
+._button:hover .roll .c,.roll-host:hover .roll .c{transform:translateY(-100%)}
+.link-orange{color:var(--orange);font-weight:450;letter-spacing:.42px;display:inline-flex;align-items:center;gap:8px;border-radius:8px;padding:8px}
+.link-orange:hover{background:var(--cat-tint)}
+
+/* ---------- top nav (히어로 위 투명 오버레이) ---------- */
+.top-nav{position:absolute;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:28px 40px;color:#fff}
+.logo{font-weight:700;font-size:28px;letter-spacing:-.02em;color:#fff}
+.nav-right{display:flex;gap:12px;align-items:center}
+.lang-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border-radius:9999px;font-size:14px;letter-spacing:.42px;font-weight:450;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(12px);background:rgba(255,255,255,.08)}
+.lang-btn:hover{border-color:#fff}
+.login-btn{padding:13px 20px;border-radius:9999px;color:#fff;font-size:15px;letter-spacing:.42px;font-weight:450;border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(12px);background:rgba(255,255,255,.08)}
+.login-btn:hover{border-color:#fff}
+.signup-btn{padding:13px 24px;border-radius:9999px;background:#fff;color:var(--orange);font-size:15px;letter-spacing:.42px;font-weight:500}
+.signup-btn:hover{transform:translateY(-1px)}
+
+/* ---------- bottom dock nav (오렌지 필) ---------- */
+.dock{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:220;display:flex;align-items:center;background:var(--orange);border-radius:9999px;padding:6px;box-shadow:0 14px 40px rgba(247,59,32,.4);color:#fff}
+.dock-home{width:52px;height:52px;border-radius:50%;background:var(--orange-tint);display:grid;place-items:center;font-size:19px;color:#fff;transition:background .2s}
+.dock-home:hover{background:#ff6b52}
+.dock-links{display:flex;align-items:center;padding:0 10px;gap:2px}
+.dock-item{position:relative}
+.dock-link{display:inline-flex;align-items:center;gap:7px;padding:14px 16px;border-radius:9999px;font-size:15px;font-weight:450;letter-spacing:.42px;color:#fff;transition:background .2s}
+.dock-link:hover{background:rgba(255,255,255,.14)}
+.dock-link .chev{font-size:9px;opacity:.7;transition:transform .25s}
+.dock-item:hover .chev{transform:rotate(180deg)}
+.dropup{position:absolute;bottom:calc(100% + 14px);left:50%;transform:translate(-50%,6px);background:#fff;color:var(--ink);border-radius:16px;box-shadow:0 18px 50px rgba(54,8,2,.25);padding:8px;min-width:230px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.dock-item:hover .dropup{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.dropup a{display:block;padding:11px 14px;border-radius:10px;font-size:14.5px;letter-spacing:.3px}
+.dropup a:hover{background:var(--blush);color:var(--orange)}
+.dropup a small{display:block;font-size:12px;color:var(--ash);margin-top:2px}
+
+/* ---------- support pill ---------- */
+.support-pill{position:fixed;bottom:26px;right:28px;z-index:220;display:inline-flex;align-items:center;gap:9px;padding:15px 24px;border-radius:9999px;background:rgba(255,255,255,.55);backdrop-filter:blur(16px);color:var(--ink);font-size:15px;letter-spacing:.42px;font-weight:450;box-shadow:0 10px 30px rgba(54,8,2,.15);border:1px solid rgba(255,255,255,.6)}
+.support-pill:hover{background:rgba(255,255,255,.8)}
+
+/* ---------- hero (그라데이션 + 원판 스택) ---------- */
+.hero{height:260vh;position:relative}
+.hero .sticky-slot{position:sticky;top:0;height:100vh;overflow:hidden;display:grid}
+.hero-bg{position:absolute;inset:0;background:linear-gradient(115deg,#e94b6e 0%,#f2646a 30%,#f88d64 62%,#fcae72 100%);overflow:hidden}
+.hero-bg .hb{position:absolute;border-radius:50%;filter:blur(90px);mix-blend-mode:soft-light}
+.hero-bg .hb1{width:70vw;height:70vw;background:#ff2e7e;top:-20%;left:-15%;animation:hbdrift1 16s ease-in-out infinite alternate}
+.hero-bg .hb2{width:60vw;height:60vw;background:#ffd07a;bottom:-25%;right:-12%;animation:hbdrift2 19s ease-in-out infinite alternate}
+.hero-bg .hb3{width:40vw;height:40vw;background:#a2123a;bottom:-10%;left:8%;opacity:.55;animation:hbdrift1 22s ease-in-out infinite alternate-reverse}
+@keyframes hbdrift1{from{transform:translate(0,0) scale(1)}to{transform:translate(9vw,6vh) scale(1.12)}}
+@keyframes hbdrift2{from{transform:translate(0,0) scale(1)}to{transform:translate(-8vw,-7vh) scale(1.08)}}
+#discs{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.hero-vignette{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(115% 95% at 52% 42%,transparent 52%,rgba(70,6,26,.30) 100%)}
+.hero-grain{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:.38;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");background-size:160px 160px}
+.hero .stage{grid-area:1/1;position:relative;z-index:3}
+.hero-title{position:absolute;left:clamp(20px,4vw,64px);bottom:clamp(36px,9vh,96px);color:#fff;text-align:left}
+.hero-title .word{display:inline-block;white-space:nowrap}
+.hero-title .ch{display:inline-block;overflow:hidden;vertical-align:top}
+.hero-title .ch i{display:inline-block;font-style:normal;transform:translateY(115%)}
+.hero-aside{position:absolute;right:clamp(20px,5vw,80px);bottom:clamp(140px,26vh,260px);color:#fff;max-width:360px;z-index:4}
+.hero-aside p{font-size:clamp(19px,1.9vw,26px);font-weight:500;line-height:1.25;letter-spacing:.23px;margin-bottom:26px}
+.hero-aside .app-badges{margin-top:0;flex-direction:column;align-items:flex-start;gap:12px;display:flex}
+/* floating snippets */
+.snippets{position:absolute;inset:0;pointer-events:none}
+.snippet{position:absolute;background:#fff;border-radius:16px;box-shadow:var(--sh-lg);padding:14px 16px;font-size:13px;letter-spacing:.3px;text-align:left}
+.snippet .cap{font-size:11px;color:var(--ash);letter-spacing:.36px;margin-bottom:6px;font-weight:450}
+.sn1{top:16%;left:7%}
+.sn2{top:14%;right:9%}
+.sn3{bottom:24%;left:11%}
+.sn4{bottom:20%;right:7%}
+.sn5{top:47%;left:3%}
+.coin{width:64px;height:64px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;letter-spacing:.02em;animation:coin-loop 3.4s var(--ease) infinite}
+@keyframes coin-loop{0%{transform:rotateY(0)}45%{transform:rotateY(180deg)}55%{transform:rotateY(180deg)}100%{transform:rotateY(360deg)}}
+.mini-line{display:flex;gap:8px;align-items:baseline;padding:3px 0}
+.mini-line .ts{font-size:10.5px;color:var(--ash);font-weight:500}
+.mini-line.on{background:var(--blush);border-radius:6px;padding:3px 6px}
+.heat-mini{display:flex;align-items:flex-end;gap:4px;height:38px}
+.heat-mini i{width:9px;border-radius:4px;background:var(--sand);display:block}
+.heat-mini i.hot{background:var(--orange)}
+/* taglines phase */
+.taglines{grid-area:1/1;position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.4vh,28px);opacity:0;pointer-events:none;color:#fff}
+.tagline{display:flex;gap:clamp(14px,2vw,26px);align-items:center}
+.tagline .icon-card{width:clamp(58px,7vw,96px);height:clamp(58px,7vw,96px);border-radius:24px;display:grid;place-items:center;color:#fff;box-shadow:var(--sh-lg)}
+.tagline .icon-card svg{width:52%;height:52%}
+.tagline h3{font-size:clamp(44px,7vw,96px);line-height:1;font-weight:500;letter-spacing:.01em}
+.tagline.tl-slides .icon-card{background:var(--emerald)}
+.tagline.tl-audio .icon-card{background:var(--cobalt)}
+.tagline.tl-images .icon-card{background:var(--coral)}
+/* scroll indicator */
+.scroll-ind{position:absolute;left:28px;bottom:26px;display:inline-flex;align-items:center;gap:9px;font-size:14px;letter-spacing:.42px;color:#fff;z-index:6;padding:13px 22px;border-radius:9999px;background:rgba(255,255,255,.14);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.25)}
+.scroll-ind:hover{background:rgba(255,255,255,.24)}
+.scroll-ind i{font-style:normal;animation:bounceY 1.6s infinite}
+@keyframes bounceY{0%,100%{transform:translateY(-2px)}50%{transform:translateY(3px)}}
+
+/* ---------- walkthrough (orange pin) ---------- */
+.walkthrough{background:var(--orange);color:#fff;position:relative}
+.wt-pin{height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.wt-heading{position:absolute;top:clamp(76px,12vh,120px);left:0;right:0;text-align:center;padding:0 24px}
+.wt-heading .line{font-size:clamp(30px,4.6vw,64px);font-weight:500;line-height:1.05;letter-spacing:.01em;position:relative;height:1.2em}
+.wt-heading .line span{position:absolute;left:0;right:0;opacity:0;transform:translateY(24px)}
+.wt-sub{margin-top:14px;font-size:15px;letter-spacing:.3px;opacity:.75;font-weight:450}
+/* phone */
+.phone{width:min(320px,72vw);aspect-ratio:320/650;background:#fff;border-radius:44px;box-shadow:0 40px 90px rgba(54,8,2,.35);padding:12px;position:relative;margin-top:clamp(20px,4vh,44px)}
+.phone::before{content:'';position:absolute;top:22px;left:50%;transform:translateX(-50%);width:96px;height:26px;border-radius:14px;background:#f3efee;z-index:3}
+.phone .screen-stack{position:absolute;inset:12px;border-radius:34px;overflow:hidden;background:#fff}
+.screen{position:absolute;inset:0;padding:64px 20px 20px;opacity:0;transform:translateY(14px) scale(.98);transition:opacity .5s var(--ease),transform .5s var(--ease);display:flex;flex-direction:column;color:var(--ink)}
+.screen.on{opacity:1;transform:none}
+.scr-title{font-size:17px;font-weight:500;letter-spacing:.2px;margin-bottom:14px}
+.scr-note{font-size:11.5px;color:var(--ash);letter-spacing:.36px;margin-top:auto}
+.drop-tile{border:1.5px dashed var(--sand);border-radius:16px;padding:18px 14px;text-align:center;font-size:13px;color:var(--ink);margin-bottom:10px;letter-spacing:.3px}
+.drop-tile.ok{border-style:solid;border-color:var(--emerald);background:#f2fcf4;display:flex;justify-content:space-between;align-items:center;text-align:left}
+.drop-tile .sm{display:block;font-size:11px;color:var(--ash);margin-top:4px}
+.wave{display:flex;align-items:center;gap:3px;height:74px;margin:12px 0}
+.wave i{flex:1;background:var(--cobalt);border-radius:3px;height:20%;animation:wavey 1.2s ease-in-out infinite}
+.wave i:nth-child(odd){animation-delay:.2s}
+.wave i:nth-child(3n){animation-delay:.4s}
+.wave i:nth-child(4n){animation-delay:.6s}
+@keyframes wavey{0%,100%{height:18%}50%{height:var(--h,70%)}}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.photo-cell{aspect-ratio:1;border-radius:12px;background:linear-gradient(135deg,#f6f1ef,#eee4e0);display:grid;place-items:center;color:var(--ash);font-size:18px;position:relative}
+.photo-cell .stamp{position:absolute;bottom:6px;right:8px;font-size:9.5px;color:var(--ash);letter-spacing:.3px}
+.pipe-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:#faf7f6;margin-bottom:7px;font-size:12.5px;letter-spacing:.2px}
+.pipe-row .n{width:22px;height:22px;border-radius:50%;background:var(--sand);display:grid;place-items:center;font-size:10.5px;font-weight:500;flex-shrink:0}
+.pipe-row.done .n{background:var(--mint);color:#0b6b2c}
+.pipe-row.cur .n{background:var(--orange);color:#fff}
+.pipe-row.cur{background:var(--blush)}
+.pipe-row .pct{margin-left:auto;font-size:11px;color:var(--ash);font-weight:500}
+.pipe-row.cur .pct{color:var(--orange)}
+.ready-slide{border:1.5px solid var(--sand);border-radius:12px;padding:9px 10px;margin-bottom:8px}
+.ready-slide.cur{border-color:var(--orange);box-shadow:0 0 0 3px rgba(247,59,32,.12)}
+.ready-slide .st{font-size:10.5px;font-weight:500;color:var(--ink);margin-bottom:5px}
+.ready-slide .ln{height:5px;border-radius:3px;background:#f3efee;margin-bottom:4px}
+.karaoke{font-size:11.5px;padding:5px 7px;border-radius:8px;display:flex;gap:6px}
+.karaoke .ts{color:var(--ash);font-size:10px;font-weight:500}
+.karaoke.on{background:var(--blush)}
+/* stepper */
+.stepper{position:absolute;bottom:clamp(24px,5vh,48px);left:0;right:0;display:flex;justify-content:center;gap:clamp(10px,2vw,24px);flex-wrap:wrap;padding:0 20px}
+.step-btn{display:flex;align-items:baseline;gap:8px;color:#fff;opacity:.45;transition:opacity .3s;font-size:14px;letter-spacing:.42px;padding:8px 4px}
+.step-btn .index{font-size:11px;font-weight:400}
+.step-btn .bar{display:block;width:clamp(30px,4.5vw,64px);height:2px;background:rgba(255,255,255,.35);border-radius:1px;position:relative;overflow:hidden;margin-left:8px;align-self:center}
+.step-btn .bar i{position:absolute;inset:0;background:#fff;transform:scaleX(0);transform-origin:left}
+.step-btn.active{opacity:1}
+.restart-wrap{position:absolute;bottom:clamp(24px,5vh,48px);right:32px}
+.restart-btn{display:inline-flex;gap:8px;align-items:center;color:#fff;font-size:14px;letter-spacing:.42px;opacity:.8}
+.restart-btn:hover{opacity:1}
+
+/* ---------- mobile app hero ---------- */
+.app-hero{position:relative;min-height:92vh;display:flex;align-items:flex-end;overflow:hidden;border-radius:0}
+.app-hero .bg{position:absolute;inset:0;background:linear-gradient(160deg,#2b0f45 0%,#5b1636 45%,#f73b20 130%)}
+.app-hero .bg .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5}
+.app-hero .bg .b1{width:520px;height:520px;background:#f73b20;top:-160px;right:-120px}
+.app-hero .bg .b2{width:420px;height:420px;background:#477ee9;bottom:-140px;left:-100px}
+.app-hero .float-card{position:absolute;background:rgba(255,255,255,.1);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:14px 16px;color:#fff;font-size:12.5px;letter-spacing:.3px}
+.app-hero .fc1{top:18%;right:12%}
+.app-hero .fc2{top:44%;right:24%}
+.app-hero .content{position:relative;padding:120px 0 90px;color:#fff;width:100%}
+.app-hero h2{max-width:820px}
+.app-hero .sub{margin:26px 0 34px;max-width:520px;opacity:.85}
+.app-badges{display:flex;gap:16px;margin-top:44px;flex-wrap:wrap}
+._app-button{position:relative;display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:12px;color:#fff;font-size:14px;letter-spacing:.42px}
+._app-button .outline{position:absolute;inset:0;border:1px solid rgba(255,255,255,.5);border-radius:inherit;transition:border-color .2s,background .2s}
+._app-button:hover .outline{border-color:#fff;background:rgba(255,255,255,.08)}
+._app-button b{font-weight:500}
+._app-button small{display:block;font-size:10.5px;opacity:.7;letter-spacing:.36px}
+
+/* ---------- workspace overview ---------- */
+.overview{margin:180px 0 160px}
+.overview .head{text-align:center}
+.ov-panel{margin:96px auto 48px;max-width:1000px;background:#fff;border-radius:20px;box-shadow:var(--sh-lg);overflow:hidden}
+.ov-inner{display:grid;grid-template-columns:170px 1fr 200px;min-height:380px}
+.ov-col{padding:18px;border-right:1px solid #f3efee}
+.ov-col:last-child{border-right:none}
+.ov-label{font-size:10.5px;letter-spacing:.36px;color:var(--ash);font-weight:500;text-transform:uppercase;margin-bottom:12px}
+.ov-tl{border-top:1px solid #f3efee;padding:16px 18px;display:flex;gap:4px;align-items:center;position:relative}
+.ov-tl .seg{height:10px;border-radius:5px;background:#f3efee;position:relative;overflow:hidden}
+.ov-tl .seg.done{background:var(--blush)}
+.ov-tl .seg.cur i{position:absolute;inset:0;background:var(--orange);border-radius:inherit;transform-origin:left;animation:fillx 6s linear infinite}
+@keyframes fillx{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+.ov-check{text-align:center;max-width:760px;margin:0 auto}
+.ov-check h3{margin-bottom:18px}
+.ov-check p{color:rgba(54,8,2,.65);font-size:clamp(16px,1.5vw,21px);letter-spacing:.23px;font-weight:450;max-width:560px;margin:0 auto 28px}
+
+/* ---------- calculator ---------- */
+.calc{display:flex;flex-direction:column;align-items:center;color:var(--orange);padding:40px 0 150px;user-select:none}
+.calc .head{text-align:center;margin-bottom:80px}
+.calc-box{width:min(460px,92vw);display:flex;flex-direction:column;gap:8px;position:relative}
+._card{background:var(--cat-tint);border-radius:16px;padding:18px 20px 16px;position:relative}
+._card .row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+._dropdown{position:relative}
+.dd-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:#fff;color:var(--ink);font-size:14.5px;letter-spacing:.42px;font-weight:450;box-shadow:var(--sh-md)}
+.dd-btn .ic{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:12px}
+.dd-btn .chev{font-size:9px;opacity:.5;transition:transform .25s}
+._dropdown.open .dd-btn .chev{transform:rotate(180deg)}
+.dd-list{position:absolute;top:calc(100% + 8px);left:0;min-width:240px;background:#fff;border-radius:16px;box-shadow:var(--sh-lg);padding:6px;z-index:20;opacity:0;pointer-events:none;transform:translateY(6px);transition:.25s}
+._dropdown.open .dd-list{opacity:1;pointer-events:auto;transform:none}
+.dd-list button{display:flex;width:100%;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:var(--ink);font-size:14px;letter-spacing:.3px;text-align:left}
+.dd-list button:hover{background:var(--blush)}
+.dd-list button .ic{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;flex-shrink:0}
+.dd-list button small{margin-left:auto;color:var(--ash);font-size:11.5px}
+._card .amount{display:flex;align-items:baseline;gap:8px;color:var(--ink);margin-top:10px}
+._card .amount input{border:none;background:transparent;font-size:clamp(34px,4vw,44px);font-weight:500;color:var(--ink);width:100%;outline:none;letter-spacing:.01em;font-family:var(--font)}
+._card .amount .unit{font-size:16px;color:var(--ash);letter-spacing:.3px;flex-shrink:0}
+._card .out-val{font-size:clamp(34px,4vw,44px);font-weight:500;color:var(--ink);margin-top:10px;letter-spacing:.01em}
+._card .out-val small{font-size:16px;color:var(--ash);font-weight:450;letter-spacing:.3px}
+.swap-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:19px;box-shadow:var(--sh-lg);z-index:10;transition:transform .4s var(--ease)}
+.swap-btn:hover{transform:translate(-50%,-50%) rotate(180deg)}
+.calc-note{display:flex;align-items:center;gap:8px;margin-top:26px;font-size:13px;letter-spacing:.36px;color:var(--orange);opacity:.85}
+.calc-save{margin-top:10px;font-size:14.5px;color:var(--ink);letter-spacing:.3px}
+.calc-save b{color:var(--orange);font-weight:500}
+
+/* ---------- testimonials ---------- */
+.testimonials{position:relative;background:linear-gradient(175deg,#41060d 0%,#7c1508 55%,var(--orange) 140%);color:#fff;border-radius:0}
+.tst-pin{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative;padding:0 20px}
+.tst-pin h2{text-align:center;position:absolute;top:clamp(64px,11vh,120px);left:0;right:0;padding:0 24px;color:#ffe9e4}
+.card-stack{position:relative;width:min(430px,92vw);height:300px}
+.t-card{position:absolute;inset:0;background:rgba(255,255,255,.08);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:28px;display:flex;flex-direction:column}
+.t-card p{font-size:15.5px;line-height:1.6;letter-spacing:.2px;opacity:.85}
+.t-card .who{display:flex;gap:12px;align-items:center;margin-top:auto}
+.t-card .avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:500;font-size:14px;color:var(--ink)}
+.t-card .who span{font-size:14.5px;letter-spacing:.3px}
+.t-card .who small{display:block;font-size:12px;opacity:.6;letter-spacing:.36px}
+
+/* ---------- finale / footer ---------- */
+.finale{background:var(--orange);color:#fff;padding:clamp(120px,18vh,216px) 0 60px;text-align:center;position:relative;overflow:hidden}
+.finale h2{margin:0 auto;max-width:1000px}
+.finale .sub{margin:48px auto 0;max-width:560px;opacity:.9}
+.finale .cta-row{display:flex;gap:16px;justify-content:center;margin-top:56px;flex-wrap:wrap}
+.foot-links{max-width:var(--maxw);margin:96px auto 0;padding:0 28px;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:left;font-size:15px}
+.fl-group .hd{opacity:.55;font-size:13px;letter-spacing:.42px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;width:100%}
+.fl-group a{display:block;padding:6px 0;letter-spacing:.3px;opacity:.95}
+.fl-group a:hover{opacity:1;text-decoration:underline}
+.certs{display:flex;justify-content:center;gap:14px;margin-top:90px;flex-wrap:wrap}
+.cert{border:1px solid rgba(255,255,255,.35);border-radius:9999px;padding:8px 18px;font-size:12.5px;letter-spacing:.42px;opacity:.85}
+.foot-base{max-width:var(--maxw);margin:70px auto 0;padding:24px 28px 0;border-top:1px solid rgba(255,255,255,.25);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;letter-spacing:.36px;opacity:.85}
+.socials{display:flex;gap:10px}
+._circle-button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.4);display:grid;place-items:center;font-size:15px;transition:background .2s,border-color .2s}
+._circle-button:hover{background:#fff;color:var(--orange);border-color:#fff}
+.giant-lectra{font-size:clamp(90px,17vw,270px);font-weight:500;line-height:.85;letter-spacing:-.02em;margin-top:70px;opacity:.97;user-select:none}
+
+@media (prefers-reduced-motion:reduce){
+  .coin,.wave i,.ov-tl .seg.cur i,.scroll-ind .ring i{animation:none!important}
+}
+@media (max-width:900px){
+  .hero-aside{display:none}
+  .dock-links .dock-link{padding:12px 10px;font-size:13.5px}
+  .support-pill{display:none}
+  .top-nav{padding:18px 20px}
+  .logo{font-size:22px}
+  .lang-btn{display:none}
+  .ov-inner{grid-template-columns:1fr}
+  .ov-col{border-right:none;border-bottom:1px solid #f3efee}
+  .foot-links{grid-template-columns:1fr 1fr}
+  .snippet{display:none}
+  .sn1,.sn4{display:block}
+  .restart-wrap{right:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= BOTTOM DOCK NAV ================= -->
+<nav class="dock" id="dock">
+  <button class="dock-home" id="dock-home" title="맨 위로">⌂</button>
+  <div class="dock-links">
+    <div class="dock-item">
+      <button class="dock-link">Product <span class="chev">▼</span></button>
+      <div class="dropup">
+        <a href="/?screen=study">Workspace <small>동기화 노트 · Q&A · 번역</small></a>
+        <a href="/?screen=dashboard">Library <small>폴더 · 검색 · 처리 현황</small></a>
+        <a href="#walkthrough">How it works <small>5단계 워크스루</small></a>
+        <a href="#calc">Calculator <small>시간 절약 계산기</small></a>
+      </div>
+    </div>
+    <a class="dock-link" href="/?screen=dashboard">Workspace ↗</a>
+    <div class="dock-item">
+      <button class="dock-link">Company <span class="chev">▼</span></button>
+      <div class="dropup">
+        <a href="mailto:focustationcapstone@gmail.com">Team contact</a>
+        <a href="#calc">Fees</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </div>
+</nav>
+<a class="support-pill" href="mailto:focustationcapstone@gmail.com">💬 Support</a>
+
+<main id="top">
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="hero">
+  <div class="sticky-slot">
+    <div class="hero-bg"><div class="hb hb1"></div><div class="hb hb2"></div><div class="hb hb3"></div></div>
+    <canvas id="discs"></canvas>
+    <div class="hero-vignette"></div>
+    <div class="hero-grain"></div>
+    <div class="top-nav">
+      <a class="logo" href="#top">Lectra</a>
+      <div class="nav-right">
+        <button class="lang-btn">🌐 KO <span style="font-size:9px;opacity:.7">▼</span></button>
+        <a class="login-btn" href="/?screen=login">Log in</a>
+        <a class="signup-btn" href="/?screen=login">Sign up</a>
+      </div>
+    </div>
+    <div class="stage">
+      <h1 class="hero-title t-display" id="hero-title">One app<br>for every lecture</h1>
+      <aside class="hero-aside">
+        <p>Single workspace<br>for all your lectures.</p>
+        <div class="app-badges">
+          <a class="_app-button" href="/?screen=login"><span class="outline"></span><span>🌐</span><span><small>지금 바로</small><b>Web App</b></span></a>
+          <a class="_app-button" href="#"><span class="outline"></span><span></span><span><small>곧 출시</small><b>App Store</b></span></a>
+        </div>
+      </aside>
+    </div>
+    <div class="taglines" id="taglines">
+      <div class="tagline tl-slides">
+        <div class="icon-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6"/></svg></div>
+        <h3>Slides</h3>
+      </div>
+      <div class="tagline tl-audio">
+        <div class="icon-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg></div>
+        <h3>Audio recordings</h3>
+      </div>
+      <div class="tagline tl-images">
+        <div class="icon-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4-4-8 8"/></svg></div>
+        <h3>Images</h3>
+      </div>
+    </div>
+    <button class="scroll-ind" id="scroll-ind"><i>↓</i> Scroll</button>
+  </div>
+</section>
+
+<!-- ================= WALKTHROUGH (pinned) ================= -->
+<section class="walkthrough" id="walkthrough">
+  <div class="wt-pin" id="wt-pin">
+    <div class="wt-heading">
+      <div class="line" id="wt-line">
+        <span>Drop in your slides.</span>
+        <span>Add the recording.</span>
+        <span>Photos? Auto-placed.</span>
+        <span>We align every sentence.</span>
+        <span>Your workspace is ready.</span>
+      </div>
+      <div class="wt-sub" id="wt-sub">PDF·PPT 슬라이드가 강의의 뼈대가 됩니다</div>
+    </div>
+
+    <div class="phone">
+      <div class="screen-stack">
+        <!-- 01 Slides -->
+        <div class="screen on" data-step="0">
+          <div class="scr-title">Upload slides</div>
+          <div class="drop-tile ok"><span>week11_hashing.pdf<span class="sm">4.2 MB — 검증 통과</span></span><b style="color:var(--emerald)">✓</b></div>
+          <div class="drop-tile">+ PPT / PDF<span class="sm">최대 50MB</span></div>
+          <div class="scr-note">제목은 파일명에서 자동으로 채워져요</div>
+        </div>
+        <!-- 02 Audio -->
+        <div class="screen" data-step="1">
+          <div class="scr-title">Add the recording</div>
+          <div class="wave"><i style="--h:60%"></i><i style="--h:85%"></i><i style="--h:45%"></i><i style="--h:95%"></i><i style="--h:55%"></i><i style="--h:75%"></i><i style="--h:40%"></i><i style="--h:90%"></i><i style="--h:65%"></i><i style="--h:80%"></i><i style="--h:50%"></i><i style="--h:70%"></i></div>
+          <div class="drop-tile ok"><span>week11_lecture.mp3<span class="sm">58 MB · 61:30</span></span><b style="color:var(--cobalt)">✓</b></div>
+          <div class="scr-note">.mp3 .wav .m4a — 녹음만 (영상 X)</div>
+        </div>
+        <!-- 03 Photos -->
+        <div class="screen" data-step="2">
+          <div class="scr-title">Photos, auto-placed</div>
+          <div class="photo-grid">
+            <div class="photo-cell">📷<span class="stamp">23:40</span></div>
+            <div class="photo-cell">📷<span class="stamp">36:50</span></div>
+            <div class="photo-cell">📷<span class="stamp">48:12</span></div>
+            <div class="photo-cell" style="border:1.5px dashed var(--sand);background:none;color:var(--sand)">＋</div>
+          </div>
+          <div class="scr-note">촬영 시각(EXIF)으로 타임라인·노트의 정확한 위치에 배치</div>
+        </div>
+        <!-- 04 Processing -->
+        <div class="screen" data-step="3">
+          <div class="scr-title">Aligning…</div>
+          <div class="pipe-row done"><span class="n">✓</span>업로드 수신<span class="pct">done</span></div>
+          <div class="pipe-row done"><span class="n">✓</span>STT 음성 인식<span class="pct">done</span></div>
+          <div class="pipe-row done"><span class="n">✓</span>슬라이드 텍스트 추출<span class="pct">done</span></div>
+          <div class="pipe-row cur"><span class="n">4</span>슬라이드-스크립트 정렬<span class="pct">72%</span></div>
+          <div class="pipe-row"><span class="n">5</span>AI 노트 생성<span class="pct">대기</span></div>
+          <div class="scr-note">페이지를 떠나도 처리는 계속돼요</div>
+        </div>
+        <!-- 05 Ready -->
+        <div class="screen" data-step="4">
+          <div class="scr-title">Ready to study</div>
+          <div class="ready-slide"><div class="st">S11 — Insertion overview</div><div class="ln" style="width:75%"></div><div class="ln" style="width:50%"></div></div>
+          <div class="ready-slide cur"><div class="st">S12 — B-Tree insertion</div><div class="ln" style="width:65%"></div><div class="ln" style="width:80%"></div></div>
+          <div class="karaoke on"><span class="ts">23:14</span>The median moves up to the parent…</div>
+          <div class="karaoke"><span class="ts">23:26</span>Let's see a split example…</div>
+          <div class="scr-note">문장 클릭 → 슬라이드·오디오 동시 점프</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stepper" id="stepper">
+      <button class="step-btn active" data-i="0"><span class="index">01</span><span class="label">Slides</span><span class="bar"><i></i></span></button>
+      <button class="step-btn" data-i="1"><span class="index">02</span><span class="label">Audio</span><span class="bar"><i></i></span></button>
+      <button class="step-btn" data-i="2"><span class="index">03</span><span class="label">Photos</span><span class="bar"><i></i></span></button>
+      <button class="step-btn" data-i="3"><span class="index">04</span><span class="label">Align</span><span class="bar"><i></i></span></button>
+      <button class="step-btn" data-i="4"><span class="index">05</span><span class="label">Ready</span></button>
+    </div>
+    <div class="restart-wrap"><button class="restart-btn roll-host" id="restart" data-roll>⟲ Restart</button></div>
+  </div>
+</section>
+
+<!-- ================= APP HERO ================= -->
+<section class="app-hero" id="app-hero">
+  <div class="bg"><div class="blob b1"></div><div class="blob b2"></div></div>
+  <div class="float-card fc1">이번 주 강의 3개 정렬 완료 ✓</div>
+  <div class="float-card fc2">Week 11 — Hashing<br><span style="opacity:.7;font-size:11px">Processing 45% · ETA 6분</span></div>
+  <div class="wrap content">
+    <h2 class="t3">All your lectures,<br>in one app.</h2>
+    <p class="sub sub2">업로드부터 시험 전날 복습까지 — 폴더, 검색, 처리 현황, 워크스페이스가 한곳에.</p>
+    <a class="_button fill-white pill" href="/?screen=dashboard" data-roll>Get Started</a>
+    <div class="app-badges">
+      <a class="_app-button" href="/?screen=login"><span class="outline"></span><span>🌐</span><span><small>지금 바로</small><b>Web App</b></span></a>
+      <a class="_app-button" href="#"><span class="outline"></span><span></span><span><small>곧 출시</small><b>App Store</b></span></a>
+      <a class="_app-button" href="#"><span class="outline"></span><span>▶</span><span><small>곧 출시</small><b>Google Play</b></span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WORKSPACE OVERVIEW ================= -->
+<section class="overview" id="overview">
+  <div class="wrap head">
+    <span class="_tag" style="color:var(--orange)"><span class="outline"></span>Workspace</span>
+    <h2 class="t5" style="margin-top:16px">Lectra Workspace:<br>your go-to for every exam.</h2>
+  </div>
+  <div class="ov-panel reveal">
+    <div class="ov-inner">
+      <div class="ov-col">
+        <div class="ov-label">Slides</div>
+        <div class="ready-slide"><div class="st">S11 — Insertion</div><div class="ln" style="width:75%"></div><div class="ln" style="width:55%"></div></div>
+        <div class="ready-slide cur"><div class="st">S12 — B-Tree insertion</div><div class="ln" style="width:70%"></div><div class="ln" style="width:82%"></div></div>
+        <div class="ready-slide"><div class="st">S13 — Split example</div><div class="ln" style="width:60%"></div><div class="ln" style="width:45%"></div></div>
+      </div>
+      <div class="ov-col">
+        <div class="ov-label">My notes</div>
+        <div class="karaoke"><span class="ts">S12</span><b style="font-weight:500">B-Tree insertion — 23:14</b></div>
+        <div class="karaoke">노드가 가득 차면 중앙값 기준 분할</div>
+        <div class="karaoke on">중앙값은 부모로 승격 — 높이 로그 유지</div>
+        <div class="karaoke">📷 23:40 필기 사진 — 자동 삽입</div>
+        <div class="karaoke" style="color:var(--orange)">내 질문: 왜 하필 중앙값? → Q&A</div>
+      </div>
+      <div class="ov-col">
+        <div class="ov-label">Q&A</div>
+        <div class="karaoke" style="background:#faf7f6;border-radius:10px">왜 중앙값으로 분할해?</div>
+        <div class="karaoke" style="font-size:11px;line-height:1.5">양쪽 모두 최소 채움을 만족하는 유일한 분할점이라서요.</div>
+        <div style="margin-top:6px"><span class="caption" style="color:var(--orange);border:1px solid var(--blush);border-radius:9999px;padding:3px 10px">S12 · 23:14</span></div>
+      </div>
+      <div class="ov-tl">
+        <span class="ov-label" style="margin:0 8px 0 0">Timeline</span>
+        <div class="seg done" style="flex:5"></div><div class="seg done" style="flex:8"></div><div class="seg cur" style="flex:6"><i></i></div><div class="seg" style="flex:9"></div><div class="seg" style="flex:7"></div>
+      </div>
+    </div>
+  </div>
+  <div class="wrap ov-check reveal">
+    <h3 class="t5">Karaoke highlight? Sure.<br>Cited answers? Check.<br>Heatmaps? Also check.</h3>
+    <p>현재 문장 자동 하이라이트, 원문 인용 칩이 달린 Q&A, 교수님이 오래 머문 슬라이드를 보여주는 체류시간 히트맵까지 — 정렬 하나로 전부 따라옵니다.</p>
+    <a class="link-orange roll-host" href="/?screen=study" data-roll>Learn more →</a>
+  </div>
+</section>
+
+<!-- ================= CALCULATOR ================= -->
+<section class="calc" id="calc">
+  <div class="head">
+    <span class="_tag"><span class="outline"></span>Calculator</span>
+    <h2 class="t3" style="margin-top:16px">Convert lectures<br>into minutes.</h2>
+  </div>
+  <div class="calc-box">
+    <div class="_card">
+      <div class="row1">
+        <div class="_dropdown" id="dd-src">
+          <button class="dd-btn"><span class="ic" style="background:var(--cobalt)">🎧</span><span class="lbl">Lecture</span><span class="chev">▼</span></button>
+          <div class="dd-list">
+            <button data-mult="1" data-label="Lecture"><span class="ic" style="background:var(--cobalt)">🎧</span>Lecture<small>1개</small></button>
+            <button data-mult="3" data-label="Week"><span class="ic" style="background:var(--emerald)">📅</span>Week<small>강의 3개</small></button>
+            <button data-mult="45" data-label="Semester"><span class="ic" style="background:var(--coral)">🎓</span>Semester<small>강의 45개</small></button>
+          </div>
+        </div>
+        <span class="caption" style="color:var(--ash)">강의 길이</span>
+      </div>
+      <div class="amount"><input id="calc-in" type="text" inputmode="numeric" value="60"><span class="unit">min</span></div>
+    </div>
+    <button class="swap-btn" id="swap" title="방향 바꾸기">⇅</button>
+    <div class="_card">
+      <div class="row1">
+        <div class="dd-btn" style="cursor:default"><span class="ic" style="background:var(--orange)">⚡</span><span id="out-label">Lectra 복습</span></div>
+        <span class="caption" style="color:var(--ash)" id="out-cap">정렬 노트 기준</span>
+      </div>
+      <div class="out-val"><span id="calc-out">22</span> <small>min</small></div>
+    </div>
+  </div>
+  <div class="calc-save" id="calc-save"><b>38분</b> 절약 — 2.7× 빠른 복습</div>
+  <div class="calc-note">ⓘ 평균 정렬 노트 복습 속도 기준 · 데모 수치</div>
+</section>
+
+<!-- ================= TESTIMONIALS (pinned stack) ================= -->
+<section class="testimonials" id="testimonials">
+  <div class="tst-pin" id="tst-pin">
+    <h2 class="t3">Hear it from students</h2>
+    <div class="card-stack" id="card-stack">
+      <div class="t-card">
+        <p>"시험 전날 3배속으로 다시 듣던 걸 그만뒀어요. 히트맵에서 교수님이 15분 머문 슬라이드만 골라 보니까 복습이 22분에 끝나요."</p>
+        <div class="who"><span class="avatar" style="background:var(--mint)">JH</span><span>지현<small>컴퓨터공학 3학년</small></span></div>
+      </div>
+      <div class="t-card">
+        <p>"필기 사진이 촬영 시각으로 노트에 자동 배치되는 게 진짜 편해요. 판서 놓친 날에도 친구 사진만 받으면 끝."</p>
+        <div class="who"><span class="avatar" style="background:var(--citrus)">MJ</span><span>민준<small>전자공학 2학년</small></span></div>
+      </div>
+      <div class="t-card">
+        <p>"Q&A 답변에 인용 칩이 붙어서 원문을 바로 확인할 수 있어요. 챗봇 환각 때문에 불안했던 게 사라졌어요."</p>
+        <div class="who"><span class="avatar" style="background:#ffd9d0">SY</span><span>서연<small>수학과 4학년</small></span></div>
+      </div>
+      <div class="t-card">
+        <p>"영어 강의는 번역 탭으로 섹션마다 한국어를 깔아두고, 타임스탬프 그대로 점프하면서 들어요. 유학생 팀원한테도 공유했어요."</p>
+        <div class="who"><span class="avatar" style="background:#d7e4ff">DK</span><span>도경<small>경영학 3학년</small></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINALE / FOOTER ================= -->
+<section class="finale" id="finale">
+  <h2 class="t1 reveal">Ten thousand lectures,<br>plus yours.</h2>
+  <p class="sub sub2 reveal">가입부터 첫 정렬 노트까지 5분. 시험공부의 기본값을 바꿔보세요.</p>
+  <div class="cta-row reveal">
+    <a class="_button fill-white pill" style="padding:16px 30px" href="/?screen=login" data-roll>Get Started</a>
+    <a class="_button ghost-white" style="padding:16px 30px" href="/?screen=study" data-roll>View sample</a>
+  </div>
+
+  <div class="foot-links">
+    <div class="fl-group">
+      <div class="hd">PRODUCT</div>
+      <a href="/?screen=dashboard">Library</a>
+      <a href="/?screen=study">Workspace</a>
+      <a href="#walkthrough">How it works</a>
+      <a href="#calc">Pricing</a>
+    </div>
+    <div class="fl-group">
+      <div class="hd">FEATURES</div>
+      <a href="#hero">Slides</a>
+      <a href="#hero">Audio recordings</a>
+      <a href="#hero">Images</a>
+      <a href="#calc">Calculator</a>
+    </div>
+    <div class="fl-group">
+      <div class="hd">COMPANY</div>
+      <a href="mailto:focustationcapstone@gmail.com">Team contact</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </div>
+  </div>
+
+  <div class="certs">
+    <span class="cert">STT</span><span class="cert">OCR</span><span class="cert">DTW 정렬</span><span class="cert">RAG Q&A</span><span class="cert">EXIF 자동 배치</span>
+  </div>
+
+  <div class="giant-lectra">Lectra</div>
+
+  <div class="foot-base">
+    <span>© 2026 Lectra — 소프트웨어공학 캡스톤 MVP</span>
+    <div class="socials">
+      <a class="_circle-button" href="#" title="GitHub">◈</a>
+      <a class="_circle-button" href="#" title="Instagram">◎</a>
+      <a class="_circle-button" href="mailto:focustationcapstone@gmail.com" title="Mail">✉</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script>
+/* ================================================================
+   Lectra v3 — interactions (GSAP + ScrollTrigger + Lenis)
+   ================================================================ */
+gsap.registerPlugin(ScrollTrigger);
+
+/* ---------- Lenis smooth scroll ---------- */
+const lenis = new Lenis({ lerp: 0.11, wheelMultiplier: 1 });
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add(t => lenis.raf(t * 1000));
+gsap.ticker.lagSmoothing(0);
+
+/* ---------- rolling label buttons (Jeton식 글자 롤업) ---------- */
+document.querySelectorAll('[data-roll]').forEach(el => {
+  const label = el.textContent.trim();
+  el.textContent = '';
+  const roll = document.createElement('span');
+  roll.className = 'roll';
+  const mk = cls => {
+    const line = document.createElement('span');
+    line.className = 'line' + (cls ? ' ' + cls : '');
+    [...label].forEach((ch, i) => {
+      const c = document.createElement('span');
+      c.className = 'c';
+      c.style.setProperty('--i', i);
+      c.textContent = ch === ' ' ? ' ' : ch;
+      line.appendChild(c);
+    });
+    return line;
+  };
+  roll.appendChild(mk());
+  roll.appendChild(mk('clone'));
+  el.appendChild(roll);
+});
+
+/* ---------- dock home ---------- */
+document.getElementById('dock-home').onclick = () => lenis.scrollTo(0, { duration: 1.4 });
+
+/* ---------- 3D 원판 스택 (Three.js — 물리 기반 스튜디오 룩) ---------- */
+(() => {
+  const canvas = document.getElementById('discs');
+  if (!canvas || !window.THREE) return;
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(28, 1, .1, 100);
+  camera.position.set(0, 0.35, 9.4);
+
+  /* 스튜디오 라이트박스 → PMREM 환경광 (부드러운 반사·색 번짐의 핵심) */
+  const env = new THREE.Scene();
+  const panel = (color, w, h, x, y, z, ry = 0, rx = 0, intensity = 1) => {
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, h),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity) })
+    );
+    m.position.set(x, y, z); m.rotation.set(rx, ry, 0); env.add(m);
+  };
+  panel(0xffffff, 14, 14, 0, 9, 0, 0, Math.PI / 2, 2.6);      // 천장 소프트박스
+  panel(0xffc9b0, 16, 12, -9, 1, 2, Math.PI / 2.4, 0, 1.6);   // 웜 필 (왼쪽)
+  panel(0xff6f95, 16, 12, 9, 0, 2, -Math.PI / 2.4, 0, 1.4);   // 핑크 필 (오른쪽)
+  panel(0xfff1e2, 12, 8, 0, 0, -9, 0, 0, .9);                 // 백 필
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(env, .07).texture;
+
+  const key = new THREE.DirectionalLight(0xfff4ec, 2.4);
+  key.position.set(3.5, 6, 4);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.radius = 10;
+  key.shadow.camera.near = 1; key.shadow.camera.far = 20;
+  key.shadow.camera.left = key.shadow.camera.bottom = -5;
+  key.shadow.camera.right = key.shadow.camera.top = 5;
+  key.shadow.bias = -.0004;
+  scene.add(key);
+
+  const group = new THREE.Group();
+  const N = 14;
+  const geo = new THREE.CylinderGeometry(1.18, 1.18, .075, 128, 1);
+  const topCol = new THREE.Color('#ffbfae'), botCol = new THREE.Color('#f05a7e');
+  const discs = [];
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1);
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: botCol.clone().lerp(topCol, t),
+      roughness: .42, metalness: 0,
+      clearcoat: .55, clearcoatRoughness: .35,
+      sheen: .4, sheenColor: new THREE.Color('#ffd9c9'),
+      envMapIntensity: 1.15,
+    });
+    const d = new THREE.Mesh(geo, mat);
+    d.castShadow = d.receiveShadow = true;
+    d.userData.baseY = -1.55 + i * .21;
+    if (i < 4) { // 아래 4장 슬링키 퍼짐
+      d.userData.tilt = (4 - i) * .16;
+      d.userData.baseY -= (4 - i) * .07;
+      d.position.z = (4 - i) * .12;
+    } else d.userData.tilt = 0;
+    d.userData.phase = i * .55;
+    group.add(d); discs.push(d);
+  }
+  group.position.x = 1.55;
+  group.rotation.z = -.1;
+  scene.add(group);
+
+  function resize() {
+    const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    group.position.x = w < 760 ? .2 : 1.55;
+  }
+  resize();
+  addEventListener('resize', resize);
+
+  /* 마우스 패럴랙스 — lerp로 관성 있게 */
+  let mx = 0, my = 0, smx = 0, smy = 0;
+  addEventListener('pointermove', e => {
+    mx = (e.clientX / innerWidth - .5) * 2;
+    my = (e.clientY / innerHeight - .5) * 2;
+  });
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clock = new THREE.Clock();
+  function frame() {
+    const t = clock.getElapsedTime();
+    smx += (mx - smx) * .04; smy += (my - smy) * .04;
+    group.rotation.y = t * .25;
+    group.rotation.x = .05 + smy * .06;
+    group.rotation.z = -.1 + smx * .05;
+    camera.position.x = smx * .25;
+    camera.position.y = .35 - smy * .15;
+    camera.lookAt(group.position.x, 0, 0);
+    discs.forEach(d => {
+      d.position.y = d.userData.baseY + Math.sin(t * 1.1 + d.userData.phase) * .038;
+      d.rotation.x = d.userData.tilt * (1 + Math.sin(t * .7 + d.userData.phase) * .15);
+    });
+    renderer.render(scene, camera);
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  frame();
+  if (reduce) renderer.render(scene, camera);
+})();
+
+/* ---------- hero: split-letter intro ---------- */
+(() => {
+  const title = document.getElementById('hero-title');
+  const frag = document.createDocumentFragment();
+  title.childNodes.forEach(() => {});
+  const parts = title.innerHTML.split(/<br\s*\/?>/i);
+  title.innerHTML = '';
+  parts.forEach((line, li) => {
+    if (li) title.appendChild(document.createElement('br'));
+    line.trim().split(' ').forEach((word, wi, arr) => {
+      const w = document.createElement('span');
+      w.className = 'word';
+      [...word].forEach(ch => {
+        const box = document.createElement('span');
+        box.className = 'ch';
+        const inner = document.createElement('i');
+        inner.textContent = ch;
+        box.appendChild(inner);
+        w.appendChild(box);
+      });
+      title.appendChild(w);
+      if (wi < arr.length - 1) title.appendChild(document.createTextNode(' '));
+    });
+  });
+  gsap.fromTo(title.querySelectorAll('.ch i'),
+    { yPercent: 115, y: 0 },
+    { yPercent: 0, y: 0, duration: 1.1, ease: 'power4.out', stagger: 0.028, delay: .15 });
+  gsap.from('.hero-aside > *', { opacity: 0, y: 40, duration: 1, ease: 'power3.out', stagger: .12, delay: .8 });
+  gsap.from('.top-nav', { opacity: 0, y: -24, duration: .9, ease: 'power3.out', delay: .4 });
+
+  /* scroll phase: 타이틀·사이드 아웃 → 태그라인 인 (원판은 뒤에 은은하게 유지) */
+  const tl = gsap.timeline({
+    scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom bottom', scrub: .6 }
+  });
+  tl.to('.stage', { y: -80, opacity: 0, ease: 'none', duration: .3 }, .05)
+    .to('.top-nav', { opacity: 0, y: -30, duration: .2 }, .05)
+    .to('#discs', { opacity: .38, scale: 1.06, ease: 'none', duration: .5 }, .1)
+    .to('.scroll-ind', { opacity: 0, duration: .08 }, 0)
+    .set('.taglines', { pointerEvents: 'auto' })
+    .to('.taglines', { opacity: 1, duration: .12 }, .38)
+    .from('.tagline.tl-slides', { y: 110, opacity: 0, duration: .16 }, .42)
+    .from('.tagline.tl-audio', { y: 110, opacity: 0, duration: .16 }, .55)
+    .from('.tagline.tl-images', { y: 110, opacity: 0, duration: .16 }, .68)
+    .from('.tagline .icon-card', { rotate: -12, scale: .6, duration: .14, stagger: .12 }, .44);
+
+  document.getElementById('scroll-ind').onclick = () =>
+    lenis.scrollTo('#walkthrough', { offset: 0, duration: 1.4 });
+})();
+
+/* ---------- walkthrough: pinned 5-step ---------- */
+(() => {
+  const STEPS = 5;
+  const subs = [
+    'PDF·PPT 슬라이드가 강의의 뼈대가 됩니다',
+    '녹음이 모든 문장에 시간을 부여합니다',
+    '촬영 시각(EXIF)으로 정확한 위치에 자동 삽입',
+    'STT → 추출 → 정렬 → 노트, 페이지를 떠나도 계속',
+    '문장 하나를 클릭하면 전부가 따라옵니다',
+  ];
+  const lines = document.querySelectorAll('#wt-line span');
+  const screens = document.querySelectorAll('.screen');
+  const stepBtns = document.querySelectorAll('.step-btn');
+  const bars = document.querySelectorAll('.step-btn .bar i');
+  let cur = -1;
+
+  function setStep(i) {
+    if (i === cur) return;
+    cur = i;
+    screens.forEach(s => s.classList.toggle('on', +s.dataset.step === i));
+    stepBtns.forEach((b, bi) => b.classList.toggle('active', bi === i));
+    lines.forEach((l, li) => gsap.to(l, { opacity: li === i ? 1 : 0, y: li === i ? 0 : (li < i ? -24 : 24), duration: .45, ease: 'power3.out' }));
+    document.getElementById('wt-sub').textContent = subs[i];
+  }
+  setStep(0);
+
+  const st = ScrollTrigger.create({
+    trigger: '#walkthrough', start: 'top top', end: '+=3600',
+    pin: '#wt-pin', scrub: true, anticipatePin: 1,
+    onUpdate(self) {
+      const p = self.progress * STEPS;
+      const i = Math.min(STEPS - 1, Math.floor(p));
+      setStep(i);
+      bars.forEach((bar, bi) => {
+        const local = gsap.utils.clamp(0, 1, p - bi);
+        bar.style.transform = `scaleX(${bi < STEPS - 1 ? local : 0})`;
+      });
+    }
+  });
+  function scrollToStep(i) {
+    const y = st.start + (i + 0.5) / STEPS * (st.end - st.start);
+    lenis.scrollTo(y, { duration: 1.1 });
+  }
+  stepBtns.forEach((b, i) => b.onclick = () => scrollToStep(i));
+  document.getElementById('restart').onclick = () => scrollToStep(0);
+})();
+
+/* ---------- app hero: parallax + reveal ---------- */
+gsap.from('.app-hero .content > *', {
+  scrollTrigger: { trigger: '.app-hero', start: 'top 55%' },
+  y: 60, opacity: 0, duration: 1, ease: 'power3.out', stagger: .1
+});
+gsap.to('.app-hero .fc1', { scrollTrigger: { trigger: '.app-hero', start: 'top bottom', end: 'bottom top', scrub: true }, y: -110, ease: 'none' });
+gsap.to('.app-hero .fc2', { scrollTrigger: { trigger: '.app-hero', start: 'top bottom', end: 'bottom top', scrub: true }, y: -50, ease: 'none' });
+
+/* ---------- generic reveals ---------- */
+document.querySelectorAll('.reveal').forEach(el => {
+  gsap.from(el, {
+    scrollTrigger: { trigger: el, start: 'top 82%' },
+    y: 70, opacity: 0, duration: 1.1, ease: 'power3.out'
+  });
+});
+
+/* ---------- calculator ---------- */
+(() => {
+  const RATE = 0.37; // 복습시간 = 강의시간 × 0.37 (데모)
+  const input = document.getElementById('calc-in');
+  const out = document.getElementById('calc-out');
+  const saveEl = document.getElementById('calc-save');
+  const dd = document.getElementById('dd-src');
+  let mult = 1, swapped = false, displayed = 0;
+
+  dd.querySelector('.dd-btn').onclick = e => { e.stopPropagation(); dd.classList.toggle('open'); };
+  document.addEventListener('click', () => dd.classList.remove('open'));
+  dd.querySelectorAll('.dd-list button').forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    mult = +b.dataset.mult;
+    dd.querySelector('.dd-btn .lbl').textContent = b.dataset.label;
+    dd.querySelector('.dd-btn .ic').style.background = b.querySelector('.ic').style.background;
+    dd.querySelector('.dd-btn .ic').textContent = b.querySelector('.ic').textContent;
+    dd.classList.remove('open');
+    update();
+  });
+
+  function fmtMin(m) {
+    if (m >= 90) return Math.floor(m / 60) + '시간 ' + Math.round(m % 60) + '분';
+    return Math.round(m) + '분';
+  }
+  function update() {
+    const v = Math.max(0, parseFloat(input.value.replace(/[^\d.]/g, '')) || 0);
+    const total = v * mult;
+    const result = swapped ? total / RATE : total * RATE;
+    // 카운트업
+    gsap.killTweensOf(out);
+    const obj = { n: displayed };
+    gsap.to(obj, { n: result, duration: .55, ease: 'power2.out', onUpdate: () => { out.textContent = Math.round(obj.n); displayed = obj.n; } });
+    const saved = Math.abs(total - result);
+    saveEl.innerHTML = swapped
+      ? `복습 ${fmtMin(total)}이면 강의 <b>${fmtMin(result)}</b>를 커버해요`
+      : `<b>${fmtMin(saved)}</b> 절약 — 2.7× 빠른 복습`;
+  }
+  input.addEventListener('input', update);
+  document.getElementById('swap').onclick = () => {
+    swapped = !swapped;
+    document.getElementById('out-label').textContent = swapped ? '커버하는 강의' : 'Lectra 복습';
+    document.getElementById('out-cap').textContent = swapped ? '역방향 계산' : '정렬 노트 기준';
+    document.querySelector('#calc .row1 .caption').textContent = swapped ? '복습 시간' : '강의 길이';
+    update();
+  };
+  update();
+})();
+
+/* ---------- testimonials: pinned card stack ---------- */
+(() => {
+  const cards = gsap.utils.toArray('.t-card');
+  cards.forEach((c, i) => gsap.set(c, { y: i * 22, scale: 1 - i * 0.045, zIndex: cards.length - i, transformOrigin: 'center top' }));
+  const tl = gsap.timeline({
+    scrollTrigger: { trigger: '#testimonials', start: 'top top', end: '+=' + (cards.length * 620), pin: '#tst-pin', scrub: .5 }
+  });
+  cards.forEach((c, i) => {
+    if (i === cards.length - 1) return;
+    tl.to(c, { y: -420, rotate: i % 2 ? 7 : -7, opacity: 0, duration: 1, ease: 'power1.in' })
+      .to(cards.slice(i + 1), { y: (j, t) => (+gsap.getProperty(t, 'y')) - 22, scale: (j, t) => Math.min(1, (+gsap.getProperty(t, 'scale')) + 0.045), duration: 1 }, '<');
+  });
+})();
+
+/* ---------- finale headline scale-in ---------- */
+gsap.from('.finale h2', {
+  scrollTrigger: { trigger: '.finale', start: 'top 70%' },
+  scale: .85, opacity: 0, duration: 1.2, ease: 'power3.out'
+});
+gsap.from('.giant-lectra', {
+  scrollTrigger: { trigger: '.giant-lectra', start: 'top 95%' },
+  yPercent: 40, opacity: 0, duration: 1.2, ease: 'power3.out'
+});
+
+/* 폰트·이미지 로드 후 핀/트리거 위치 재계산 */
+window.addEventListener('load', () => ScrollTrigger.refresh());
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ScrollTrigger.refresh());
+</script>
+
+<script type="module">
+/* ================================================================
+   3D 원판 스택 — 시네마틱 파이프라인
+   라운드 엣지 원판 + 인캔버스 그라데이션 + DOF/블룸 후처리
+   ================================================================ */
+/* Three.js는 폴백 분기에서만 동적 import — Spline 사용 시 ~700KB 로드 생략 */
+const canvas = document.getElementById('discs');
+
+/* ================================================================
+   히어로 비주얼 우선순위: ① Spline → ② Rive(hero.riv) → ③ Three.js
+   Spline 사용법: 씬을 Export → Viewer 하면 나오는
+   https://prod.spline.design/xxxx/scene.splinecode URL을 아래에 붙여넣기
+   ================================================================ */
+/* 두 형태 모두 지원:
+   - Export → Code에서 나온 https://prod.spline.design/xxx/scene.splinecode
+   - 공유 링크 https://my.spline.design/xxx/ (iframe 임베드) */
+const SPLINE_URL = 'https://my.spline.design/radialglass-bXeLwUVIhfJGztLAHWeVpwLi/';
+
+if (SPLINE_URL && SPLINE_URL.includes('my.spline.design')) {
+  /* 성능: iframe 내부 뷰포트를 60%로 줄이고 CSS로 1/0.6배 업스케일
+     → WebGL 픽셀 수 0.36배. 유리 굴절 씬은 픽셀당 비용이 커서 체감 효과 큼.
+     (#discs는 pointer-events:none이라 인터랙션 손실 없음) */
+  const RES = 0.6;
+  /* 'Built with Spline' 배지 크롭: iframe을 오버스캔시켜 배지가 있는
+     하단(10%)·우측(4%)을 래퍼의 overflow:hidden 밖으로 밀어냄 */
+  const OVER_X = 0.08, OVER_Y = 0.14;   // 좌우 합 8%, 상하 합 14% 오버스캔
+  const SHIFT_X = 0.04, SHIFT_Y = 0.04; // 좌·상 4%씩 → 나머지가 우 4%·하 10% 크롭
+  const wrap = document.createElement('div');
+  wrap.id = 'discs';                    // 스크롤 페이드 트윈(#discs)은 래퍼에 적용
+  wrap.style.overflow = 'hidden';
+  const f = document.createElement('iframe');
+  f.src = SPLINE_URL;
+  f.title = 'Lectra hero 3D';
+  f.setAttribute('frameborder', '0');
+  f.loading = 'eager';
+  f.style.cssText = `position:absolute;top:${-SHIFT_Y * 100}%;left:${-SHIFT_X * 100}%;width:${RES * (1 + OVER_X) * 100}%;height:${RES * (1 + OVER_Y) * 100}%;transform:scale(${1 / RES});transform-origin:0 0;border:0`;
+  wrap.appendChild(f);
+  canvas.replaceWith(wrap);
+
+  /* 성능: Spline이 히어로를 완전히 덮으므로 뒤의 blur(90px) 블롭 애니메이션 정지
+     (정적 그라데이션은 iframe 로드 실패 시 폴백 배경으로 유지) */
+  document.querySelectorAll('.hero-bg .hb').forEach(el => { el.style.animation = 'none'; });
+
+  /* 성능: 히어로가 화면 밖으로 나가면 iframe 렌더링 중단 (브라우저 스로틀 유도) */
+  new IntersectionObserver(([e]) => {
+    f.style.visibility = e.isIntersecting ? 'visible' : 'hidden';
+  }, { rootMargin: '120px' }).observe(document.getElementById('hero'));
+} else if (SPLINE_URL) {
+  await import('https://unpkg.com/@splinetool/viewer/build/spline-viewer.js');
+  const v = document.createElement('spline-viewer');
+  v.setAttribute('url', SPLINE_URL);
+  v.setAttribute('loading-anim-type', 'none');
+  v.id = 'discs';                       // 스크롤 페이드 트윈(#discs) 그대로 적용
+  v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:2';
+  canvas.replaceWith(v);
+} else {
+
+/* ---- Rive: v3 폴더에 hero.riv가 있으면 3D 대신 Rive 재생 ---- */
+const useRive = await fetch('./hero.riv', { method: 'HEAD' }).then(r => r.ok).catch(() => false);
+if (useRive) {
+  const { Rive, Layout, Fit, Alignment } = await import('https://cdn.jsdelivr.net/npm/@rive-app/canvas@2/+esm');
+  const r = new Rive({
+    src: './hero.riv',
+    canvas,
+    autoplay: true,                       // 첫 번째 애니메이션(또는 스테이트 머신) 자동 재생
+    layout: new Layout({ fit: Fit.Cover, alignment: Alignment.Center }),
+    onLoad: () => r.resizeDrawingSurfaceToCanvasSize(),
+    onLoadError: () => { canvas.style.display = 'none'; },
+  });
+  addEventListener('resize', () => r.resizeDrawingSurfaceToCanvasSize());
+} else try {
+  const THREE = await import('three');
+  const [
+    { EffectComposer }, { RenderPass }, { BokehPass },
+    { UnrealBloomPass }, { OutputPass }, { RectAreaLightUniformsLib },
+  ] = await Promise.all([
+    import('three/addons/postprocessing/EffectComposer.js'),
+    import('three/addons/postprocessing/RenderPass.js'),
+    import('three/addons/postprocessing/BokehPass.js'),
+    import('three/addons/postprocessing/UnrealBloomPass.js'),
+    import('three/addons/postprocessing/OutputPass.js'),
+    import('three/addons/lights/RectAreaLightUniformsLib.js'),
+  ]);
+  RectAreaLightUniformsLib.init();
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.12;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(28, 1, .1, 100);
+  camera.position.set(0, 0.35, 9.4);
+
+  /* ---- 배경: 씬 안에서 그려지는 살아있는 그라데이션 ---- */
+  const bgCanvas = document.createElement('canvas');
+  bgCanvas.width = bgCanvas.height = 512;
+  const bctx = bgCanvas.getContext('2d');
+  const bgTex = new THREE.CanvasTexture(bgCanvas);
+  bgTex.colorSpace = THREE.SRGBColorSpace;
+  function paintBG(t) {
+    const g = bctx.createLinearGradient(0, 0, 512, 512);
+    g.addColorStop(0, '#e0486b'); g.addColorStop(.45, '#f0705f'); g.addColorStop(1, '#fbb175');
+    bctx.fillStyle = g; bctx.fillRect(0, 0, 512, 512);
+    const blob = (x, y, r, rgb, a) => {
+      const rg = bctx.createRadialGradient(x, y, 0, x, y, r);
+      rg.addColorStop(0, `rgba(${rgb},${a})`); rg.addColorStop(1, `rgba(${rgb},0)`);
+      bctx.fillStyle = rg; bctx.fillRect(0, 0, 512, 512);
+    };
+    blob(120 + Math.sin(t * .21) * 70, 130 + Math.cos(t * .17) * 55, 330, '255,46,110', .5);
+    blob(410 + Math.cos(t * .13) * 55, 420 + Math.sin(t * .19) * 60, 300, '255,204,122', .55);
+    blob(180 + Math.cos(t * .11) * 70, 440 + Math.sin(t * .15) * 40, 260, '150,16,58', .3);
+    bgTex.needsUpdate = true;
+  }
+  paintBG(0);
+  const bgPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(34, 21),
+    new THREE.MeshBasicMaterial({ map: bgTex })
+  );
+  bgPlane.position.set(0, 0, -7);
+  scene.add(bgPlane);
+
+  /* ---- 스튜디오 라이트박스 → PMREM 환경 반사 ---- */
+  const env = new THREE.Scene();
+  const panel = (color, w, h, x, y, z, ry = 0, rx = 0, k = 1) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(k) }));
+    m.position.set(x, y, z); m.rotation.set(rx, ry, 0); env.add(m);
+  };
+  panel(0xffffff, 14, 14, 0, 9, 0, 0, Math.PI / 2, 3.2);
+  panel(0xffc9b0, 16, 12, -9, 1, 2, Math.PI / 2.4, 0, 1.8);
+  panel(0xff6f95, 16, 12, 9, 0, 2, -Math.PI / 2.4, 0, 1.5);
+  panel(0xfff1e2, 12, 8, 0, 0, -9, 0, 0, 1);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(env, .08).texture;
+
+  /* ---- 라이트: 소프트 키 + 면광원 필 ---- */
+  const key = new THREE.DirectionalLight(0xfff4ec, 2.2);
+  key.position.set(3.5, 6, 4);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.radius = 12;
+  key.shadow.camera.near = 1; key.shadow.camera.far = 22;
+  key.shadow.camera.left = key.shadow.camera.bottom = -5;
+  key.shadow.camera.right = key.shadow.camera.top = 5;
+  key.shadow.bias = -.0004;
+  scene.add(key);
+  const warmFill = new THREE.RectAreaLight(0xffd9b8, 2.6, 7, 7);
+  warmFill.position.set(5.5, 3, 4.5); warmFill.lookAt(1.55, 0, 0);
+  scene.add(warmFill);
+  const pinkFill = new THREE.RectAreaLight(0xff6f95, 2.2, 7, 7);
+  pinkFill.position.set(-5, .5, 3.5); pinkFill.lookAt(1.55, 0, 0);
+  scene.add(pinkFill);
+
+  /* ---- 라운드 엣지 원판 (lathe 프로파일) ---- */
+  function discGeometry(r, h, f) {
+    const pts = [];
+    pts.push(new THREE.Vector2(0.001, -h));
+    pts.push(new THREE.Vector2(r - f, -h));
+    for (let a = 0; a <= 7; a++) { // 아래 모서리 필렛
+      const th = -Math.PI / 2 + (a / 7) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(r - f + f * Math.cos(th), -h + f + f * Math.sin(th)));
+    }
+    for (let a = 0; a <= 7; a++) { // 위 모서리 필렛
+      const th = (a / 7) * (Math.PI / 2);
+      pts.push(new THREE.Vector2(r - f + f * Math.cos(th), h - f + f * Math.sin(th)));
+    }
+    pts.push(new THREE.Vector2(0.001, h));
+    return new THREE.LatheGeometry(pts, 140);
+  }
+  const geo = discGeometry(1.18, .0375, .022);
+
+  const group = new THREE.Group();
+  const N = 14;
+  const topCol = new THREE.Color('#ffc3b0'), botCol = new THREE.Color('#ee5679');
+  const discs = [];
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1);
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: botCol.clone().lerp(topCol, t),
+      roughness: .38, metalness: 0,
+      clearcoat: .5, clearcoatRoughness: .32,
+      sheen: .35, sheenColor: new THREE.Color('#ffe0d2'),
+      envMapIntensity: 1.1,
+    });
+    const d = new THREE.Mesh(geo, mat);
+    d.castShadow = d.receiveShadow = true;
+    d.userData.baseY = -1.55 + i * .21;
+    if (i < 4) { // 아래 4장 슬링키 퍼짐
+      d.userData.tilt = (4 - i) * .16;
+      d.userData.baseY -= (4 - i) * .07;
+      d.position.z = (4 - i) * .12;
+    } else d.userData.tilt = 0;
+    d.userData.phase = i * .55;
+    group.add(d); discs.push(d);
+  }
+  group.position.x = 1.55;
+  group.rotation.z = -.1;
+  scene.add(group);
+
+  /* ---- 후처리: DOF + 블룸 + 출력 ---- */
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bokeh = new BokehPass(scene, camera, { focus: 9.6, aperture: .00032, maxblur: .0075 });
+  composer.addPass(bokeh);
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1024, 1024), .16, .75, .82));
+  composer.addPass(new OutputPass());
+
+  function resize() {
+    const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
+    renderer.setSize(w, h, false);
+    composer.setSize(w, h);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    group.position.x = w < 760 ? .2 : 1.55;
+  }
+  resize();
+  addEventListener('resize', resize);
+
+  /* ---- 모션: 느린 회전 + 관성 패럴랙스 ---- */
+  let mx = 0, my = 0, smx = 0, smy = 0;
+  addEventListener('pointermove', e => {
+    mx = (e.clientX / innerWidth - .5) * 2;
+    my = (e.clientY / innerHeight - .5) * 2;
+  });
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clock = new THREE.Clock();
+  function frame() {
+    const t = clock.getElapsedTime();
+    smx += (mx - smx) * .04; smy += (my - smy) * .04;
+    paintBG(t);
+    group.rotation.y = t * .25;
+    group.rotation.x = .05 + smy * .06;
+    group.rotation.z = -.1 + smx * .05;
+    camera.position.x = smx * .25;
+    camera.position.y = .35 - smy * .15;
+    camera.lookAt(group.position.x, 0, 0);
+    discs.forEach(d => {
+      d.position.y = d.userData.baseY + Math.sin(t * 1.1 + d.userData.phase) * .038;
+      d.rotation.x = d.userData.tilt * (1 + Math.sin(t * .7 + d.userData.phase) * .15);
+    });
+    composer.render();
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  frame();
+  if (reduce) composer.render();
+} catch (e) {
+  /* WebGL 불가 환경: 캔버스 숨기고 CSS 그라데이션 폴백 */
+  canvas.style.display = 'none';
+  console.warn('3D disabled:', e);
+}
+} /* SPLINE_URL 분기 닫기 */
+</script>
+</body>
+</html>
