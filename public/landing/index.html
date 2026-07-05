@@ -156,17 +156,70 @@ input{font-family:inherit}
 @keyframes bounceY{0%,100%{transform:translateY(-2px)}50%{transform:translateY(3px)}}
 
 /* ---------- walkthrough (orange pin) ---------- */
-.walkthrough{background:var(--orange);color:#fff;position:relative}
-.wt-pin{height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.walkthrough{background:#120F17;color:#fff;position:relative;overflow:hidden}
+.wt-pin{height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1}
 .wt-heading{position:absolute;top:clamp(76px,12vh,120px);left:0;right:0;text-align:center;padding:0 24px}
 .wt-heading .line{font-size:clamp(30px,4.6vw,64px);font-weight:500;line-height:1.05;letter-spacing:.01em;position:relative;height:1.2em}
 .wt-heading .line span{position:absolute;left:0;right:0;opacity:0;transform:translateY(24px)}
 .wt-sub{margin-top:14px;font-size:15px;letter-spacing:.3px;opacity:.75;font-weight:450}
 /* phone */
-.phone{width:min(320px,72vw);aspect-ratio:320/650;background:#fff;border-radius:44px;box-shadow:0 40px 90px rgba(54,8,2,.35);padding:12px;position:relative;margin-top:clamp(20px,4vh,44px)}
-.phone::before{content:'';position:absolute;top:22px;left:50%;transform:translateX(-50%);width:96px;height:26px;border-radius:14px;background:#f3efee;z-index:3}
-.phone .screen-stack{position:absolute;inset:12px;border-radius:34px;overflow:hidden;background:#fff}
-.screen{position:absolute;inset:0;padding:64px 20px 20px;opacity:0;transform:translateY(14px) scale(.98);transition:opacity .5s var(--ease),transform .5s var(--ease);display:flex;flex-direction:column;color:var(--ink)}
+/* ---- DotField 배경 레이어 ---- */
+.wt-dots{position:absolute;inset:0;z-index:0;pointer-events:none}
+.wt-dots canvas,.wt-dots svg{position:absolute;inset:0;width:100%;height:100%}
+/* ---- 브라우저 목업 (웹 서비스 미리보기) ---- */
+.browser{width:min(880px,90vw);border-radius:18px;overflow:hidden;background:#191320;border:1px solid rgba(255,255,255,.13);box-shadow:0 60px 130px rgba(0,0,0,.6),0 0 0 1px rgba(180,151,207,.06);margin-top:clamp(16px,3vh,40px)}
+.browser .chrome{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.browser .dots{display:flex;gap:6px}
+.browser .dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.14)}
+.browser .url{flex:0 1 300px;margin:0 auto;background:rgba(255,255,255,.07);border-radius:8px;padding:4.5px 14px;font-size:10.5px;color:rgba(255,255,255,.55);text-align:center;letter-spacing:.4px;transition:color .4s}
+.browser .app{display:flex;height:clamp(330px,47vh,440px)}
+.mini-side{width:146px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.07);padding:13px 10px;display:flex;flex-direction:column;gap:5px}
+.mini-side .logo{font-weight:700;font-size:12px;color:#fff;margin:0 0 8px 5px;letter-spacing:.2px}
+.mini-side .newbtn{background:var(--orange);color:#fff;font-size:9.5px;font-weight:600;text-align:center;border-radius:8px;padding:6.5px;margin-bottom:6px;letter-spacing:.3px}
+.mini-side .cap{font-size:8px;letter-spacing:.14em;color:rgba(255,255,255,.3);text-transform:uppercase;margin:9px 0 3px 5px}
+.mini-side .mrow{display:flex;align-items:center;gap:7px;padding:6.5px 8px;border-radius:8px;border:1px solid transparent}
+.mini-side .mrow.on{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.07)}
+.mini-side .mrow .ic{width:11px;height:11px;border-radius:3.5px;background:rgba(255,255,255,.28);flex-shrink:0}
+.mini-side .mrow.on .ic{background:var(--orange)}
+.mini-side .mrow .lb{height:6px;border-radius:3px;background:rgba(255,255,255,.22);flex:1}
+.mini-side .mrow.on .lb{background:rgba(255,255,255,.5)}
+.mini-side .mrow .fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.mini-side .srow .sdot{width:5px;height:5px;border-radius:50%;background:transparent;flex-shrink:0;transition:background .4s}
+.browser[data-step="3"] .srow1 .sdot{background:#F59E0B;animation:wtblink 1s ease-in-out infinite}
+.browser[data-step="4"] .srow1 .sdot{background:#F59E0B;animation:none}
+@keyframes wtblink{0%,100%{opacity:1}50%{opacity:.25}}
+.browser .stage{flex:1;position:relative;background:#FAF9F6;overflow:hidden}
+.mini-modal{max-width:360px;margin:auto;background:#fff;border:1px solid #E9E4DD;border-radius:16px;padding:18px;box-shadow:0 18px 44px rgba(28,25,23,.13)}
+.mini-modal .mm-title{font-size:13px;font-weight:700;color:#1C1917;letter-spacing:-.01em;margin-bottom:12px}
+.mini-page{max-width:420px;margin:auto;width:100%}
+.mini-page .mm-title{font-size:13px;font-weight:700;color:#1C1917;margin-bottom:12px}
+.wt-prog{height:6px;border-radius:3px;background:#EFEAE2;overflow:hidden;margin:12px 0 6px}
+.wt-prog i{display:block;height:100%;width:72%;border-radius:3px;background:linear-gradient(90deg,#F59E0B,#C2410C)}
+.wt-prog-lb{font-size:10px;color:#797067;text-align:right}
+.mini-study{display:flex;gap:9px;height:calc(100% - 36px)}
+.ms-col{background:#fff;border:1px solid #E9E4DD;border-radius:12px;padding:10px;overflow:hidden}
+.ms-slides{width:25%}.ms-note{flex:1}.ms-chat{width:27%}
+.ms-h{font-size:8.5px;font-weight:700;letter-spacing:.1em;color:#A8A29E;text-transform:uppercase;margin-bottom:8px}
+.ms-thumb{border:1px solid #EDE8E0;border-radius:8px;padding:7px 8px;margin-bottom:7px}
+.ms-thumb.cur{border-color:var(--orange);box-shadow:0 0 0 3px rgba(247,59,32,.1)}
+.ms-thumb .tl1{height:5px;border-radius:3px;background:#E5DFD4;width:64%;margin-bottom:5px}
+.ms-thumb .tl2{height:4px;border-radius:2px;background:#F1ECE2;width:88%}
+.ms-note .nh{height:8px;border-radius:4px;background:#D9D2C5;width:55%;margin-bottom:9px}
+.ms-note .ln{height:5px;border-radius:3px;background:#F1ECE2;margin-bottom:6px}
+.ms-note .ln.hl{background:#FDE68A;width:70%!important}
+.ms-note .frm{font-size:10.5px;background:#FCFAF5;border-left:2px solid #F59E0B;border-radius:0 7px 7px 0;padding:6px 9px;color:#57534E;font-family:ui-monospace,monospace;margin:9px 0}
+.ms-bub{border-radius:10px;padding:6px 8px;font-size:9.5px;line-height:1.5;margin-bottom:6px}
+.ms-bub.q{background:var(--orange);color:#fff;border-bottom-right-radius:3px;margin-left:14px}
+.ms-bub.a{background:#F5F1EA;color:#57534E;border-bottom-left-radius:3px;margin-right:10px}
+.ms-bub .cite{display:inline-block;background:#fff;border:1px solid #F0E3CE;color:#92400E;border-radius:9999px;padding:1px 7px;font-size:8.5px;font-weight:700;margin-top:4px}
+.mini-tl{display:flex;align-items:center;gap:9px;background:#17130F;border-radius:10px;margin-top:9px;padding:8px 11px}
+.mini-tl .play{width:17px;height:17px;border-radius:50%;background:var(--orange);flex-shrink:0;display:grid;place-items:center;font-size:7px;color:#fff}
+.mini-tl .tlt{font-size:8.5px;color:rgba(255,255,255,.7);flex-shrink:0;font-variant-numeric:tabular-nums}
+.mini-tl .segs{display:flex;gap:2px;flex:1}
+.mini-tl .segs i{height:6px;border-radius:2px;background:rgba(255,255,255,.16);flex:1}
+.mini-tl .segs i.done{background:rgba(245,158,11,.4)}
+.mini-tl .segs i.cur{background:#F59E0B}
+.screen{position:absolute;inset:0;padding:18px 22px;opacity:0;transform:translateY(14px) scale(.98);transition:opacity .5s var(--ease),transform .5s var(--ease);display:flex;flex-direction:column;color:var(--ink)}
 .screen.on{opacity:1;transform:none}
 .scr-title{font-size:17px;font-weight:500;letter-spacing:.2px;margin-bottom:14px}
 .scr-note{font-size:11.5px;color:var(--ash);letter-spacing:.36px;margin-top:auto}
@@ -395,6 +448,11 @@ input{font-family:inherit}
 
 <!-- ================= WALKTHROUGH (pinned) ================= -->
 <section class="walkthrough" id="walkthrough">
+  <div class="wt-dots" id="wt-dots">
+    <canvas id="wt-dot-canvas"></canvas>
+    <svg><defs><radialGradient id="wt-glow-grad"><stop offset="0%" stop-color="#120F17"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
+      <circle id="wt-glow" cx="-9999" cy="-9999" r="160" fill="url(#wt-glow-grad)" style="opacity:0"/></svg>
+  </div>
   <div class="wt-pin" id="wt-pin">
     <div class="wt-heading">
       <div class="line" id="wt-line">
@@ -407,54 +465,86 @@ input{font-family:inherit}
       <div class="wt-sub" id="wt-sub">PDF·PPT 슬라이드가 강의의 뼈대가 됩니다</div>
     </div>
 
-    <div class="phone">
-      <div class="screen-stack">
+    <div class="browser" id="wt-browser" data-step="0">
+      <div class="chrome"><span class="dots"><i></i><i></i><i></i></span><span class="url" id="wt-url">lectra.app/upload</span><span style="width:45px"></span></div>
+      <div class="app">
+        <aside class="mini-side">
+          <div class="logo">Lectra</div>
+          <div class="newbtn">+ New lecture</div>
+          <div class="cap">Library</div>
+          <div class="mrow on"><span class="ic"></span><span class="lb" style="max-width:52px"></span></div>
+          <div class="cap">Subjects</div>
+          <div class="mrow srow srow1"><span class="fdot" style="background:#DF7A55"></span><span class="lb" style="max-width:64px"></span><span class="sdot"></span></div>
+          <div class="mrow srow"><span class="fdot" style="background:#E0A23E"></span><span class="lb" style="max-width:46px"></span><span class="sdot"></span></div>
+          <div class="mrow srow"><span class="fdot" style="background:#A99677"></span><span class="lb" style="max-width:56px"></span><span class="sdot"></span></div>
+        </aside>
+        <div class="stage">
         <!-- 01 Slides -->
         <div class="screen on" data-step="0">
-          <div class="scr-title">Upload slides</div>
-          <div class="drop-tile ok"><span>week11_hashing.pdf<span class="sm">4.2 MB — 검증 통과</span></span><b style="color:var(--emerald)">✓</b></div>
-          <div class="drop-tile">+ PPT / PDF<span class="sm">최대 50MB</span></div>
-          <div class="scr-note">제목은 파일명에서 자동으로 채워져요</div>
+          <div class="mini-modal">
+            <div class="mm-title">New lecture</div>
+            <div class="drop-tile ok"><span>lecture_slides.pdf<span class="sm">4.2 MB — 검증 통과</span></span><b style="color:var(--emerald)">✓</b></div>
+            <div class="drop-tile">+ PDF / PPT<span class="sm">슬라이드가 노트의 뼈대가 됩니다</span></div>
+          </div>
         </div>
         <!-- 02 Audio -->
         <div class="screen" data-step="1">
-          <div class="scr-title">Add the recording</div>
-          <div class="wave"><i style="--h:60%"></i><i style="--h:85%"></i><i style="--h:45%"></i><i style="--h:95%"></i><i style="--h:55%"></i><i style="--h:75%"></i><i style="--h:40%"></i><i style="--h:90%"></i><i style="--h:65%"></i><i style="--h:80%"></i><i style="--h:50%"></i><i style="--h:70%"></i></div>
-          <div class="drop-tile ok"><span>week11_lecture.mp3<span class="sm">58 MB · 61:30</span></span><b style="color:var(--cobalt)">✓</b></div>
-          <div class="scr-note">.mp3 .wav .m4a — 녹음만 (영상 X)</div>
+          <div class="mini-modal">
+            <div class="mm-title">Add the recording</div>
+            <div class="wave"><i style="--h:60%"></i><i style="--h:85%"></i><i style="--h:45%"></i><i style="--h:95%"></i><i style="--h:55%"></i><i style="--h:75%"></i><i style="--h:40%"></i><i style="--h:90%"></i><i style="--h:65%"></i><i style="--h:80%"></i><i style="--h:50%"></i><i style="--h:70%"></i></div>
+            <div class="drop-tile ok"><span>lecture_recording.mp3<span class="sm">58 MB · 61:30</span></span><b style="color:var(--cobalt)">✓</b></div>
+          </div>
         </div>
         <!-- 03 Photos -->
         <div class="screen" data-step="2">
-          <div class="scr-title">Photos, auto-placed</div>
-          <div class="photo-grid">
-            <div class="photo-cell">📷<span class="stamp">23:40</span></div>
-            <div class="photo-cell">📷<span class="stamp">36:50</span></div>
-            <div class="photo-cell">📷<span class="stamp">48:12</span></div>
-            <div class="photo-cell" style="border:1.5px dashed var(--sand);background:none;color:var(--sand)">＋</div>
+          <div class="mini-modal">
+            <div class="mm-title">Photos, auto-placed</div>
+            <div class="photo-grid">
+              <div class="photo-cell">📷<span class="stamp">23:40</span></div>
+              <div class="photo-cell">📷<span class="stamp">36:50</span></div>
+              <div class="photo-cell">📷<span class="stamp">48:12</span></div>
+              <div class="photo-cell" style="border:1.5px dashed var(--sand);background:none;color:var(--sand)">＋</div>
+            </div>
           </div>
-          <div class="scr-note">촬영 시각(EXIF)으로 타임라인·노트의 정확한 위치에 배치</div>
         </div>
-        <!-- 04 Processing -->
+        <!-- 04 Aligning -->
         <div class="screen" data-step="3">
-          <div class="scr-title">Aligning…</div>
-          <div class="pipe-row done"><span class="n">✓</span>업로드 수신<span class="pct">done</span></div>
-          <div class="pipe-row done"><span class="n">✓</span>STT 음성 인식<span class="pct">done</span></div>
-          <div class="pipe-row done"><span class="n">✓</span>슬라이드 텍스트 추출<span class="pct">done</span></div>
-          <div class="pipe-row cur"><span class="n">4</span>슬라이드-스크립트 정렬<span class="pct">72%</span></div>
-          <div class="pipe-row"><span class="n">5</span>AI 노트 생성<span class="pct">대기</span></div>
-          <div class="scr-note">페이지를 떠나도 처리는 계속돼요</div>
+          <div class="mini-page">
+            <div class="mm-title">Aligning…</div>
+            <div class="pipe-row done"><span class="n">✓</span>업로드 수신<span class="pct">done</span></div>
+            <div class="pipe-row done"><span class="n">✓</span>STT 음성 인식<span class="pct">done</span></div>
+            <div class="pipe-row done"><span class="n">✓</span>슬라이드 텍스트 추출<span class="pct">done</span></div>
+            <div class="pipe-row cur"><span class="n">4</span>슬라이드-스크립트 정렬<span class="pct">72%</span></div>
+            <div class="pipe-row"><span class="n">5</span>AI 노트 생성<span class="pct">대기</span></div>
+            <div class="wt-prog"><i></i></div>
+            <div class="wt-prog-lb">Overall 72% — 페이지를 떠나도 계속돼요</div>
+          </div>
         </div>
-        <!-- 05 Ready -->
+        <!-- 05 Workspace -->
         <div class="screen" data-step="4">
-          <div class="scr-title">Ready to study</div>
-          <div class="ready-slide"><div class="st">S11 — Insertion overview</div><div class="ln" style="width:75%"></div><div class="ln" style="width:50%"></div></div>
-          <div class="ready-slide cur"><div class="st">S12 — B-Tree insertion</div><div class="ln" style="width:65%"></div><div class="ln" style="width:80%"></div></div>
-          <div class="karaoke on"><span class="ts">23:14</span>The median moves up to the parent…</div>
-          <div class="karaoke"><span class="ts">23:26</span>Let's see a split example…</div>
-          <div class="scr-note">문장 클릭 → 슬라이드·오디오 동시 점프</div>
+          <div class="mini-study">
+            <div class="ms-col ms-slides"><div class="ms-h">Slides</div>
+              <div class="ms-thumb"><div class="tl1"></div><div class="tl2"></div></div>
+              <div class="ms-thumb cur"><div class="tl1" style="width:78%"></div><div class="tl2"></div></div>
+              <div class="ms-thumb"><div class="tl1" style="width:52%"></div><div class="tl2" style="width:70%"></div></div>
+            </div>
+            <div class="ms-col ms-note"><div class="ms-h">Note</div>
+              <div class="nh"></div>
+              <div class="ln" style="width:94%"></div><div class="ln" style="width:80%"></div>
+              <div class="ln hl"></div>
+              <div class="frm">gˢ = yᶜ·β  →  O(log n)</div>
+              <div class="ln" style="width:86%"></div><div class="ln" style="width:58%"></div>
+            </div>
+            <div class="ms-col ms-chat"><div class="ms-h">Ask</div>
+              <div class="ms-bub q">왜 중앙값으로 분할해?</div>
+              <div class="ms-bub a">양쪽 노드가 반씩 차서 삽입 여유가 균등해져요.<br><span class="cite">S12 · 23:14</span></div>
+            </div>
+          </div>
+          <div class="mini-tl"><span class="play">▶</span><span class="tlt">23:14 / 61:30</span><span class="segs"><i class="done"></i><i class="done"></i><i class="done"></i><i class="cur"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
         </div>
-      </div>
-    </div>
+        </div><!-- /stage -->
+      </div><!-- /app -->
+    </div><!-- /browser -->
 
     <div class="stepper" id="stepper">
       <button class="step-btn active" data-i="0"><span class="index">01</span><span class="label">Slides</span><span class="bar"><i></i></span></button>
@@ -856,7 +946,12 @@ document.getElementById('dock-home').onclick = () => lenis.scrollTo(0, { duratio
   const bars = document.querySelectorAll('.step-btn .bar i');
   let cur = -1;
 
+  const WT_URLS = ['lectra.app/upload', 'lectra.app/upload', 'lectra.app/upload', 'lectra.app/lecture/new', 'lectra.app/lecture/new'];
   function setStep(i) {
+    const br = document.getElementById('wt-browser');
+    if (br) br.setAttribute('data-step', i);
+    const u = document.getElementById('wt-url');
+    if (u) u.textContent = WT_URLS[i] || WT_URLS[0];
     if (i === cur) return;
     cur = i;
     screens.forEach(s => s.classList.toggle('on', +s.dataset.step === i));
@@ -1239,6 +1334,96 @@ if (useRive) {
   console.warn('3D disabled:', e);
 }
 } /* SPLINE_URL 분기 닫기 */
+</script>
+<script>
+/* DotField (react-bits) 바닐라 포팅 — walkthrough 배경.
+   설정: dotRadius 1.5 / spacing 14 / bulge 67 / glow 160 / cursor 300 / force .1
+   gradient #ffffff → #B497CF / glow #120F17 · 섹션 밖이면 rAF 정지 */
+(() => {
+  const host = document.getElementById('wt-dots');
+  const canvas = document.getElementById('wt-dot-canvas');
+  const glowEl = document.getElementById('wt-glow');
+  if (!host || !canvas) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const CFG = { dotRadius: 1.5, dotSpacing: 14, bulgeStrength: 67, cursorRadius: 300,
+                gradientFrom: '#ffffff', gradientTo: '#B497CF' };
+  const TWO_PI = Math.PI * 2;
+  const ctx = canvas.getContext('2d', { alpha: true });
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  let dots = [], W = 0, H = 0, raf = null, frame = 0;
+  const m = { x: -9999, y: -9999, px: -9999, py: -9999, speed: 0 };
+  let engagement = 0, glowOp = 0;
+
+  function build() {
+    const r = host.getBoundingClientRect();
+    W = r.width; H = r.height;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const step = CFG.dotRadius + CFG.dotSpacing;
+    const cols = Math.floor(W / step), rows = Math.floor(H / step);
+    const padX = (W % step) / 2, padY = (H % step) / 2;
+    dots = [];
+    for (let row = 0; row < rows; row++)
+      for (let col = 0; col < cols; col++) {
+        const ax = padX + col * step + step / 2, ay = padY + row * step + step / 2;
+        dots.push({ ax, ay, sx: ax, sy: ay });
+      }
+  }
+
+  addEventListener('mousemove', (e) => {
+    const r = host.getBoundingClientRect();
+    m.x = e.clientX - r.left; m.y = e.clientY - r.top;
+  }, { passive: true });
+
+  setInterval(() => {
+    const dx = m.px - m.x, dy = m.py - m.y;
+    m.speed += (Math.hypot(dx, dy) - m.speed) * 0.5;
+    if (m.speed < 0.001) m.speed = 0;
+    m.px = m.x; m.py = m.y;
+  }, 20);
+
+  function tick() {
+    frame++;
+    engagement += (Math.min(m.speed / 5, 1) - engagement) * 0.06;
+    glowOp += (engagement - glowOp) * 0.08;
+    if (glowEl) { glowEl.setAttribute('cx', m.x); glowEl.setAttribute('cy', m.y); glowEl.style.opacity = glowOp; }
+    ctx.clearRect(0, 0, W, H);
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, CFG.gradientFrom); grad.addColorStop(1, CFG.gradientTo);
+    ctx.fillStyle = grad;
+    ctx.globalAlpha = 0.55;
+    const cr = CFG.cursorRadius, crSq = cr * cr, rad = CFG.dotRadius / 2;
+    ctx.beginPath();
+    for (let i = 0; i < dots.length; i++) {
+      const d = dots[i];
+      const dx = m.x - d.ax, dy = m.y - d.ay, distSq = dx * dx + dy * dy;
+      if (distSq < crSq && engagement > 0.01) {
+        const dist = Math.sqrt(distSq), t = 1 - dist / cr;
+        const push = t * t * CFG.bulgeStrength * engagement;
+        const ang = Math.atan2(dy, dx);
+        d.sx += (d.ax - Math.cos(ang) * push - d.sx) * 0.15;
+        d.sy += (d.ay - Math.sin(ang) * push - d.sy) * 0.15;
+      } else {
+        d.sx += (d.ax - d.sx) * 0.1;
+        d.sy += (d.ay - d.sy) * 0.1;
+      }
+      ctx.moveTo(d.sx + rad, d.sy);
+      ctx.arc(d.sx, d.sy, rad, 0, TWO_PI);
+    }
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    raf = requestAnimationFrame(tick);
+  }
+
+  /* 섹션이 보일 때만 렌더 (성능) */
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting) { if (!raf) { build(); raf = requestAnimationFrame(tick); } }
+    else if (raf) { cancelAnimationFrame(raf); raf = null; }
+  }, { rootMargin: '80px' }).observe(host);
+
+  addEventListener('resize', () => { if (raf) build(); });
+})();
 </script>
 </body>
 </html>
