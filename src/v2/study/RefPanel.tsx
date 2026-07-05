@@ -6,13 +6,14 @@
    밝은 톤: 흰 배경 + 라이트 세그먼트 탭
    ================================================================ */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, Check, Languages, Loader2, MessageSquare, Send, Sparkles } from "lucide-react";
+import { BookOpen, Check, Image as ImageIcon, Languages, Loader2, MessageSquare, Send, Sparkles } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../app/components/ui/dialog";
 import { ragQuickAction } from "../api";
-import type { QAMessage, StudyData } from "../types";
+import type { Photo, QAMessage, StudyData } from "../types";
 import { fmtTime } from "../types";
 import type { Playback } from "./playback";
 
-export type RefTab = "summary" | "translate" | "chat";
+export type RefTab = "summary" | "translate" | "photos" | "chat";
 
 interface Props {
   data: StudyData;
@@ -27,11 +28,14 @@ interface Props {
   onQaDraft: (v: string) => void;
   onSendQA: (q: string) => void;
   onPushQA: (m: QAMessage) => void;
+  /** 노트에서 판서 언급을 눌렀을 때 포커스할 사진 */
+  focusPhotoId: string | null;
 }
 
 const TABS: { key: RefTab; label: string; icon: React.ReactNode }[] = [
   { key: "summary", label: "요약", icon: <Sparkles size={12} /> },
   { key: "translate", label: "번역", icon: <Languages size={12} /> },
+  { key: "photos", label: "사진", icon: <ImageIcon size={12} /> },
   { key: "chat", label: "챗봇", icon: <MessageSquare size={12} /> },
 ];
 
@@ -55,10 +59,19 @@ function CitationChips({ citations, pb, data }: { citations?: { slide: number; t
 }
 
 export default function RefPanel(props: Props) {
-  const { data, pb, activeChapter, onSelectChapter, tab, onTab, qaMessages, qaPending, qaDraft, onQaDraft, onSendQA, onPushQA } = props;
+  const { data, pb, activeChapter, onSelectChapter, tab, onTab, qaMessages, qaPending, qaDraft, onQaDraft, onSendQA, onPushQA, focusPhotoId } = props;
   const [quickPending, setQuickPending] = useState(false);
   const [targetLang, setTargetLang] = useState("English");
+  const [photoOpen, setPhotoOpen] = useState<Photo | null>(null);
   const qaEndRef = useRef<HTMLDivElement>(null);
+  const focusRef = useRef<HTMLButtonElement>(null);
+
+  /* 노트에서 넘어온 사진 포커스 → 스크롤 */
+  useEffect(() => {
+    if (tab === "photos" && focusPhotoId) {
+      focusRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }, [tab, focusPhotoId]);
 
   useEffect(() => {
     if (tab === "chat") qaEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -194,6 +207,47 @@ export default function RefPanel(props: Props) {
         </div>
       )}
 
+
+      {/* ===== 사진 (업로드한 판서/필기 — 슬라이드 순 정렬) ===== */}
+      {tab === "photos" && (
+        <div className="ws-scroll flex-1 overflow-y-auto px-3.5 py-3">
+          <div className="px-1 text-[12px] font-bold text-card-foreground">📷 업로드한 사진 <span className="ml-1 font-normal text-muted-foreground">{data.photos.length}장 · 슬라이드 순</span></div>
+          <div className="mt-2 space-y-3">
+            {[...data.photos].sort((a, b) => a.slide - b.slide).map((ph) => {
+              const focused = ph.id === focusPhotoId;
+              return (
+                <button
+                  key={ph.id}
+                  ref={focused ? focusRef : undefined}
+                  onClick={() => setPhotoOpen(ph)}
+                  className={`block w-full overflow-hidden rounded-xl border bg-white text-left transition-all ${
+                    focused ? "border-[var(--ember)] shadow-[0_0_0_3px_rgba(245,158,11,0.25)]" : "border-border hover:border-[var(--ember)]/60"
+                  }`}
+                >
+                  <div className="flex h-32 items-center justify-center bg-gradient-to-br from-[#F3EDE2] to-[#E9E0D0] text-[26px]">📷</div>
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-card-foreground">{ph.label}</span>
+                    <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">S{ph.slide}</span>
+                    {ph.t != null && (
+                      <span
+                        onClick={(e) => { e.stopPropagation(); pb.seek(ph.t!); }}
+                        className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground hover:bg-primary hover:text-white"
+                        title="이 시점으로 점프"
+                      >
+                        {fmtTime(ph.t)}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 px-1 text-[10px] leading-relaxed text-muted-foreground/80">
+            촬영 시각(EXIF)으로 슬라이드에 자동 매칭됩니다 · 클릭하면 원본 크게 보기
+          </p>
+        </div>
+      )}
+
       {/* ===== 챗봇 ===== */}
       {tab === "chat" && (
         <div className="flex min-h-0 flex-1 flex-col">
@@ -247,6 +301,17 @@ export default function RefPanel(props: Props) {
           </div>
         </div>
       )}
+      {/* 사진 원본 크게 */}
+      <Dialog open={!!photoOpen} onOpenChange={(o) => !o && setPhotoOpen(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-[15px]">{photoOpen?.label} — S{photoOpen?.slide}{photoOpen?.t != null ? ` · ${fmtTime(photoOpen.t)}` : ""}</DialogTitle>
+          </DialogHeader>
+          <div className="flex h-80 items-center justify-center rounded-xl bg-gradient-to-br from-[#F3EDE2] to-[#E5DBC8] text-[13px] text-muted-foreground">
+            판서 사진 원본 (실연동 시 업로드 이미지)
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

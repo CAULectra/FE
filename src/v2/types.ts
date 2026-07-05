@@ -66,6 +66,7 @@ export type NoteBlock =
   | { kind: "bullets"; items: string[] }
   | { kind: "code"; filename: string; code: string }
   | { kind: "table"; headers: string[]; rows: string[][] }
+  | { kind: "callout"; emoji: string; text: string }
   | { kind: "math"; latex: string; caption?: string }
   | { kind: "viz"; viz: "schnorr-flow"; caption?: string }
   | { kind: "handwriting"; slide: number; t?: number; photoId: string; caption: string }
