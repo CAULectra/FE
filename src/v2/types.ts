@@ -49,6 +49,7 @@ export interface Slide {
   startSec: number;          // 정렬: 이 슬라이드 구간 시작
   endSec: number;
   dwellProf?: number;        // 체류시간(교수, 초) — 히트맵용
+  img?: string;              // 슬라이드 렌더 이미지 경로 (실연동: PDF 페이지 렌더)
   isBoard?: boolean;
 }
 
@@ -59,11 +60,27 @@ export interface ScriptSentence {
   text: string;
 }
 
+/** AI 정리본 노트 블록 — 챕터 본문을 구성 */
 export type NoteBlock =
-  | { kind: "heading"; slide: number; t?: number; text: string }
-  | { kind: "bullet"; slide: number; text: string }
-  | { kind: "photo"; slide: number; t: number; photoId: string; caption: string }
-  | { kind: "memo"; slide: number; text: string };
+  | { kind: "section"; title: string; body: string }
+  | { kind: "bullets"; items: string[] }
+  | { kind: "code"; filename: string; code: string }
+  | { kind: "table"; headers: string[]; rows: string[][] }
+  | { kind: "handwriting"; slide: number; t?: number; photoId: string; caption: string }
+  | { kind: "audio"; slide: number; t: number; text: string };
+
+/** AI 정리본은 챕터 단위 (Figma Make 버전 구조), 블록은 S#·시점에 앵커 */
+export interface Chapter {
+  idx: number;               // 0-base
+  title: string;             // "Chapter 1"
+  sub: string;               // 챕터 제목
+  pages: string;             // "1~4페이지"
+  slides: [number, number];  // 포함 슬라이드 범위 [start, end]
+  intro: string;
+  meta: string;              // "슬라이드 4장 · 판서 1장 · 녹음 12분 반영"
+  summary: string[];         // 핵심 요약 불릿
+  blocks: NoteBlock[];
+}
 
 export interface Photo {
   id: string;
@@ -83,24 +100,28 @@ export interface QAMessage {
   citations?: Citation[];
 }
 
-export interface TranslationSection {
-  id: string;
-  slide: number;
-  original: string;          // EN 원문
-  translated: string;        // KO 번역 (편집 가능)
-}
-
 export interface StudyData {
   lectureId: string;
+  courseName: string;        // "정보보호이론"
+  defaultSlide: number;      // 데모 진입 시 시작 슬라이드
   durationSec: number;
   slides: Slide[];
   script: ScriptSentence[];
-  notes: NoteBlock[];
+  chapters: Chapter[];
   photos: Photo[];
-  translations: TranslationSection[];
+  overall: string;           // 전체 강의자료 총 요약
+  /** 번역 탭 — 번역된 내용만 노출 (원문 병기 없음) */
+  chaptersEn: { title: string; summary: string[] }[];
+  overallEn: string;
 }
 
 export const fmtTime = (sec: number): string => {
   const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
   return `${m}:${String(s).padStart(2, "0")}`;
+};
+
+/** 현재 슬라이드가 속한 챕터 index */
+export const chapterOfSlide = (chapters: Chapter[], slideN: number): number => {
+  const i = chapters.findIndex((c) => slideN >= c.slides[0] && slideN <= c.slides[1]);
+  return i === -1 ? 0 : i;
 };

@@ -1,22 +1,23 @@
 /* ================================================================
    SlideStrip — 좌측 세로 슬라이드 (재생 따라 자동 스크롤)
-   히트맵: 바 길이·진하기 = 머문 시간 (소스: 교수/나/기출 토글)
+   슬라이드 = 실제 PDF 페이지 렌더 이미지 (public/slides/…)
+   챕터 구분선 + 체류시간 히트맵(교수/나/기출) + 동기화 상태
    ================================================================ */
-import { useEffect, useRef, useState } from "react";
-import type { Slide } from "../types";
+import { Fragment, useEffect, useRef } from "react";
+import type { Chapter, Slide } from "../types";
 import { fmtTime } from "../types";
 import type { Playback } from "./playback";
 
-type HeatSource = "off" | "prof" | "me" | "exam";
-const HEAT_LABEL: Record<Exclude<HeatSource, "off">, string> = { prof: "교수", me: "나", exam: "기출" };
+interface Props {
+  slides: Slide[];
+  chapters: Chapter[];
+  pb: Playback;
+  docMode: boolean;
+}
 
-export default function SlideStrip({ slides, pb, docMode }: { slides: Slide[]; pb: Playback; docMode: boolean }) {
-  const [heat, setHeat] = useState<HeatSource>("off");
-  const listRef = useRef<HTMLDivElement>(null);
+export default function SlideStrip({ slides, chapters, pb, docMode }: Props) {
   const activeRef = useRef<HTMLButtonElement>(null);
   const suppressScrollEvent = useRef(false);
-
-  const maxDwell = Math.max(...slides.map((s) => s.dwellProf ?? 0), 1);
 
   /* 동기화 ON: 활성 슬라이드로 자동 스크롤 */
   useEffect(() => {
@@ -28,25 +29,12 @@ export default function SlideStrip({ slides, pb, docMode }: { slides: Slide[]; p
   }, [pb.activeSlideN, pb.syncOn, docMode]);
 
   return (
-    <div className="flex h-full w-[300px] shrink-0 flex-col border-r border-border bg-[#F7F4F0]">
+    <div className="flex h-full w-[300px] shrink-0 flex-col border-r border-border bg-[#FAF8F5]">
       {/* 헤더 */}
-      <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
-        <span className="text-[12px] font-semibold text-card-foreground">
-          {docMode ? "슬라이드 (문서 모드)" : "슬라이드"}
-        </span>
-        <div className="flex items-center gap-1">
-          {(["prof", "me", "exam"] as const).map((k) => (
-            <button
-              key={k}
-              onClick={() => setHeat((h) => (h === k ? "off" : k))}
-              className={`rounded-full px-2 py-0.5 text-[10.5px] font-medium transition-colors ${
-                heat === k ? "bg-primary text-white" : "bg-white text-muted-foreground hover:bg-accent"
-              }`}
-              title="체류시간 히트맵 — 소스 전환"
-            >
-              {HEAT_LABEL[k]}
-            </button>
-          ))}
+      <div className="border-b border-border px-3.5 pb-2 pt-2.5">
+        <span className="text-[12px] font-semibold text-card-foreground">슬라이드</span>
+        <div className="mt-0.5 text-[10.5px] text-muted-foreground">
+          전체 {slides.length}페이지 · {chapters.length}챕터{docMode ? " · 문서 모드" : ""}
         </div>
       </div>
 
@@ -64,74 +52,52 @@ export default function SlideStrip({ slides, pb, docMode }: { slides: Slide[]; p
         </div>
       )}
 
-      {/* 슬라이드 목록 */}
+      {/* 슬라이드 목록 (챕터 구분선 포함) */}
       <div
-        ref={listRef}
         onWheel={() => { if (!suppressScrollEvent.current && !docMode) pb.breakSync(); }}
-        className="ws-scroll flex-1 space-y-2.5 overflow-y-auto px-3.5 py-2"
+        className="ws-scroll flex-1 space-y-2 overflow-y-auto px-3.5 py-2"
       >
         {slides.map((s) => {
           const active = s.n === pb.activeSlideN && !docMode;
-          const dwell = s.dwellProf ?? 0;
-          const isMax = dwell === maxDwell && heat !== "off";
+          const chapterHere = chapters.find((c) => c.slides[0] === s.n);
           return (
-            <button
-              key={s.n}
-              ref={active ? activeRef : undefined}
-              onClick={() => (docMode ? undefined : pb.seek(s.startSec + 0.5))}
-              className={`block w-full rounded-lg border text-left transition-all ${
-                active ? "border-primary shadow-[0_0_0_3px_rgba(194,65,12,0.12)]" : "border-border hover:border-primary/40"
-              } bg-white`}
-            >
-              {/* 슬라이드 렌더 플레이스홀더 */}
-              <div className="relative rounded-t-lg bg-gradient-to-br from-white to-[#F5F1EA] px-3 pb-8 pt-2.5" style={{ minHeight: s.n === pb.activeSlideN ? 118 : 74 }}>
-                <div className="flex items-center justify-between">
-                  <span className={`text-[11px] font-bold ${active ? "text-primary" : "text-muted-foreground"}`}>
-                    S{s.n}{s.isBoard ? " · 판서" : ""}
+            <Fragment key={s.n}>
+              {chapterHere && (
+                <div className="flex items-center gap-2 pb-0.5 pt-2 first:pt-0">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary">{chapterHere.title}</span>
+                  <span className="truncate text-[10px] text-muted-foreground">{chapterHere.sub}</span>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              )}
+              <button
+                ref={active ? activeRef : undefined}
+                onClick={() => (docMode ? undefined : pb.seek(s.startSec + 0.5))}
+                className={`group block w-full overflow-hidden rounded-lg border bg-white text-left transition-all ${
+                  active ? "border-primary shadow-[0_0_0_3px_rgba(194,65,12,0.13)]" : "border-border hover:border-primary/40"
+                }`}
+              >
+                {/* 실제 슬라이드 페이지 렌더 */}
+                <div className="relative">
+                  <img src={s.img} alt={`S${s.n} — ${s.title}`} loading="lazy" className="block w-full" draggable={false} />
+                  <span className={`absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[9.5px] font-bold ${
+                    active ? "bg-primary text-white" : "bg-black/55 text-white"
+                  }`}>
+                    S{s.n}
                   </span>
                   {active && (
-                    <span className="rounded-full bg-[#17130F] px-2 py-0.5 text-[10px] font-semibold text-white">
+                    <span className="absolute right-1.5 top-1.5 rounded-full bg-[#17130F]/90 px-2 py-0.5 text-[9.5px] font-semibold text-white">
                       현재 · {fmtTime(pb.currentTime)}
                     </span>
                   )}
                 </div>
-                <div className="mt-1 text-[12px] font-medium leading-snug text-card-foreground">{s.title}</div>
-                {active && (
-                  <>
-                    <div className="mt-2 h-1.5 w-4/5 rounded bg-[#EDE6DA]" />
-                    <div className="mt-1 h-1.5 w-3/5 rounded bg-[#EDE6DA]" />
-                    <div className="mt-1 h-1.5 w-2/3 rounded bg-[#F1ECE2]" />
-                  </>
-                )}
-                {/* 히트맵 바 */}
-                {heat !== "off" && (
-                  <div className="absolute bottom-2 left-3 right-3">
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#EFE9DF]">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${Math.round((dwell / maxDwell) * 100)}%`,
-                            background: `rgba(194, 65, 12, ${0.25 + 0.75 * (dwell / maxDwell)})`,
-                          }}
-                        />
-                      </div>
-                      <span className={`shrink-0 text-[9.5px] tabular-nums ${isMax ? "font-bold text-primary" : "text-muted-foreground"}`}>
-                        {Math.round(dwell / 60)}분{isMax ? " ★" : ""}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </button>
+              </button>
+            </Fragment>
           );
         })}
         <p className="px-1 pb-2 pt-1 text-[10px] leading-relaxed text-muted-foreground/80">
           {docMode
-            ? "녹음이 없는 강의 — 정렬 타임라인 비활성. 녹음을 추가하면 정렬·스크립트·타임라인이 생성됩니다."
-            : heat !== "off"
-              ? "바 길이·진하기 = 머문 시간. 오래 머문 슬라이드 = 시험 포인트"
-              : "휠 스크롤 = 수동 탐색 (동기화 일시 해제 → '재생 위치로' 버튼)"}
+            ? "녹음이 없는 강의 — 정렬 타임라인 비활성. 녹음을 추가하면 정렬·타임라인이 생성됩니다."
+            : "휠 스크롤 = 수동 탐색 (동기화 일시 해제 → '재생 위치로' 버튼)"}
         </p>
       </div>
     </div>
