@@ -29,7 +29,7 @@ export default function SlideStrip({ slides, chapters, pb, docMode }: Props) {
   }, [pb.activeSlideN, pb.syncOn, docMode]);
 
   return (
-    <div className="flex h-full w-[300px] shrink-0 flex-col border-r border-border bg-[#FAF8F5]">
+    <div className="flex h-full w-[360px] shrink-0 flex-col border-r border-border bg-[#FAF8F5]">
       {/* 헤더 */}
       <div className="border-b border-border px-3.5 pb-2 pt-2.5">
         <span className="text-[12px] font-semibold text-card-foreground">슬라이드</span>
@@ -44,11 +44,6 @@ export default function SlideStrip({ slides, chapters, pb, docMode }: Props) {
           <span className={pb.syncOn ? "font-semibold text-[#92400E]" : "text-muted-foreground"}>
             {pb.syncOn ? "동기화 ON — 재생 따라옴" : "동기화 일시 해제 (수동 탐색)"}
           </span>
-          {!pb.syncOn && (
-            <button onClick={pb.resync} className="rounded-full bg-[var(--ember)] px-2 py-0.5 font-semibold text-white hover:brightness-95">
-              재생 위치로
-            </button>
-          )}
         </div>
       )}
 

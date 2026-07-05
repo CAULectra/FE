@@ -102,9 +102,6 @@ export default function Timeline({ slides, photos, pb }: { slides: Slide[]; phot
           </div>
         </div>
       </div>
-      <p className="mt-1 text-center text-[10px] text-white/35">
-        클릭 = 점프 · 드래그 = 스크럽 · ▼ 사진 · ▬ 형광펜 · 세그먼트 호버 시 슬라이드 툴팁
-      </p>
     </div>
   );
 }
