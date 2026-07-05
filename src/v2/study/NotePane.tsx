@@ -3,12 +3,11 @@
    사람이 정리한 노트 같은 톤: 조용한 타이포 + LaTeX 수식(KaTeX) +
    프로토콜 다이어그램(SVG). 판서/녹음 앵커는 슬림한 참조 행으로.
    ================================================================ */
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import { ChevronLeft, ChevronRight, Mic, PenLine } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../app/components/ui/dialog";
-import type { Chapter, NoteBlock, Photo, StudyData } from "../types";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { Chapter, NoteBlock, StudyData } from "../types";
 import { fmtTime } from "../types";
 import type { Playback } from "./playback";
 
@@ -71,10 +70,11 @@ interface Props {
   docMode: boolean;
   chapter: Chapter;
   onSelectChapter: (idx: number) => void;
+  /** 노트의 판서 언급 클릭 → 우측 '사진' 탭에서 해당 사진 포커스 */
+  onPhotoRef: (photoId: string) => void;
 }
 
-export default function NotePane({ data, pb, docMode, chapter, onSelectChapter }: Props) {
-  const [photoOpen, setPhotoOpen] = useState<Photo | null>(null);
+export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, onPhotoRef }: Props) {
 
   const renderBlock = (b: NoteBlock, i: number) => {
     switch (b.kind) {
@@ -94,6 +94,13 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter }
               </li>
             ))}
           </ul>
+        );
+      case "callout":
+        return (
+          <div key={i} className="mt-4 flex items-start gap-3 rounded-xl bg-[#F7F3EC] px-4 py-3">
+            <span className="mt-0.5 text-[16px] leading-none">{b.emoji}</span>
+            <p className="text-[12.5px] leading-[1.8] text-[#44403C]">{b.text}</p>
+          </div>
         );
       case "math":
         return <MathBlock key={i} latex={b.latex} caption={b.caption} />;
@@ -135,26 +142,27 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter }
           </div>
         );
       case "handwriting": {
-        const photo = data.photos.find((p) => p.id === b.photoId);
         return (
           <button
             key={i}
-            onClick={() => photo && setPhotoOpen(photo)}
-            className="mt-4 flex w-full items-center gap-2.5 rounded-lg border border-border bg-[#FCFAF5] px-3 py-2 text-left transition-colors hover:border-[var(--ember)]"
+            onClick={() => onPhotoRef(b.photoId)}
+            title="사진 탭에서 보기"
+            className="mt-4 flex w-full items-center gap-2.5 rounded-xl bg-[#FBF4E8] px-4 py-3 text-left transition-all hover:shadow-[0_2px_10px_rgba(146,64,14,0.12)]"
           >
-            <PenLine size={13} className="shrink-0 text-[#92400E]" />
-            <span className="min-w-0 flex-1 truncate text-[12px] text-[#57534E]">
-              <b className="font-semibold text-[#44403C]">판서</b> · {b.caption}
+            <span className="text-[15px] leading-none">📷</span>
+            <span className="min-w-0 flex-1 truncate text-[12.5px] text-[#57534E]">
+              <b className="font-semibold text-[#44403C]">판서 사진</b> · {b.caption}
             </span>
-            <span className="shrink-0 rounded bg-white px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">S{b.slide}</span>
+            <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">S{b.slide}</span>
             {b.t != null && !docMode && (
               <span
                 onClick={(e) => { e.stopPropagation(); pb.seek(b.t!); }}
-                className="shrink-0 rounded bg-white px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground hover:bg-primary hover:text-white"
+                className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground hover:bg-primary hover:text-white"
               >
                 {fmtTime(b.t)}
               </span>
             )}
+            <span className="shrink-0 text-[10px] font-semibold text-[#B45309]">사진 탭 →</span>
           </button>
         );
       }
@@ -163,12 +171,12 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter }
           <button
             key={i}
             onClick={() => !docMode && pb.seek(b.t)}
-            className="mt-2 flex w-full items-start gap-2.5 rounded-lg border border-border bg-white px-3 py-2 text-left transition-colors hover:border-[#8B5CF6]/50"
+            className="mt-2 flex w-full items-start gap-2.5 rounded-xl bg-[#F4F1FA] px-4 py-3 text-left transition-all hover:shadow-[0_2px_10px_rgba(124,58,237,0.12)]"
           >
-            <Mic size={13} className="mt-0.5 shrink-0 text-[#7C3AED]" />
-            <span className="min-w-0 flex-1 text-[12px] italic leading-relaxed text-[#57534E]">{b.text}</span>
+            <span className="text-[15px] leading-none">🎙️</span>
+            <span className="min-w-0 flex-1 text-[12.5px] italic leading-[1.75] text-[#57534E]">{b.text}</span>
             {!docMode && (
-              <span className="shrink-0 rounded bg-[#FCFAF5] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">{fmtTime(b.t)}</span>
+              <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">{fmtTime(b.t)}</span>
             )}
           </button>
         );
@@ -209,8 +217,10 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter }
           <p className="mt-2.5 text-[13.5px] leading-[1.85] text-[#57534E]">{chapter.intro}</p>
           <p className="mt-1.5 text-[11px] text-muted-foreground/80">{chapter.meta}</p>
 
-          {/* 요약 — 조용한 callout */}
-          <div className="mt-6 rounded-r-xl border-l-2 border-[var(--ember)] bg-[#FCFAF5] py-3 pl-4 pr-4">
+          {/* 요약 — 노션식 콜아웃 */}
+          <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#FCF7EE] px-4 py-3.5">
+            <span className="mt-0.5 text-[17px] leading-none">💡</span>
+            <div className="min-w-0 flex-1">
             <div className="text-[11px] font-bold uppercase tracking-wider text-[#92400E]">요약</div>
             <ul className="mt-2 space-y-1.5">
               {chapter.summary.map((s, i) => (
@@ -219,23 +229,13 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter }
                 </li>
               ))}
             </ul>
+            </div>
           </div>
 
           {chapter.blocks.map(renderBlock)}
         </div>
       </div>
 
-      {/* 사진 원본 크게 보기 */}
-      <Dialog open={!!photoOpen} onOpenChange={(o) => !o && setPhotoOpen(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-[15px]">{photoOpen?.label} — S{photoOpen?.slide}{photoOpen?.t != null ? ` · ${fmtTime(photoOpen.t)}` : ""}</DialogTitle>
-          </DialogHeader>
-          <div className="flex h-80 items-center justify-center rounded-xl bg-gradient-to-br from-[#F3EDE2] to-[#E5DBC8] text-[13px] text-muted-foreground">
-            판서 사진 원본 (실연동 시 업로드 이미지)
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
