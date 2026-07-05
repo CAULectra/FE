@@ -1,12 +1,11 @@
 /* ================================================================
-   LibraryPage — 폴더별 강의 카드 그리드 (와이어프레임 2.0~2.3)
-   카드 = 썸네일 + 제목 + 폴더·날짜 + 처리 상태 배지
-   헤더 = 폴더명 · 개수 · 정렬 드롭다운 · + Upload
-   상태: 빈 상태 / 컨텍스트 메뉴 / 이름 변경 / 이동 / 삭제 확인
+   LibraryPage — 2단 구조 (Flexcil 스타일)
+   /library            → 과목 폴더 그리드 (폴더 모양 카드)
+   /library?folder=is  → 해당 과목의 강의(업로드한 슬라이드 단위) 카드
    ================================================================ */
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router";
-import { ArrowUpDown, FolderOpen, MoreHorizontal, Plus, RotateCcw, Upload } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router";
+import { ArrowUpDown, ChevronLeft, FolderOpen, MoreHorizontal, Plus, RotateCcw, Upload } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
@@ -17,7 +16,7 @@ import {
 } from "../app/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../app/components/ui/dialog";
 import { useApp } from "./store";
-import type { Lecture } from "./types";
+import type { Folder, Lecture } from "./types";
 import UploadModal from "./UploadModal";
 
 type SortKey = "updated" | "name" | "uploaded" | "status";
@@ -25,6 +24,14 @@ const SORT_LABEL: Record<SortKey, string> = {
   updated: "최근 수정순", name: "이름순", uploaded: "업로드일순", status: "상태순 (처리중 우선)",
 };
 const STATUS_ORDER: Record<Lecture["status"], number> = { processing: 0, queued: 1, failed: 2, uploading: 0, ready: 3 };
+
+/** 과목 폴더 색상 팔레트 (웜 계열 순환) */
+const FOLDER_COLORS = [
+  { tab: "#DF7A55", from: "#F9DCCE", to: "#F3C3AC", text: "#8A3D1F" },
+  { tab: "#E0A23E", from: "#FBE8C4", to: "#F5D69A", text: "#7C5308" },
+  { tab: "#A99677", from: "#EFE7D6", to: "#E3D5BC", text: "#5C4F38" },
+  { tab: "#C98A6B", from: "#F5DFD3", to: "#EBC9B5", text: "#7A4429" },
+];
 
 function StatusBadge({ lec }: { lec: Lecture }) {
   switch (lec.status) {
@@ -36,23 +43,51 @@ function StatusBadge({ lec }: { lec: Lecture }) {
   }
 }
 
-/** 슬라이드 썸네일 플레이스홀더 (실연동 시 첫 페이지 렌더 이미지로 교체) */
-function Thumb({ seed }: { seed: string }) {
-  const hue = (seed.charCodeAt(0) * 7) % 24;
+/** Flexcil 스타일 폴더 카드 */
+function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; lectures: Lecture[]; colorIdx: number; onOpen: () => void }) {
+  const c = FOLDER_COLORS[colorIdx % FOLDER_COLORS.length];
+  const processing = lectures.filter((l) => l.status === "processing" || l.status === "queued").length;
+  const latest = [...lectures].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0];
   return (
-    <div className="relative h-36 overflow-hidden rounded-t-xl border-b border-border bg-gradient-to-br from-[#FBF7F1] to-[#F3EDE4]">
-      <div className="absolute left-5 top-5 h-2.5 w-2/5 rounded bg-[#E3DACB]" style={{ filter: `hue-rotate(${hue}deg)` }} />
-      <div className="absolute left-5 top-11 h-1.5 w-3/5 rounded bg-[#EDE6DA]" />
-      <div className="absolute left-5 top-[58px] h-1.5 w-1/2 rounded bg-[#EDE6DA]" />
-      <div className="absolute bottom-4 left-5 right-5 top-[76px] rounded-md border border-[#EBE3D6] bg-white/70" />
-    </div>
+    <button onClick={onOpen} className="group text-left">
+      <div className="relative pt-3">
+        {/* 폴더 탭 */}
+        <div className="absolute left-0 top-0 h-6 w-24 rounded-t-xl" style={{ background: c.tab }} />
+        {/* 폴더 본체 */}
+        <div
+          className="card-lift relative flex aspect-[16/10] flex-col justify-between rounded-2xl rounded-tl-none p-4 shadow-[0_2px_8px_rgba(28,25,23,0.07)]"
+          style={{ background: `linear-gradient(145deg, ${c.from} 0%, ${c.to} 100%)` }}
+        >
+          {/* 안쪽 서류 힌트 */}
+          <div className="absolute left-4 right-4 top-3 h-10 rounded-lg bg-white/45" />
+          <div className="absolute left-6 right-6 top-1.5 h-10 rounded-lg bg-white/30" />
+          <div className="relative" />
+          <div className="relative flex items-end justify-between">
+            <div>
+              <div className="text-[22px] font-bold leading-none" style={{ color: c.text }}>{lectures.length}</div>
+              <div className="mt-1 text-[11px] font-medium" style={{ color: c.text, opacity: 0.75 }}>강의</div>
+            </div>
+            {processing > 0 && (
+              <span className="rounded-full bg-white/75 px-2.5 py-1 text-[10.5px] font-semibold" style={{ color: c.text }}>
+                {processing}개 처리 중
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="mt-2.5 px-0.5">
+        <div className="text-[15px] font-bold text-card-foreground transition-colors group-hover:text-primary">{folder.name}</div>
+        <div className="mt-0.5 text-[12px] text-muted-foreground">
+          강의 {lectures.length}개{latest ? ` · 최근 수정 ${latest.updatedLabel}` : ""}
+        </div>
+      </div>
+    </button>
   );
 }
 
 export default function LibraryPage() {
   const { folders, lectures, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob } = useApp();
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const folderId = searchParams.get("folder");
   const uploadOpen = searchParams.get("upload") === "1";
@@ -65,7 +100,8 @@ export default function LibraryPage() {
   const folder = folders.find((f) => f.id === folderId) ?? null;
 
   const shown = useMemo(() => {
-    const list = lectures.filter((l) => !folder || l.folderId === folder.id);
+    if (!folder) return [];
+    const list = lectures.filter((l) => l.folderId === folder.id);
     return [...list].sort((a, b) => {
       switch (sort) {
         case "name":     return a.title.localeCompare(b.title);
@@ -76,17 +112,60 @@ export default function LibraryPage() {
     });
   }, [lectures, folder, sort]);
 
-  const latestLabel = shown[0]?.updatedLabel;
   const closeUpload = () => { searchParams.delete("upload"); setSearchParams(searchParams, { replace: true }); };
+  const openUpload = () => { searchParams.set("upload", "1"); setSearchParams(searchParams); };
 
+  /* ===================== 과목 폴더 그리드 ===================== */
+  if (!folder) {
+    return (
+      <div className="mx-auto max-w-[1400px] px-8 py-7">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-[26px] font-bold tracking-tight text-card-foreground">전체 강의</h1>
+            <p className="mt-1 text-[13px] text-muted-foreground">과목 {folders.length}개 · 강의 {lectures.length}개</p>
+          </div>
+          <button
+            onClick={openUpload}
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(194,65,12,0.22)] transition-colors hover:bg-[#9A3412]"
+          >
+            <Upload size={14} /> Upload
+          </button>
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
+          {folders.map((f, i) => (
+            <FolderCard
+              key={f.id}
+              folder={f}
+              colorIdx={i}
+              lectures={lectures.filter((l) => l.folderId === f.id)}
+              onOpen={() => { searchParams.set("folder", f.id); setSearchParams(searchParams); }}
+            />
+          ))}
+        </div>
+
+        <p className="mt-12 text-center text-[11.5px] text-muted-foreground/70">
+          과목 폴더를 열면 업로드한 슬라이드(단원) 단위로 강의가 보입니다.
+        </p>
+        {uploadOpen && <UploadModal defaultFolderId={null} onClose={closeUpload} />}
+      </div>
+    );
+  }
+
+  /* ===================== 폴더 내 강의 카드 ===================== */
   return (
     <div className="mx-auto max-w-[1400px] px-8 py-7">
-      {/* ===== 헤더 ===== */}
-      <div className="flex items-end justify-between gap-4">
+      <button
+        onClick={() => { searchParams.delete("folder"); setSearchParams(searchParams); }}
+        className="flex items-center gap-1 text-[12.5px] font-medium text-muted-foreground transition-colors hover:text-primary"
+      >
+        <ChevronLeft size={14} /> 전체 과목
+      </button>
+      <div className="mt-2 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-bold tracking-tight text-card-foreground">{folder ? folder.name : "전체 강의"}</h1>
+          <h1 className="text-[26px] font-bold tracking-tight text-card-foreground">{folder.name}</h1>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            강의 {shown.length}개{latestLabel ? ` · 최근 수정 ${latestLabel}` : ""}
+            강의 {shown.length}개{shown[0] ? ` · 최근 수정 ${shown[0].updatedLabel}` : ""}
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -103,7 +182,7 @@ export default function LibraryPage() {
             </DropdownMenuContent>
           </DropdownMenu>
           <button
-            onClick={() => { searchParams.set("upload", "1"); setSearchParams(searchParams); }}
+            onClick={openUpload}
             className="flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(194,65,12,0.22)] transition-colors hover:bg-[#9A3412]"
           >
             <Upload size={14} /> Upload
@@ -111,7 +190,6 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      {/* ===== 카드 그리드 / 빈 상태 ===== */}
       {shown.length === 0 ? (
         <div className="mt-24 flex flex-col items-center text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
@@ -122,13 +200,10 @@ export default function LibraryPage() {
             슬라이드 PDF + 녹음 파일(+ 사진)을 올리면 정렬된 노트가 자동으로 만들어져요
           </p>
           <button
-            onClick={() => { searchParams.set("upload", "1"); setSearchParams(searchParams); }}
+            onClick={openUpload}
             className="mt-6 flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-[13.5px] font-semibold text-white hover:bg-[#9A3412]"
           >
             <Plus size={15} /> Upload your first lecture
-          </button>
-          <button onClick={() => navigate("/lecture/w10")} className="mt-3 text-[12.5px] text-muted-foreground underline-offset-2 hover:text-primary hover:underline">
-            또는 샘플 워크스페이스 둘러보기
           </button>
         </div>
       ) : (
@@ -137,13 +212,20 @@ export default function LibraryPage() {
             <div
               key={lec.id}
               onClick={() => navigate(`/lecture/${lec.id}`)}
-              className="card-lift group cursor-pointer rounded-xl border border-border bg-card"
+              className="card-lift group cursor-pointer overflow-hidden rounded-xl border border-border bg-card"
             >
-              <Thumb seed={lec.id} />
+              {/* 썸네일: 해당 강의 첫 슬라이드 렌더 (없으면 플레이스홀더) */}
+              <div className="relative h-36 overflow-hidden border-b border-border bg-gradient-to-br from-[#FBF7F1] to-[#F3EDE4]">
+                {(lec.id.startsWith("bt") || lec.id.startsWith("cn") || ["w10", "is05", "cnref"].includes(lec.id)) && (
+                  <img
+                    src={`/slides/${lec.id.startsWith("bt") ? "bt" : lec.id.startsWith("cn") ? "cn" : "zk"}/p1.png`}
+                    alt="" className="h-full w-full object-cover object-top opacity-90" loading="lazy"
+                  />
+                )}
+              </div>
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="text-[15px] font-semibold text-card-foreground">{lec.title}</h3>
-                  {/* 카드 hover 시 ⋯ 컨텍스트 메뉴 */}
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       onClick={(e) => e.stopPropagation()}
@@ -171,7 +253,7 @@ export default function LibraryPage() {
                   </DropdownMenu>
                 </div>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  {folders.find((f) => f.id === lec.folderId)?.name} · {lec.updatedLabel}
+                  {folder.name} · {lec.updatedLabel}{lec.slideCount ? ` · 슬라이드 ${lec.slideCount}장` : ""}
                 </p>
                 <div className="mt-3"><StatusBadge lec={lec} /></div>
               </div>
@@ -184,7 +266,7 @@ export default function LibraryPage() {
         카드를 클릭하면 강의 페이지가 열립니다 — 처리 중엔 진행 상황을, 완료되면 스터디 워크스페이스를 보여줍니다.
       </p>
 
-      {/* ===== 삭제 확인 ===== */}
+      {/* 삭제 확인 */}
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -208,7 +290,7 @@ export default function LibraryPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ===== 이름 변경 ===== */}
+      {/* 이름 변경 */}
       <Dialog open={!!renaming} onOpenChange={(o) => !o && setRenaming(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>이름 변경</DialogTitle></DialogHeader>
@@ -232,8 +314,7 @@ export default function LibraryPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ===== 업로드 모달 (?upload=1) ===== */}
-      {uploadOpen && <UploadModal defaultFolderId={folder?.id ?? null} onClose={closeUpload} />}
+      {uploadOpen && <UploadModal defaultFolderId={folder.id} onClose={closeUpload} />}
     </div>
   );
 }

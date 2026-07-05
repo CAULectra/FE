@@ -1,9 +1,9 @@
 /* ================================================================
-   StudyWorkspace — 3-pane + 하단 정렬 타임라인 (와이어프레임 5.x)
-   A 상단바 · B 슬라이드 · C 내 노트 · D 참조 패널 · E 타임라인
-   문서 모드(녹음 없음): 타임라인·스크립트 숨김 + '+ 녹음 추가'
+   StudyWorkspace — 3-pane + 하단 정렬 타임라인
+   B 슬라이드(실제 PDF 렌더) · C AI 정리본(챕터 단위) · D 요약/번역/챗봇
+   문서 모드(녹음 없음): 타임라인 숨김 + '+ 녹음 추가'
    ================================================================ */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { CheckCircle2, ChevronLeft, Download, Loader2, Mic } from "lucide-react";
 import {
@@ -11,7 +11,7 @@ import {
 } from "../../app/components/ui/dropdown-menu";
 import { EXPORT_FORMATS, fetchStudyData, ragQA, requestExport } from "../api";
 import { useApp } from "../store";
-import type { Lecture, QAMessage, StudyData } from "../types";
+import { chapterOfSlide, type Lecture, type QAMessage, type StudyData } from "../types";
 import { usePlayback } from "./playback";
 import SlideStrip from "./SlideStrip";
 import NotePane from "./NotePane";
@@ -46,14 +46,24 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
     if (!Number.isNaN(t) && t > 0) return t;
     const s = Number(searchParams.get("s"));
     if (!Number.isNaN(s) && s > 0) return data.slides.find((sl) => sl.n === s)?.startSec ?? 0;
-    return data.slides.find((sl) => sl.n === 12)?.startSec ?? 0; // 데모 기본: S12
+    return (data.slides.find((sl) => sl.n === data.defaultSlide)?.startSec ?? 0) + 14; // 데모 기본 슬라이드
   })();
 
-  const pb = usePlayback(data.slides, data.durationSec, initialT + 14); // 23:14 부근
+  const pb = usePlayback(data.slides, data.durationSec, initialT);
 
-  const [tab, setTab] = useState<RefTab>(docMode ? "photos" : "script");
+  /* 챕터: 재생 위치를 따라가고, 수동 선택(문서 모드)은 별도 상태 */
+  const [manualChapter, setManualChapter] = useState(0);
+  const activeChapter = docMode ? manualChapter : chapterOfSlide(data.chapters, pb.activeSlideN);
+  const selectChapter = (idx: number) => {
+    const clamped = Math.max(0, Math.min(data.chapters.length - 1, idx));
+    if (docMode) { setManualChapter(clamped); return; }
+    const firstSlide = data.slides.find((s) => s.n === data.chapters[clamped].slides[0]);
+    if (firstSlide) pb.seek(firstSlide.startSec + 0.5);
+  };
+
+  const [tab, setTab] = useState<RefTab>("summary");
   const [qaMessages, setQaMessages] = useState<QAMessage[]>([
-    { role: "ai", text: '안녕하세요! 이 강의 내용에 대해 무엇이든 물어보세요. 예: "왜 중앙값으로 분할해?"' },
+    { role: "ai", text: '안녕하세요! 이 강의 내용에 대해 무엇이든 물어보세요. 예: "Fiat-Shamir 변환이 왜 안전해?"' },
   ]);
   const [qaPending, setQaPending] = useState(false);
   const [qaDraft, setQaDraft] = useState("");
@@ -75,28 +85,25 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
     setQaPending(false);
   };
 
-  /* 노트 메모 블록 → Q&A 전송 */
-  const askFromNote = (q: string) => { setTab("qa"); void sendQA(q); };
-
   const doExport = async (formatKey: (typeof EXPORT_FORMATS)[number]["key"], label: string) => {
     pushToast(`${label} 내보내기 — 백그라운드 생성 중… (작업 계속 가능)`);
     const filename = await requestExport(lecture.title, formatKey);
     pushToast(`${filename} 다운로드 준비 완료`, true);
   };
 
+  const folderName = useMemo(() => folders.find((f) => f.id === lecture.folderId)?.name, [folders, lecture.folderId]);
+
   return (
     <div className="flex h-screen flex-col bg-background">
       {/* ===== A. 상단 바 ===== */}
-      <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-4">
+      <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-white px-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/library")} className="flex items-center gap-1 text-[12.5px] font-medium text-muted-foreground hover:text-primary">
             <ChevronLeft size={14} /> Library
           </button>
           <span className="text-border">|</span>
           <h1 className="text-[14.5px] font-bold text-card-foreground">{lecture.title}</h1>
-          <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-            {folders.find((f) => f.id === lecture.folderId)?.name}
-          </span>
+          <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">{folderName}</span>
           {docMode && <span className="badge-status badge-queued">문서 모드 — 녹음 없음</span>}
         </div>
         <DropdownMenu>
@@ -120,10 +127,11 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
 
       {/* ===== B·C·D 3-pane ===== */}
       <div className="flex min-h-0 flex-1">
-        <SlideStrip slides={data.slides} pb={pb} docMode={docMode} />
-        <NotePane lecture={lecture} data={data} pb={pb} docMode={docMode} onAskQA={askFromNote} />
+        <SlideStrip slides={data.slides} chapters={data.chapters} pb={pb} docMode={docMode} />
+        <NotePane data={data} pb={pb} docMode={docMode} chapter={data.chapters[activeChapter]} onSelectChapter={selectChapter} />
         <RefPanel
-          data={data} pb={pb} docMode={docMode}
+          data={data} pb={pb}
+          activeChapter={activeChapter} onSelectChapter={selectChapter}
           tab={tab} onTab={setTab}
           qaMessages={qaMessages} qaPending={qaPending}
           qaDraft={qaDraft} onQaDraft={setQaDraft}
@@ -136,7 +144,7 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
       {docMode ? (
         <div className="flex shrink-0 items-center justify-between border-t border-border bg-[#17130F] px-5 py-2.5">
           <span className="text-[11.5px] text-white/50">
-            녹음이 없는 강의 — 정렬 타임라인 비활성. 녹음을 추가하면 정렬·스크립트·타임라인이 생성됩니다.
+            녹음이 없는 강의 — 정렬 타임라인 비활성. 녹음을 추가하면 정렬·타임라인이 생성됩니다.
           </span>
           <button
             onClick={() => navigate("/library?upload=1")}
