@@ -68,6 +68,10 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
   const [qaPending, setQaPending] = useState(false);
   const [qaDraft, setQaDraft] = useState("");
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [photoFocus, setPhotoFocus] = useState<string | null>(null);
+
+  /* 노트의 판서 언급 클릭 → 사진 탭 + 해당 사진 포커스 */
+  const openPhotoTab = (photoId: string) => { setPhotoFocus(photoId); setTab("photos"); };
 
   const pushToast = (text: string, done = false) => {
     const id = Date.now() + Math.random();
@@ -128,7 +132,7 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
       {/* ===== B·C·D 3-pane ===== */}
       <div className="flex min-h-0 flex-1">
         <SlideStrip slides={data.slides} chapters={data.chapters} pb={pb} docMode={docMode} />
-        <NotePane data={data} pb={pb} docMode={docMode} chapter={data.chapters[activeChapter]} onSelectChapter={selectChapter} />
+        <NotePane data={data} pb={pb} docMode={docMode} chapter={data.chapters[activeChapter]} onSelectChapter={selectChapter} onPhotoRef={openPhotoTab} />
         <RefPanel
           data={data} pb={pb}
           activeChapter={activeChapter} onSelectChapter={selectChapter}
@@ -137,6 +141,7 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
           qaDraft={qaDraft} onQaDraft={setQaDraft}
           onSendQA={sendQA}
           onPushQA={(m) => setQaMessages((prev) => [...prev, m])}
+          focusPhotoId={photoFocus}
         />
       </div>
 

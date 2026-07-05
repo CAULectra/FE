@@ -17,6 +17,7 @@ interface Props {
 
 export default function SlideStrip({ slides, chapters, pb, docMode }: Props) {
   const activeRef = useRef<HTMLButtonElement>(null);
+  const maxSeg = Math.max(...slides.map((sl) => sl.endSec - sl.startSec), 1);
   const suppressScrollEvent = useRef(false);
 
   /* 동기화 ON: 활성 슬라이드로 자동 스크롤 */
@@ -85,6 +86,20 @@ export default function SlideStrip({ slides, chapters, pb, docMode }: Props) {
                     </span>
                   )}
                 </div>
+                {/* 이 슬라이드에서 얘기한 시간 */}
+                {!docMode && (
+                  <div className="flex items-center gap-1.5 border-t border-[#F1ECE2] px-2 py-1">
+                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#F1ECE2]">
+                      <div
+                        className="h-full rounded-full bg-[#E3A574]"
+                        style={{ width: `${Math.round(((s.endSec - s.startSec) / maxSeg) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="shrink-0 text-[9px] tabular-nums text-muted-foreground">
+                      {Math.max(1, Math.round((s.endSec - s.startSec) / 60))}분
+                    </span>
+                  </div>
+                )}
               </button>
             </Fragment>
           );
