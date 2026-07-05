@@ -1,0 +1,109 @@
+/* ================================================================
+   Lectra App v2 테마 — Evreghen Command Center × Ember Studio 블렌드
+   - 뼈대: 웜 페이퍼 워크스페이스 + 다크 프로스트 글래스 셸(사이드바/헤더)
+   - 팔레트: 테라코타(#C2410C) primary + 앰버(#F59E0B) accent + 웜 스톤 뉴트럴
+   - 사용자 피드백 반영: 내부 박스는 회색(#F3F4F6) 대신 밝은 웜 톤(흰색/크림)
+   - theme.css 뒤에 import 되어 shadcn CSS 변수를 덮어쓴다
+   ================================================================ */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+:root {
+  /* ---- 워크스페이스 (light, warm) ---- */
+  --background: #FAF9F6;            /* 웜 페이퍼 캔버스 */
+  --foreground: #423D38;            /* 웜 브라운-그레이 본문 */
+  --card: #FFFFFF;                  /* 카드 = 순백에 가깝게 (기존 회색 F3F4F6 대체) */
+  --card-foreground: #1C1917;
+  --popover: #FFFFFF;
+  --popover-foreground: #1C1917;
+  --primary: #C2410C;               /* 테라코타 — CTA/액티브/포커스 */
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F3F0;             /* 낮은 강조 웜 필 */
+  --secondary-foreground: #57534E;
+  --muted: #F5F3F0;
+  --muted-foreground: #797067;
+  --accent: #FBEEE4;                /* hover 등 옅은 테라코타 틴트 */
+  --accent-foreground: #9A3412;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: #E8E4DE;                /* 웜 보더 */
+  --input: transparent;
+  --input-background: #F5F3F0;
+  --switch-background: #D6D3D1;
+  --ring: #F97015;
+  --radius: 0.625rem;
+
+  /* ---- 다크 프로스트 셸 (Command Center 시그니처) ---- */
+  --shell-bg: rgba(19, 15, 12, 0.82);
+  --shell-solid: #17130F;
+  --shell-fg: #FFFFFF;
+  --shell-muted: rgba(255, 255, 255, 0.62);
+  --shell-faint: rgba(255, 255, 255, 0.38);
+  --shell-border: rgba(255, 255, 255, 0.10);
+  --shell-input: rgba(255, 255, 255, 0.08);
+  --shell-hover: rgba(255, 255, 255, 0.07);
+
+  /* ---- 시맨틱 ---- */
+  --ember: #F59E0B;                 /* 앰버 — 진행/하이라이트/타임라인 */
+  --ember-soft: #FEF3C7;
+  --success: #16A34A;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --info: #3080FF;
+
+  /* ---- 처리 상태 배지 ---- */
+  --st-ready-bg: #DCFCE7;    --st-ready-fg: #166534;
+  --st-processing-bg: #FEF3C7; --st-processing-fg: #92400E;
+  --st-failed-bg: #FEE2E2;   --st-failed-fg: #B91C1C;
+  --st-queued-bg: #F1EFEC;   --st-queued-fg: #57534E;
+
+  /* ---- 형광펜 ---- */
+  --hl: #FDE68A;
+}
+
+html, body {
+  font-family: 'Pretendard Variable', Pretendard, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* ---- 다크 글래스 셸 ---- */
+.shell-glass {
+  background: var(--shell-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--shell-fg);
+  border-color: var(--shell-border);
+}
+
+/* 셸 내부 스크롤바 (얇고 어두운 배경용) */
+.shell-scroll::-webkit-scrollbar { width: 6px; }
+.shell-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 3px; }
+.shell-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* 워크스페이스 스크롤바 */
+.ws-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.ws-scroll::-webkit-scrollbar-thumb { background: #DCD7D0; border-radius: 4px; }
+.ws-scroll::-webkit-scrollbar-thumb:hover { background: #C9C3BA; }
+.ws-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- 상태 배지 ---- */
+.badge-status { display: inline-flex; align-items: center; gap: 4px; border-radius: 9999px; padding: 3px 10px; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.badge-ready      { background: var(--st-ready-bg);      color: var(--st-ready-fg); }
+.badge-processing { background: var(--st-processing-bg); color: var(--st-processing-fg); }
+.badge-failed     { background: var(--st-failed-bg);     color: var(--st-failed-fg); }
+.badge-queued     { background: var(--st-queued-bg);     color: var(--st-queued-fg); }
+
+/* ---- 노트 편집 영역 ---- */
+.note-editable:focus { outline: none; }
+.note-editable [data-hl], .note-editable mark { background: var(--hl); border-radius: 2px; padding: 0 1px; }
+
+/* ---- 타임라인 세그먼트 ---- */
+.tl-seg { transition: background 150ms cubic-bezier(0.4,0,0.2,1); }
+.tl-seg:hover { background: rgba(245, 158, 11, 0.55) !important; }
+
+/* ---- 카라오케 현재 문장 ---- */
+.script-active { background: var(--ember-soft); box-shadow: inset 2px 0 0 var(--ember); }
+
+/* 카드 hover 리프트 (Ember Studio) */
+.card-lift { transition: box-shadow 150ms, transform 150ms; }
+.card-lift:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(28, 25, 23, 0.08); }
