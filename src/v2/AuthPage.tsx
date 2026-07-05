@@ -17,7 +17,7 @@ export default function AuthPage() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_4px_16px_rgba(28,25,23,0.06)]">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Alignment preview</div>
             <div className="mt-3 space-y-2">
-              {[["S12 · B-Tree insertion", "23:14", true], ["S13 · Split example", "25:02", false], ["S14 · Summary", "28:20", false]].map(([t, ts, hot]) => (
+              {[["S9 · Schnorr's Protocol", "23:14", true], ["S11 · Fiat-Shamir", "30:10", false], ["S14 · Schnorr Signature", "42:00", false]].map(([t, ts, hot]) => (
                 <div key={t as string} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-[12.5px] ${hot ? "border-[var(--ember)] bg-[var(--ember-soft)]" : "border-border bg-[#FBFAF8]"}`}>
                   <span className="font-medium text-card-foreground">{t}</span>
                   <span className="tabular-nums text-muted-foreground">{ts}</span>
