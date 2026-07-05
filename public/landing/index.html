@@ -328,13 +328,13 @@ input{font-family:inherit}
     <div class="dock-item">
       <button class="dock-link">Product <span class="chev">▼</span></button>
       <div class="dropup">
-        <a href="/?screen=study">Workspace <small>동기화 노트 · Q&A · 번역</small></a>
-        <a href="/?screen=dashboard">Library <small>폴더 · 검색 · 처리 현황</small></a>
+        <a href="/lecture/w10">Workspace <small>동기화 노트 · Q&A · 번역</small></a>
+        <a href="/library">Library <small>폴더 · 검색 · 처리 현황</small></a>
         <a href="#walkthrough">How it works <small>5단계 워크스루</small></a>
         <a href="#calc">Calculator <small>시간 절약 계산기</small></a>
       </div>
     </div>
-    <a class="dock-link" href="/?screen=dashboard">Workspace ↗</a>
+    <a class="dock-link" href="/library">Workspace ↗</a>
     <div class="dock-item">
       <button class="dock-link">Company <span class="chev">▼</span></button>
       <div class="dropup">
@@ -361,8 +361,8 @@ input{font-family:inherit}
       <a class="logo" href="#top">Lectra</a>
       <div class="nav-right">
         <button class="lang-btn">🌐 KO <span style="font-size:9px;opacity:.7">▼</span></button>
-        <a class="login-btn" href="/?screen=login">Log in</a>
-        <a class="signup-btn" href="/?screen=login">Sign up</a>
+        <a class="login-btn" href="/auth">Log in</a>
+        <a class="signup-btn" href="/auth">Sign up</a>
       </div>
     </div>
     <div class="stage">
@@ -370,7 +370,7 @@ input{font-family:inherit}
       <aside class="hero-aside">
         <p>Single workspace<br>for all your lectures.</p>
         <div class="app-badges">
-          <a class="_app-button" href="/?screen=login"><span class="outline"></span><span>🌐</span><span><small>지금 바로</small><b>Web App</b></span></a>
+          <a class="_app-button" href="/auth"><span class="outline"></span><span>🌐</span><span><small>지금 바로</small><b>Web App</b></span></a>
           <a class="_app-button" href="#"><span class="outline"></span><span></span><span><small>곧 출시</small><b>App Store</b></span></a>
         </div>
       </aside>
@@ -475,9 +475,9 @@ input{font-family:inherit}
   <div class="wrap content">
     <h2 class="t3">All your lectures,<br>in one app.</h2>
     <p class="sub sub2">업로드부터 시험 전날 복습까지 — 폴더, 검색, 처리 현황, 워크스페이스가 한곳에.</p>
-    <a class="_button fill-white pill" href="/?screen=dashboard" data-roll>Get Started</a>
+    <a class="_button fill-white pill" href="/library" data-roll>Get Started</a>
     <div class="app-badges">
-      <a class="_app-button" href="/?screen=login"><span class="outline"></span><span>🌐</span><span><small>지금 바로</small><b>Web App</b></span></a>
+      <a class="_app-button" href="/auth"><span class="outline"></span><span>🌐</span><span><small>지금 바로</small><b>Web App</b></span></a>
       <a class="_app-button" href="#"><span class="outline"></span><span></span><span><small>곧 출시</small><b>App Store</b></span></a>
       <a class="_app-button" href="#"><span class="outline"></span><span>▶</span><span><small>곧 출시</small><b>Google Play</b></span></a>
     </div>
@@ -521,7 +521,7 @@ input{font-family:inherit}
   <div class="wrap ov-check reveal">
     <h3 class="t5">Karaoke highlight? Sure.<br>Cited answers? Check.<br>Heatmaps? Also check.</h3>
     <p>현재 문장 자동 하이라이트, 원문 인용 칩이 달린 Q&A, 교수님이 오래 머문 슬라이드를 보여주는 체류시간 히트맵까지 — 정렬 하나로 전부 따라옵니다.</p>
-    <a class="link-orange roll-host" href="/?screen=study" data-roll>Learn more →</a>
+    <a class="link-orange roll-host" href="/lecture/w10" data-roll>Learn more →</a>
   </div>
 </section>
 
@@ -589,15 +589,15 @@ input{font-family:inherit}
   <h2 class="t1 reveal">Ten thousand lectures,<br>plus yours.</h2>
   <p class="sub sub2 reveal">가입부터 첫 정렬 노트까지 5분. 시험공부의 기본값을 바꿔보세요.</p>
   <div class="cta-row reveal">
-    <a class="_button fill-white pill" style="padding:16px 30px" href="/?screen=login" data-roll>Get Started</a>
-    <a class="_button ghost-white" style="padding:16px 30px" href="/?screen=study" data-roll>View sample</a>
+    <a class="_button fill-white pill" style="padding:16px 30px" href="/auth" data-roll>Get Started</a>
+    <a class="_button ghost-white" style="padding:16px 30px" href="/lecture/w10" data-roll>View sample</a>
   </div>
 
   <div class="foot-links">
     <div class="fl-group">
       <div class="hd">PRODUCT</div>
-      <a href="/?screen=dashboard">Library</a>
-      <a href="/?screen=study">Workspace</a>
+      <a href="/library">Library</a>
+      <a href="/lecture/w10">Workspace</a>
       <a href="#walkthrough">How it works</a>
       <a href="#calc">Pricing</a>
     </div>
@@ -1016,7 +1016,12 @@ if (SPLINE_URL && SPLINE_URL.includes('my.spline.design')) {
   f.title = 'Lectra hero 3D';
   f.setAttribute('frameborder', '0');
   f.loading = 'eager';
-  f.style.cssText = `position:absolute;top:${-SHIFT_Y * 100}%;left:${-SHIFT_X * 100}%;width:${RES * (1 + OVER_X) * 100}%;height:${RES * (1 + OVER_Y) * 100}%;transform:scale(${1 / RES});transform-origin:0 0;border:0`;
+  f.style.cssText = `position:absolute;top:${-SHIFT_Y * 100}%;left:${-SHIFT_X * 100}%;width:${RES * (1 + OVER_X) * 100}%;height:${RES * (1 + OVER_Y) * 100}%;transform:scale(${1 / RES});transform-origin:0 0;border:0;opacity:0;transition:opacity 1.1s cubic-bezier(0.4,0,0.2,1)`;
+  /* 새로고침 시 그라데이션 → Spline 이 뚝 바뀌는 문제:
+     iframe을 투명하게 시작해 로드 후 크로스페이드 (씬 초기화 여유 0.4s) */
+  f.addEventListener('load', () => {
+    setTimeout(() => { f.style.opacity = '1'; }, 400);
+  });
   wrap.appendChild(f);
   canvas.replaceWith(wrap);
 
