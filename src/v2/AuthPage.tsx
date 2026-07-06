@@ -36,7 +36,7 @@ export default function AuthPage() {
       {/* 우: 테라코타 패널 + 로그인 카드 */}
       <div className="relative flex flex-1 items-center justify-center bg-gradient-to-br from-[#C2410C] via-[#B03A0A] to-[#7C2D12] p-8">
         <button
-          onClick={() => (window.location.href = "/landing/index.html")}
+          onClick={() => navigate("/")}
           className="absolute right-6 top-6 flex items-center gap-1 rounded-full border border-white/30 px-3.5 py-1.5 text-[12.5px] font-medium text-white/90 backdrop-blur transition-colors hover:bg-white/10"
         >
           <ChevronLeft size={13} /> Back

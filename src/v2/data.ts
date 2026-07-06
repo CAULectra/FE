@@ -132,14 +132,21 @@ export const STUDY_ZK: StudyData = {
         "Fiat-Shamir: c = H(β, y)로 대체 → 비대화형, 랜덤 오라클 모델에서 안전",
       ],
       blocks: [
-        { kind: "viz", viz: "schnorr-flow", caption: "Schnorr 프로토콜 — 3-move 흐름" },
-        { kind: "section", title: "프로토콜 구성", body: "증명자는 매 실행마다 새로운 난수 α를 뽑아 커밋 β를 만들고, 검증자의 무작위 챌린지 c를 받은 뒤에야 응답 s를 계산한다. 공개되는 것은 (β, c, s) 세 값뿐이며, α가 매번 새로 뽑히므로 s에서 x를 분리해낼 수 없다." },
+        { kind: "viz", viz: "schnorr-flow", caption: "🔐 Schnorr 프로토콜 — 3-move 흐름" },
+        { kind: "section", title: "🧩 프로토콜 구성", body: "증명자는 매 실행마다 새로운 난수 α를 뽑아 커밋 β를 만들고, 검증자의 무작위 챌린지 c를 받은 뒤에야 응답 s를 계산한다. 공개되는 것은 (β, c, s) 세 값뿐이며, α가 매번 새로 뽑히므로 s에서 x를 분리해낼 수 없다." },
         { kind: "math", latex: "\\beta = g^{\\alpha},\\qquad c \\xleftarrow{\\;\\$\\;} \\mathbb{Z}_q,\\qquad s = x\\,c + \\alpha \\pmod{q}" },
-        { kind: "section", title: "검증과 완전성", body: "검증자는 아래 한 식만 확인하면 된다. 지수 법칙으로 곧바로 성립하므로 정직한 증명자는 항상 통과한다." },
+        { kind: "section", title: "✅ 검증과 완전성", body: "검증자는 아래 한 식만 확인하면 된다. 지수 법칙으로 곧바로 성립하므로 정직한 증명자는 항상 통과한다." },
         { kind: "math", latex: "g^{s} \\;=\\; g^{xc+\\alpha} \\;=\\; \\left(g^{x}\\right)^{c} g^{\\alpha} \\;\\overset{?}{=}\\; y^{c}\\,\\beta" },
-        { kind: "section", title: "건전성 — 지식 추출", body: "부정한 증명자가 같은 β로 서로 다른 두 챌린지에 모두 유효하게 답했다면, 두 응답을 빼는 것만으로 비밀이 계산된다. '두 번 답할 수 있다 = 정말 알고 있다'는 뜻이고, 이 추출기의 존재가 곧 건전성의 증명이다." },
+        { kind: "section", title: "🕵️ 건전성 — 지식 추출", body: "부정한 증명자가 같은 β로 서로 다른 두 챌린지에 모두 유효하게 답했다면, 두 응답을 빼는 것만으로 비밀이 계산된다. '두 번 답할 수 있다 = 정말 알고 있다'는 뜻이고, 이 추출기의 존재가 곧 건전성의 증명이다." },
         { kind: "math", latex: "x \\;=\\; \\frac{s - s'}{c - c'} \\pmod{q}" },
         { kind: "callout", emoji: "🔑", text: "α는 매 실행마다 새로 뽑는 일회용 난수 — 재사용하는 순간 두 응답에서 x가 계산된다. (실제로 소니 PS3 서명 키가 이 실수로 유출됐다)" },
+        { kind: "section", title: "📝 시험 대비 체크", body: "이 챕터를 덮기 전에 스스로 답할 수 있어야 하는 것들:" },
+        { kind: "bullets", items: [
+          "✍️ 검증식 gˢ = yᶜ·β 유도를 안 보고 손으로 써보기",
+          "🎲 챌린지 c가 무작위가 아니라면 증명자가 어떻게 속일 수 있는지 설명하기",
+          "🔁 Fiat-Shamir 변환에서 해시가 '검증자 역할'을 대신하는 이유 한 문장으로 정리하기",
+          "⚠️ 랜덤 오라클 모델 가정이 왜 필요한지 말할 수 있기",
+        ] },
         { kind: "handwriting", slide: 9, t: 1420, photoId: "zk_ph2", caption: "커밋 → 챌린지 → 응답 흐름 판서" },
         { kind: "audio", slide: 11, t: 1810, text: "\"검증자를 해시함수로 갈아끼우는 겁니다. 해시가 예측 불가능하니 챌린지 역할을 대신하죠.\"" },
       ],
@@ -162,8 +169,8 @@ export const STUDY_ZK: StudyData = {
     },
   ],
   photos: [
-    { id: "zk_ph1", slide: 6, t: 1120, label: "판서 — 알리바바 동굴 그림" },
-    { id: "zk_ph2", slide: 9, t: 1420, label: "판서 — Schnorr 3-move 흐름" },
+    { id: "zk_ph1", slide: 6, t: 1120, label: "판서 — 알리바바 동굴 그림", img: "/photos/board-example.png" },
+    { id: "zk_ph2", slide: 9, t: 1420, label: "판서 — Schnorr 3-move 흐름", img: "/photos/board-example.png" },
   ],
   overall: "이 강의는 증명 시스템 → Σ-프로토콜 → 영지식 증명(3성질) → Schnorr 프로토콜 → Fiat-Shamir 변환 → Schnorr 서명으로 이어지는 한 줄기 흐름입니다. 핵심은 \"대화형 증명의 챌린지를 해시로 대체하면 비대화형이 되고, 그 해시에 메시지를 넣으면 서명이 된다\"는 연결고리입니다.",
   chaptersEn: [
@@ -273,7 +280,7 @@ export const STUDY_BT: StudyData = {
     },
   ],
   photos: [
-    { id: "bt_ph1", slide: 18, t: 1290, label: "판서 — N-Queens 가지치기 트리" },
+    { id: "bt_ph1", slide: 18, t: 1290, label: "판서 — N-Queens 가지치기 트리", img: "/photos/board-example.png" },
   ],
   overall: "백트래킹은 상태 공간 트리를 DFS로 탐색하며 유망하지 않은 서브트리를 잘라내는 Smart Brute-Force입니다. 미로 → N-Queens → 그래프 색칠 → 부분 집합의 합 → 0/1 배낭 순서로, 뼈대는 고정한 채 유망 함수만 바꿔 끼우는 것이 이 강의의 한 줄 요약입니다.",
   chaptersEn: [
@@ -384,7 +391,7 @@ export const STUDY_CN: StudyData = {
     },
   ],
   photos: [
-    { id: "cn_ph1", slide: 14, t: 880, label: "판서 — Dijkstra 단계별 표" },
+    { id: "cn_ph1", slide: 14, t: 880, label: "판서 — Dijkstra 단계별 표", img: "/photos/board-example.png" },
   ],
   overall: "제어 평면은 포워딩 테이블을 만드는 층입니다. AS 내부에서는 LS(OSPF)·DV 알고리즘이 최소 비용 경로를 계산하고, AS 사이에서는 BGP가 비용 대신 정책으로 경로를 고릅니다. Dijkstra 표 계산, DV 수렴(count-to-infinity), BGP 경로 선택 3가지가 시험 포인트입니다.",
   chaptersEn: [
