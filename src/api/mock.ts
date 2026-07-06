@@ -31,7 +31,8 @@ const MOCK_LECTURES: Lecture[] = [
 
 // job_id별 시작 시각을 기억해 progress를 시간에 따라 증가시킴
 const jobStart = new Map<string, number>();
-const MOCK_STATUSES = ["PDF 분석", "음성 STT", "판서 분석", "매핑중", "노트 생성"];
+// 백엔드 계약과 동일한 이산 status 문자열 (완료는 별도, 실패는 여기선 미발생)
+const MOCK_STATUSES = ["대기", "처리중", "추출", "매핑", "챕터", "요약", "인덱싱"];
 
 export const mockApi: LectraApi = {
   async loginGoogle(_code) {

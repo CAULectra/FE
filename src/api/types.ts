@@ -35,7 +35,10 @@ export interface TranslateResponse {
   translated_text: string;
 }
 
-// GET /jobs/{job_id} — status는 한글 문자열("매핑중", "완료" 등), progress는 0~100
+// GET /jobs/{job_id}
+//   status: 이산 문자열(대기·처리중·추출·매핑·챕터·요약·인덱싱·완료·실패)
+//   progress: 0~100
+//   FE는 status를 사용자용 4단계로 매핑해 표시하고 progress는 진행률 숫자/바에 사용.
 export interface JobProgress {
   job_id: string;
   status: string;

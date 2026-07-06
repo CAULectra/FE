@@ -80,16 +80,53 @@ interface Job {
   createdAt: number;     // ms timestamp
   lectureId?: number;    // 백엔드 lecture_id (업로드 응답)
   backendJobId?: string; // 백엔드 job_id (분석 진행 폴링용)
-  apiStatus?: string;    // 백엔드가 준 status 문자열 (예: "매핑중")
+  apiStatus?: string;    // 백엔드가 준 status 문자열 (대기·처리중·추출·매핑·챕터·요약·인덱싱·완료·실패)
 }
 
 const MAX_CONCURRENT = 2;
-const JOB_STEPS = ["PDF 분석", "Speech-to-Text", "판서 이미지 분석", "RAG 인덱싱", "노트 생성"];
 
-function stepForProgress(p: number) {
-  if (p >= 100) return "완료";
-  const idx = Math.min(JOB_STEPS.length - 1, Math.floor(p / (100 / JOB_STEPS.length)));
-  return JOB_STEPS[idx];
+// ─── 분석 단계 (백엔드 status ↔ 사용자용 단계) ────────────────────────────────
+// 백엔드 계약: job.status는 이산 문자열(대기·처리중·추출·매핑·챕터·요약·인덱싱·완료·실패),
+// progress는 0~100. 사용자에겐 세부 9단계 대신 아래 4개 묶음으로 간결하게 보여주고,
+// 진행률 숫자·바에는 progress를 그대로 쓴다.
+interface AnalysisPhase { label: string; sub: string; Icon: LucideIcon; }
+
+const ANALYSIS_PHASES: AnalysisPhase[] = [
+  { label: "자료 준비", sub: "업로드한 슬라이드·음성·판서를 확인하고 있어요", Icon: FileText },
+  { label: "내용 추출", sub: "강의 자료에서 텍스트와 핵심 내용을 뽑아내고 있어요", Icon: Layers },
+  { label: "구조화·요약", sub: "챕터로 나누고 내용을 정리하고 있어요", Icon: Brain },
+  { label: "노트 완성", sub: "학습 노트를 마무리하고 있어요", Icon: Sparkles },
+];
+
+// 백엔드 status → 단계 인덱스. 목록에 없는 값은 progress로 역산(폴백).
+const STATUS_PHASE: Record<string, number> = {
+  "대기": 0, "처리중": 0,
+  "추출": 1,
+  "매핑": 2, "챕터": 2, "요약": 2,
+  "인덱싱": 3,
+};
+const DONE_STATUS = "완료";
+const FAILED_STATUS = "실패";
+
+interface AnalysisView { failed: boolean; done: boolean; phaseIndex: number; progress: number; }
+
+// status가 계약값이면 그것으로 단계를 정하고, 비었거나(데모 job) 모르는 값이면 progress로 역산.
+function resolveAnalysis(status: string, progress: number): AnalysisView {
+  const N = ANALYSIS_PHASES.length;
+  if (status === FAILED_STATUS) return { failed: true, done: false, phaseIndex: 0, progress };
+  const done = status === DONE_STATUS || progress >= 100;
+  if (done) return { failed: false, done: true, phaseIndex: N, progress: 100 };
+  const byStatus = STATUS_PHASE[status];
+  const phaseIndex = byStatus ?? Math.min(N - 1, Math.floor(progress / (100 / N)));
+  return { failed: false, done: false, phaseIndex, progress };
+}
+
+// 워크스페이스 카드 등에서 쓰는 짧은 단계 라벨
+function phaseLabel(status: string, progress: number): string {
+  const v = resolveAnalysis(status, progress);
+  if (v.failed) return "실패";
+  if (v.done) return "완료";
+  return ANALYSIS_PHASES[v.phaseIndex].label;
 }
 function etaMinutes(p: number) {
   return Math.max(1, Math.round((100 - p) / 8));
@@ -153,7 +190,8 @@ function SourceBadge({ Icon, label }: { Icon: LucideIcon; label: string }) {
 }
 
 function JobCard({ job, onCancel, onOpen, onView }: { job: Job; onCancel: (id: string) => void; onOpen: () => void; onView: (id: string) => void }) {
-  const done = job.progress >= 100;
+  const view = resolveAnalysis(job.apiStatus ?? "", job.progress);
+  const { done, failed } = view;
   return (
     <div className="bg-white rounded-2xl border border-border p-5">
       <div className="flex items-start gap-3">
@@ -167,9 +205,9 @@ function JobCard({ job, onCancel, onOpen, onView }: { job: Job; onCancel: (id: s
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">업로드 {timeAgo(job.createdAt)}</p>
         </div>
-        <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${done ? "bg-emerald-50 text-emerald-600" : "bg-primary/10 text-primary"}`}>
-          {done ? <Check className="w-3 h-3" /> : <Loader2 className="w-3 h-3 animate-spin" />}
-          {done ? "완료" : "분석 중"}
+        <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${failed ? "bg-red-50 text-red-600" : done ? "bg-emerald-50 text-emerald-600" : "bg-primary/10 text-primary"}`}>
+          {failed ? <X className="w-3 h-3" /> : done ? <Check className="w-3 h-3" /> : <Loader2 className="w-3 h-3 animate-spin" />}
+          {failed ? "실패" : done ? "완료" : "분석 중"}
         </span>
       </div>
 
@@ -184,8 +222,8 @@ function JobCard({ job, onCancel, onOpen, onView }: { job: Job; onCancel: (id: s
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-        <InfoBox Icon={Sparkles} label="현재 단계" value={done ? "완료" : stepForProgress(job.progress)} />
-        <InfoBox Icon={Clock} label="남은 시간" value={done ? "0분" : `${etaMinutes(job.progress)}분`} />
+        <InfoBox Icon={Sparkles} label="현재 단계" value={phaseLabel(job.apiStatus ?? "", job.progress)} />
+        <InfoBox Icon={Clock} label="남은 시간" value={done ? "0분" : failed ? "-" : `${etaMinutes(job.progress)}분`} />
         <InfoBox Icon={FileText} label="슬라이드" value={`${job.slides}`} />
         <InfoBox Icon={Mic} label="오디오" value={`${job.audioMin}분`} />
       </div>
@@ -1406,20 +1444,7 @@ function UploadPage({ navigate, projectDraft, onAnalyze }: NavProps & {
 }
 
 // ─── ANALYSIS PAGE (원형 다이어그램) ───────────────────────────────────────────
-
-interface AnalysisStage {
-  label: string;
-  sub: string;
-  Icon: LucideIcon;
-}
-
-const ANALYSIS_STAGES: AnalysisStage[] = [
-  { label: "PDF 분석", sub: "슬라이드 텍스트·구조 추출 중", Icon: FileText },
-  { label: "음성 STT", sub: "녹음 음성을 텍스트로 변환 중", Icon: Mic },
-  { label: "판서 분석", sub: "판서 이미지를 인식하는 중", Icon: ImageIcon },
-  { label: "RAG 인덱싱", sub: "검색용 벡터 인덱스 구성 중", Icon: Layers },
-  { label: "노트 생성", sub: "구조화된 학습 노트 작성 중", Icon: Sparkles },
-];
+// 단계 정의(ANALYSIS_PHASES)와 status 매핑은 상단에 공통으로 정의됨.
 
 // viewBox 0 0 100 100 기준. 각도 0° = 12시 방향, 시계방향 증가.
 function polar(r: number, deg: number): [number, number] {
@@ -1461,12 +1486,15 @@ function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & 
         if (!alive) return;
         setPolled({ progress: p.progress, status: p.status });
         setPollError(null);
+        const v = resolveAnalysis(p.status, p.progress);
         if (jobId) onJobUpdate(jobId, {
           progress: p.progress,
           apiStatus: p.status,
-          status: p.progress >= 100 ? "completed" : "processing",
+          // 실패는 apiStatus로 표현하고 job.status는 processing 유지(워크스페이스에서 사라지지 않게)
+          status: v.done ? "completed" : "processing",
         });
-        if (p.progress >= 100 && holder.timer) clearInterval(holder.timer);
+        // 완료 또는 실패면 더 폴링하지 않는다
+        if ((v.done || v.failed) && holder.timer) clearInterval(holder.timer);
       } catch (e) {
         if (!alive) return;
         setPollError(e instanceof Error ? e.message : "진행 상황을 불러오지 못했습니다.");
@@ -1480,19 +1508,20 @@ function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & 
   // backendJobId가 있으면 폴링 결과, 없으면(초기 데모 job) 전역 타이머의 job.progress 사용
   const progress = backendJobId ? polled.progress : (job?.progress ?? 0);
   const apiStatus = backendJobId ? polled.status : "";
-  const done = progress >= 100;
-  const N = ANALYSIS_STAGES.length;
-  const stageIndex = done ? N : Math.min(N - 1, Math.floor(progress / (100 / N)));
+  const view = resolveAnalysis(apiStatus, progress);
+  const { failed, done } = view;
+  const N = ANALYSIS_PHASES.length;
+  const stageIndex = view.phaseIndex;
   const seg = 360 / N;
   const gap = 3.5; // 세그먼트 사이 각도 간격
 
   const stateOf = (i: number): StageState =>
     done || i < stageIndex ? "done" : i === stageIndex ? "active" : "pending";
   const fillOf = (s: StageState) =>
-    s === "done" ? "#93C5FD" : s === "active" ? "#2563EB" : "#E7ECF3";
+    failed ? "#FCA5A5" : s === "done" ? "#93C5FD" : s === "active" ? "#2563EB" : "#E7ECF3";
 
-  const current = ANALYSIS_STAGES[Math.min(stageIndex, N - 1)];
-  const centerLabel = done ? "완료" : (apiStatus || current.label);
+  const current = ANALYSIS_PHASES[Math.min(stageIndex, N - 1)];
+  const centerLabel = failed ? "분석 실패" : done ? "완료" : current.label;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -1507,16 +1536,18 @@ function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & 
         <span className="text-sm font-medium text-foreground truncate">{job?.title ?? "AI 분석"}</span>
         {job?.week && <span className="text-[11px] px-2 py-0.5 bg-muted rounded-md text-muted-foreground flex-shrink-0">{job.week}</span>}
         <span className="ml-auto hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className={`w-1.5 h-1.5 rounded-full ${done ? "bg-emerald-500" : "bg-primary animate-pulse"}`} />
-          {done ? "분석 완료" : "백그라운드에서 계속 진행됩니다"}
+          <span className={`w-1.5 h-1.5 rounded-full ${failed ? "bg-red-500" : done ? "bg-emerald-500" : "bg-primary animate-pulse"}`} />
+          {failed ? "분석 실패" : done ? "분석 완료" : "백그라운드에서 계속 진행됩니다"}
         </span>
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full mb-4">
-          {done
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 ${failed ? "bg-red-50" : "bg-primary/10"}`}>
+          {failed
+            ? <><X className="w-3.5 h-3.5 text-red-600" /><span className="text-xs font-semibold text-red-600">분석에 실패했습니다</span></>
+            : done
             ? <><Check className="w-3.5 h-3.5 text-emerald-600" /><span className="text-xs font-semibold text-emerald-600">분석이 완료되었습니다</span></>
-            : <><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /><span className="text-xs font-semibold text-primary">{N}단계 멀티모달 통합 분석 중</span></>}
+            : <><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /><span className="text-xs font-semibold text-primary">AI가 강의를 통합 분석하고 있어요</span></>}
         </div>
         <h1 className="text-2xl font-bold mb-1.5 text-center" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           {job?.title ?? "강의 분석"}
@@ -1528,7 +1559,7 @@ function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & 
         {/* 원형 다이어그램 */}
         <div className="relative my-2" style={{ width: "min(88vw, 380px)", aspectRatio: "1 / 1" }}>
           <svg viewBox="0 0 100 100" className="w-full h-full">
-            {ANALYSIS_STAGES.map((_, i) => {
+            {ANALYSIS_PHASES.map((_, i) => {
               const start = i * seg + gap / 2;
               const end = (i + 1) * seg - gap / 2;
               const state = stateOf(i);
@@ -1536,7 +1567,7 @@ function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & 
                 <g key={i}>
                   <path d={donutSegment(30, 47, start, end)} fill={fillOf(state)} />
                   {state === "active" && (
-                    <motion.path d={donutSegment(30, 47, start, end)} fill="#1D4ED8"
+                    <motion.path d={donutSegment(30, 47, start, end)} fill={failed ? "#DC2626" : "#1D4ED8"}
                       initial={{ opacity: 0.15 }}
                       animate={{ opacity: [0.15, 0.5, 0.15] }}
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }} />
@@ -1547,7 +1578,7 @@ function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & 
           </svg>
 
           {/* 세그먼트 라벨 (아이콘 + 텍스트) */}
-          {ANALYSIS_STAGES.map((s, i) => {
+          {ANALYSIS_PHASES.map((s, i) => {
             const mid = i * seg + seg / 2;
             const [lx, ly] = polar(38.5, mid);
             const state = stateOf(i);
@@ -1566,7 +1597,9 @@ function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & 
           {/* 중앙 허브 */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white border border-border shadow-sm flex flex-col items-center justify-center text-center"
             style={{ width: "52%", height: "52%" }}>
-            {done
+            {failed
+              ? <X className="w-6 h-6 text-red-500 mb-1" />
+              : done
               ? <Check className="w-6 h-6 text-emerald-500 mb-1" />
               : <Loader2 className="w-5 h-5 text-primary mb-1 animate-spin" />}
             <div className="text-3xl font-bold leading-none" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -1581,11 +1614,11 @@ function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & 
         {/* 전체 진행률 + 현재 단계 설명 */}
         <div className="w-full mt-6" style={{ maxWidth: "min(88vw, 380px)" }}>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <motion.div className="h-full bg-gradient-to-r from-primary to-blue-400 rounded-full"
+            <motion.div className={`h-full rounded-full ${failed ? "bg-red-400" : "bg-gradient-to-r from-primary to-blue-400"}`}
               animate={{ width: `${progress}%` }} transition={{ duration: 0.4 }} />
           </div>
           <p className="text-xs text-muted-foreground mt-2.5 text-center">
-            {done ? "학습 노트가 준비되었습니다." : current.sub}
+            {failed ? "분석 중 문제가 발생했어요. 다시 업로드해 주세요." : done ? "학습 노트가 준비되었습니다." : current.sub}
           </p>
           {pollError && (
             <p className="text-xs text-destructive mt-2 text-center">
@@ -1600,7 +1633,12 @@ function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & 
             className="flex items-center gap-1.5 px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors">
             <Layers className="w-4 h-4" /> 워크스페이스에서 보기
           </button>
-          {done ? (
+          {failed ? (
+            <button onClick={() => navigate("upload")}
+              className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md hover:shadow-primary/25">
+              다시 업로드 <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : done ? (
             <button onClick={() => navigate("study")}
               className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md hover:shadow-primary/25">
               <BookOpen className="w-4 h-4" /> 결과 보기 <ArrowRight className="w-4 h-4" />
@@ -2156,9 +2194,9 @@ function StudyPage({ navigate, lectureId }: NavProps & { lectureId: number }) {
               <div className="flex items-center gap-2">
                 <select value={transLang} onChange={e => setTransLang(e.target.value)}
                   className="px-3 py-1.5 text-sm border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/25">
+                  {/* 백엔드 Language enum(ko, en)에 맞춤 */}
                   <option value="en">English</option>
-                  <option value="ja">日本語</option>
-                  <option value="zh">中文</option>
+                  <option value="ko">한국어</option>
                 </select>
                 <button onClick={translateActive} disabled={transLoading || !apiActiveSlide}
                   className="flex items-center gap-1.5 px-4 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
