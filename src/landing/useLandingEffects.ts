@@ -94,70 +94,26 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
         .from(".tagline.tl-images", { y: 110, opacity: 0, duration: 0.16 }, 0.68)
         .from(".tagline .icon-card", { rotate: -12, scale: 0.6, duration: 0.14, stagger: 0.12 }, 0.44)
         // 히어로 끝을 walkthrough와 같은 #120F17로 페이드 → 두 섹션 자연스럽게 연결
-        .to(".hero-outro", { opacity: 1, ease: "none", duration: 0.15 }, 0.85);
+        .to(".hero-outro", { opacity: 1, ease: "none", duration: 0.05 }, 0.95);
 
       const scrollInd = root.querySelector<HTMLElement>("#scroll-ind");
       if (scrollInd) scrollInd.onclick = () => lenis.scrollTo("#walkthrough", { offset: 0, duration: 1.4 });
 
-      /* ---------- walkthrough: pinned 5-step ---------- */
+      /* ---------- §2 카드 섹션: 마지막 카드 스크롤과 함께 배경 다크→크림 ---------- */
       {
-        const STEPS = 5;
-        const WT_URLS = ["lectra.app/upload", "lectra.app/upload", "lectra.app/upload", "lectra.app/lecture/new", "lectra.app/lecture/new"];
-        const lines = root.querySelectorAll<HTMLElement>("#wt-line span");
-        const tiles = root.querySelectorAll<HTMLElement>(".tile");
-        const boardEl = root.querySelector<HTMLElement>("#wt-board");
-        const stepBtns = root.querySelectorAll<HTMLElement>(".step-btn");
-        const bars = root.querySelectorAll<HTMLElement>(".step-btn .bar i");
-        let cur = -1;
-
-        const setStep = (i: number) => {
-          const br = root.querySelector("#wt-browser");
-          if (br) br.setAttribute("data-step", String(i));
-          const u = root.querySelector("#wt-url");
-          if (u) u.textContent = WT_URLS[i] || WT_URLS[0];
-          if (i === cur) return;
-          cur = i;
-          // 누적 리빌: data-tile ≤ min(i, 타일수-1)인 타일만 표시(되감으면 역순 제거)
-          const filled = Math.min(i, tiles.length - 1);
-          tiles.forEach((t) => {
-            const ti = +(t.dataset.tile ?? -1);
-            t.classList.toggle("in", ti <= filled);
-            t.classList.toggle("active", ti === i);
-          });
-          // 마지막 스텝: 보드 전체 '정렬 완료' 상태
-          if (boardEl) boardEl.classList.toggle("aligned", i >= STEPS - 1);
-          stepBtns.forEach((b, bi) => b.classList.toggle("active", bi === i));
-          lines.forEach((l, li) => gsap.to(l, { opacity: li === i ? 1 : 0, y: li === i ? 0 : li < i ? -24 : 24, duration: 0.45, ease: "power3.out" }));
-        };
-        setStep(0);
-
-        // 여백(bridge) → walkthrough 자연 연결: #120F17 커버(.wt-intro)를 걷어내며
-        // 콘텐츠 fade-in. 핀 시작 직전 완료. 핀 대상 opacity를 안 건드려 안정적.
-        gsap.fromTo(".wt-intro", { opacity: 1 }, {
-          opacity: 0, ease: "none",
-          scrollTrigger: { trigger: "#walkthrough", start: "top 85%", end: "top 12%", scrub: true },
-        });
-
-        const st = ScrollTrigger.create({
-          trigger: "#walkthrough", start: "top top", end: "+=3600",
-          pin: "#wt-pin", scrub: true, anticipatePin: 1,
-          onUpdate(self) {
-            const p = self.progress * STEPS;
-            const i = Math.min(STEPS - 1, Math.floor(p));
-            setStep(i);
-            bars.forEach((bar, bi) => {
-              const local = gsap.utils.clamp(0, 1, p - bi);
-              bar.style.transform = `scaleX(${bi < STEPS - 1 ? local : 0})`;
-            });
-          },
-        });
-        const scrollToStep = (i: number) => {
-          const y = st.start + ((i + 0.5) / STEPS) * (st.end - st.start);
-          lenis.scrollTo(y, { duration: 1.1 });
-        };
-        stepBtns.forEach((b, i) => { b.onclick = () => scrollToStep(i); });
-        const restart = root.querySelector<HTMLElement>("#restart");
-        if (restart) restart.onclick = () => scrollToStep(0);
+        const cardsSection = root.querySelector<HTMLElement>(".cards-section");
+        const lastCard = root.querySelector<HTMLElement>(".cards-section .scroll-stack-card:last-child");
+        if (cardsSection && lastCard) {
+          gsap.fromTo(
+            cardsSection,
+            { backgroundColor: "#120F17" },
+            {
+              backgroundColor: "#f6f1eb",
+              ease: "none",
+              scrollTrigger: { trigger: lastCard, start: "top 88%", end: "top 40%", scrub: true },
+            },
+          );
+        }
       }
 
       /* ---------- testimonials: 스태거 등장 + 둥실 플로팅 ---------- */
