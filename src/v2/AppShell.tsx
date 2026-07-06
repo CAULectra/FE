@@ -87,7 +87,7 @@ export default function AppShell() {
       <aside className="shell-glass relative z-20 flex w-64 shrink-0 flex-col border-r">
         {/* 로고 */}
         <div className="px-4 pb-2 pt-4">
-          <button onClick={() => gotoFolder(null)} className="text-[17px] font-bold tracking-tight text-white">
+          <button onClick={() => navigate("/")} title="랜딩 페이지로" className="text-[17px] font-bold tracking-tight text-white">
             Lectra
           </button>
         </div>
