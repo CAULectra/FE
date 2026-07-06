@@ -90,6 +90,7 @@ export interface Photo {
   slide: number;
   t?: number;                // 촬영 시각(EXIF) 기반 정렬 시점. 없으면 업로드 순
   label: string;
+  img?: string;              // 사진 파일 경로 (실연동: 업로드 이미지 URL)
 }
 
 /** RAG Q&A — POST /api/rag/qa 응답 스키마 기준 (인용 칩 필수) */

@@ -224,7 +224,9 @@ export default function RefPanel(props: Props) {
                     focused ? "border-[var(--ember)] shadow-[0_0_0_3px_rgba(245,158,11,0.25)]" : "border-border hover:border-[var(--ember)]/60"
                   }`}
                 >
-                  <div className="flex h-32 items-center justify-center bg-gradient-to-br from-[#F3EDE2] to-[#E9E0D0] text-[26px]">📷</div>
+                  {ph.img
+                    ? <img src={ph.img} alt={ph.label} loading="lazy" className="h-36 w-full bg-[#FCFAF5] object-cover object-top" />
+                    : <div className="flex h-32 items-center justify-center bg-gradient-to-br from-[#F3EDE2] to-[#E9E0D0] text-[26px]">📷</div>}
                   <div className="flex items-center gap-2 px-3 py-2">
                     <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-card-foreground">{ph.label}</span>
                     <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">S{ph.slide}</span>
@@ -307,9 +309,9 @@ export default function RefPanel(props: Props) {
           <DialogHeader>
             <DialogTitle className="text-[15px]">{photoOpen?.label} — S{photoOpen?.slide}{photoOpen?.t != null ? ` · ${fmtTime(photoOpen.t)}` : ""}</DialogTitle>
           </DialogHeader>
-          <div className="flex h-80 items-center justify-center rounded-xl bg-gradient-to-br from-[#F3EDE2] to-[#E5DBC8] text-[13px] text-muted-foreground">
-            판서 사진 원본 (실연동 시 업로드 이미지)
-          </div>
+          {photoOpen?.img
+            ? <img src={photoOpen.img} alt={photoOpen.label} className="max-h-[70vh] w-full rounded-xl bg-[#FCFAF5] object-contain" />
+            : <div className="flex h-80 items-center justify-center rounded-xl bg-gradient-to-br from-[#F3EDE2] to-[#E5DBC8] text-[13px] text-muted-foreground">판서 사진 원본 (실연동 시 업로드 이미지)</div>}
         </DialogContent>
       </Dialog>
     </div>
