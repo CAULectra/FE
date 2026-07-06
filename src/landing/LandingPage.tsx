@@ -1,13 +1,15 @@
 /* ================================================================
    LandingPage — React landing page
    인터랙션은 useLandingEffects, 히어로 3D는 Hero3D,
-   워크스루 배경은 DotField가 담당.
+   §2 카드 섹션은 ScrollStack(3장) + 마지막 카드에서 크림 전환.
    ================================================================ */
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import DotField from "./DotField";
-import FloatingLines from "./FloatingLines";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Hero3D from "./Hero3D";
+import ScrollStack, { ScrollStackItem } from "./ScrollStack";
+import TextType from "./TextType";
 import { useLandingEffects } from "./useLandingEffects";
 import "./landing.css";
 
@@ -15,6 +17,25 @@ export default function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   useLandingEffects(rootRef);
+
+  /* 태그라인 등장 시점(히어로 스크롤 중반)에 TextType 타이핑 시작.
+     sticky 히어로 안이라 startOnVisible은 로드 즉시 발동 → 스크롤 진행도로 게이팅. */
+  const [copyOn, setCopyOn] = useState(false);
+  useEffect(() => {
+    let fired = false;
+    const st = ScrollTrigger.create({
+      trigger: ".hero",
+      start: "top top",
+      end: "bottom bottom",
+      onUpdate: (self) => {
+        if (!fired && self.progress >= 0.86) {
+          fired = true;
+          setCopyOn(true);
+        }
+      },
+    });
+    return () => st.kill();
+  }, []);
 
   /* 내부 링크(/auth, /library, /lecture/…)는 SPA 네비게이션으로 */
   const onRootClick = (e: React.MouseEvent) => {
@@ -96,6 +117,18 @@ export default function LandingPage() {
               <div className="icon-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4-4-8 8"/></svg></div>
               <h3>Images</h3>
             </div>
+            <p className="tagline-copy">
+              {copyOn && (
+                <TextType
+                  as="span"
+                  text="모든 자료를 한 화면에, 간편하게 완성하는 나만의 강의노트"
+                  typingSpeed={55}
+                  loop={false}
+                  showCursor
+                  cursorCharacter="|"
+                />
+              )}
+            </p>
           </div>
           <button className="scroll-ind" id="scroll-ind"><i>↓</i> Scroll</button>
           {/* 히어로 끝을 walkthrough 다크(#120F17)로 페이드 → 두 섹션 자연 연결 */}
@@ -106,152 +139,82 @@ export default function LandingPage() {
       {/* breathing room: 히어로와 워크스루 사이 여백 (히어로와 같은 다크 톤 #120F17) */}
       <div className="bridge" aria-hidden="true"></div>
 
-      {/* ================= WALKTHROUGH (pinned) ================= */}
-      <section className="walkthrough" id="walkthrough">
-        <div className="wt-pin" id="wt-pin">
-          <div className="wt-dots">
-            <DotField
-              dotRadius={1.5}
-              dotSpacing={14}
-              bulgeStrength={67}
-              glowRadius={160}
-              cursorRadius={300}
-              bulgeOnly
-              gradientFrom="#ffffff"
-              gradientTo="#B497CF"
-              glowColor="#120F17"
-            />
-            <FloatingLines
-              enabledWaves={["top", "middle", "bottom"]}
-              lineCount={[8, 8, 8]}
-              lineDistance={[8, 8, 8]}
-              bendRadius={10}
-              bendStrength={-2}
-              interactive
-              parallax
-              animationSpeed={1}
-              linesGradient={["#ed9cf3", "#6f6f6f", "#6a6a6a"]}
-            />
-          </div>
-          <div className="wt-heading">
-            <div className="line" id="wt-line">
-              <span>Drop in your slides.</span>
-              <span>Add the recording.</span>
-              <span>Photos? Auto-placed.</span>
-              <span>We align every sentence.</span>
-              <span>Your workspace is ready.</span>
+      {/* ================= §2 CARDS (워크스루 대체) — 스크롤하며 쌓이는 3장 ================= */}
+      <section className="cards-section" id="walkthrough">
+        <ScrollStack
+          className="cards-stack"
+          itemDistance={92}
+          itemScale={0.04}
+          itemStackDistance={22}
+          stackPosition="14%"
+          baseScale={0.9}
+          useWindowScroll
+        >
+          <ScrollStackItem itemClassName="workflow-card workflow-card-light">
+            <div className="workflow-card-copy">
+              <span className="workflow-index">01</span>
+              <h3>Upload every source at once.</h3>
+              <p>Drop the slide deck, lecture recording, and board photos into one lecture folder. Lectra keeps the raw material grouped before any AI pass begins.</p>
             </div>
-          </div>
-      
-          <div className="browser" id="wt-browser" data-step="0">
-            <div className="chrome"><span className="dots"><i></i><i></i><i></i></span><span className="url" id="wt-url">lectra.app/lecture/new</span><span style={{width: '45px'} as React.CSSProperties}></span></div>
-            <div className="app board" id="wt-board">
-              <aside className="mini-side">
-                <div className="logo">Lectra</div>
-                <div className="newbtn">+ New lecture</div>
-                <div className="cap">Library</div>
-                <div className="mrow on"><span className="ic"></span><span className="lb" style={{maxWidth: '52px'} as React.CSSProperties}></span></div>
-                <div className="cap">Subjects</div>
-                <div className="mrow srow srow1"><span className="fdot" style={{background: '#DF7A55'} as React.CSSProperties}></span><span className="lb" style={{maxWidth: '64px'} as React.CSSProperties}></span><span className="sdot"></span></div>
-                <div className="mrow srow"><span className="fdot" style={{background: '#E0A23E'} as React.CSSProperties}></span><span className="lb" style={{maxWidth: '46px'} as React.CSSProperties}></span><span className="sdot"></span></div>
-                <div className="mrow srow"><span className="fdot" style={{background: '#A99677'} as React.CSSProperties}></span><span className="lb" style={{maxWidth: '56px'} as React.CSSProperties}></span><span className="sdot"></span></div>
-              </aside>
-              <div className="board-main">
-                <div className="board-toolbar">
-                  <div className="bt-title"><span className="bt-dot"></span>Week 11 — Hashing</div>
-                  <div className="bt-status"><span className="s-run">Processing…</span><span className="s-done">Ready <b>✓</b></span></div>
-                  <div className="bt-tags"><span>61:30</span><span>S1–S18</span><span>RAG</span></div>
-                </div>
-                <div className="board-stage">
-                <div className="board-grid">
-                  {/* 01 Slides */}
-                  <div className="tile" data-tile="0">
-                    <div className="tile-h"><span className="tdot c-cobalt"></span>Slides<b className="tick">✓</b></div>
-                    <div className="tile-b">
-                      <div className="sl-thumb">
-                        <div className="sl-t">S12 — B-Tree insertion</div>
-                        <div className="tln" style={{width: '82%'} as React.CSSProperties}></div>
-                        <div className="tln" style={{width: '64%'} as React.CSSProperties}></div>
-                        <div className="sl-frm">gˢ = yᶜ·β → O(log n)</div>
-                      </div>
-                      <div className="sl-pages"><i></i><i className="cur"></i><i></i><i></i></div>
-                    </div>
-                  </div>
-                  {/* 02 Audio */}
-                  <div className="tile" data-tile="1">
-                    <div className="tile-h"><span className="tdot c-coral"></span>Audio<b className="tick">✓</b></div>
-                    <div className="tile-b">
-                      <div className="wave sm"><i style={{'--h': '60%'} as React.CSSProperties}></i><i style={{'--h': '85%'} as React.CSSProperties}></i><i style={{'--h': '45%'} as React.CSSProperties}></i><i style={{'--h': '95%'} as React.CSSProperties}></i><i style={{'--h': '55%'} as React.CSSProperties}></i><i style={{'--h': '75%'} as React.CSSProperties}></i><i style={{'--h': '40%'} as React.CSSProperties}></i><i style={{'--h': '90%'} as React.CSSProperties}></i><i style={{'--h': '65%'} as React.CSSProperties}></i><i style={{'--h': '80%'} as React.CSSProperties}></i></div>
-                      <div className="cap-line"><span className="ts-chip">23:14</span>the median key moves <em>up</em></div>
-                    </div>
-                  </div>
-                  {/* 03 Photos */}
-                  <div className="tile" data-tile="2">
-                    <div className="tile-h"><span className="tdot c-amber"></span>Photos<b className="tick">✓</b></div>
-                    <div className="tile-b">
-                      <div className="photo-grid sm">
-                        <div className="photo-cell">📷<span className="stamp">23:40</span></div>
-                        <div className="photo-cell">📷<span className="stamp">36:50</span></div>
-                        <div className="photo-cell">📷<span className="stamp">48:12</span></div>
-                        <div className="photo-cell add">＋</div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* 04 Align */}
-                  <div className="tile" data-tile="3">
-                    <div className="tile-h"><span className="tdot c-terra"></span>Align<b className="tick">✓</b></div>
-                    <div className="tile-b">
-                      <div className="pipe-row done"><span className="n">✓</span>Speech-to-text<span className="pct">done</span></div>
-                      <div className="pipe-row done"><span className="n">✓</span>Slide text<span className="pct">done</span></div>
-                      <div className="pipe-row cur"><span className="n">4</span>Align script<span className="pct">100%</span></div>
-                      <div className="wt-prog"><i></i></div>
-                    </div>
-                  </div>
-                </div>{/* /board-grid */}
-                <div className="board-workspace">
-                  <div className="mini-study">
-                    <div className="ms-col ms-slides"><div className="ms-h">Slides</div>
-                      <div className="ms-thumb"><div className="tl1"></div><div className="tl2"></div></div>
-                      <div className="ms-thumb cur"><div className="tl1" style={{width: '78%'} as React.CSSProperties}></div><div className="tl2"></div></div>
-                      <div className="ms-thumb"><div className="tl1" style={{width: '52%'} as React.CSSProperties}></div><div className="tl2" style={{width: '70%'} as React.CSSProperties}></div></div>
-                    </div>
-                    <div className="ms-col ms-note"><div className="ms-h">Note</div>
-                      <div className="nh"></div>
-                      <div className="ln" style={{width: '94%'} as React.CSSProperties}></div><div className="ln" style={{width: '80%'} as React.CSSProperties}></div>
-                      <div className="ln hl"></div>
-                      <div className="frm">gˢ = yᶜ·β  →  O(log n)</div>
-                      <div className="ln" style={{width: '86%'} as React.CSSProperties}></div><div className="ln" style={{width: '58%'} as React.CSSProperties}></div>
-                    </div>
-                    <div className="ms-col ms-chat"><div className="ms-h">Ask</div>
-                      <div className="ms-bub q">Why split at the median?</div>
-                      <div className="ms-bub a">Both nodes stay half-full, so inserts stay balanced.<br /><span className="cite">S12 · 23:14</span></div>
-                    </div>
-                  </div>
-                </div>
-                </div>{/* /board-stage */}
-                <div className="board-tl">
-                  <span className="play">▶</span>
-                  <span className="tlt">23:14 / 61:30</span>
-                  <span className="segs"><i className="done"></i><i className="done"></i><i className="done"></i><i className="cur"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
-                </div>
-              </div>{/* /board-main */}
-            </div>{/* /app */}
-          </div>{/* /browser */}
-      
-          <div className="stepper" id="stepper">
-            <button className="step-btn active" data-i="0"><span className="index">01</span><span className="label">Slides</span><span className="bar"><i></i></span></button>
-            <button className="step-btn" data-i="1"><span className="index">02</span><span className="label">Audio</span><span className="bar"><i></i></span></button>
-            <button className="step-btn" data-i="2"><span className="index">03</span><span className="label">Photos</span><span className="bar"><i></i></span></button>
-            <button className="step-btn" data-i="3"><span className="index">04</span><span className="label">Align</span><span className="bar"><i></i></span></button>
-            <button className="step-btn" data-i="4"><span className="index">05</span><span className="label">Ready</span></button>
-          </div>
-          <div className="restart-wrap"><button className="restart-btn roll-host" id="restart" data-roll>⟲ Restart</button></div>
-          {/* 여백→walkthrough 연결: #120F17 커버가 걷히며 콘텐츠 fade-in */}
-          <div className="wt-intro" aria-hidden="true"></div>
-        </div>
+            <div className="workflow-visual upload-visual" aria-hidden="true">
+              <div className="upload-ring"><span>Ready</span></div>
+              <div className="upload-file file-slide"><b>slides.pdf</b><small>42 pages</small></div>
+              <div className="upload-file file-audio"><b>recording.m4a</b><small>61:30</small></div>
+              <div className="upload-file file-photo"><b>board-photos</b><small>8 images</small></div>
+            </div>
+          </ScrollStackItem>
+
+          <ScrollStackItem itemClassName="workflow-card workflow-card-dark">
+            <div className="workflow-card-copy">
+              <span className="workflow-index">02</span>
+              <h3>Align the lecture timeline.</h3>
+              <p>Speech, slide text, and photo timestamps are mapped to the same clock, so every sentence knows where it belongs.</p>
+            </div>
+            <div className="workflow-visual align-visual" aria-hidden="true">
+              <div className="align-wave">
+                {Array.from({ length: 20 }).map((_, i) => (
+                  <i key={i} style={{ "--h": `${28 + ((i * 17) % 62)}%` } as React.CSSProperties} />
+                ))}
+              </div>
+              <div className="align-track">
+                <span>00:00</span><i></i><span>23:14</span><i></i><span>61:30</span>
+              </div>
+              <div className="align-script">
+                <p><b>S12</b> the median key moves up</p>
+                <p><b>S13</b> child nodes stay balanced</p>
+                <p><b>S14</b> search remains logarithmic</p>
+              </div>
+            </div>
+          </ScrollStackItem>
+
+          <ScrollStackItem itemClassName="workflow-card workflow-card-light">
+            <div className="workflow-card-copy">
+              <span className="workflow-index">03</span>
+              <h3>Study from the finished workspace.</h3>
+              <p>Review synced notes, jump through cited answers, and see which slides deserve the most attention before the exam.</p>
+            </div>
+            <div className="workflow-visual workspace-visual" aria-hidden="true">
+              <div className="workspace-rail">
+                <span></span><span className="active"></span><span></span><span></span>
+              </div>
+              <div className="workspace-note">
+                <b>Week 11 &mdash; B-Trees</b>
+                <i style={{ width: "92%" }}></i>
+                <i style={{ width: "78%" }}></i>
+                <i className="highlight" style={{ width: "64%" }}></i>
+                <i style={{ width: "86%" }}></i>
+              </div>
+              <div className="workspace-answer">
+                <span>Q&amp;A</span>
+                <p>Balanced inserts keep the tree shallow.</p>
+                <small>S12 &middot; 23:14</small>
+              </div>
+            </div>
+          </ScrollStackItem>
+        </ScrollStack>
       </section>
-      
-      {/* ================= WORKSPACE OVERVIEW ================= */}
+
+            {/* ================= WORKSPACE OVERVIEW ================= */}
       <section className="overview" id="overview">
         <div className="wrap overview-layout">
           <div className="overview-main">
