@@ -1,7 +1,6 @@
 /* ================================================================
-   useLandingEffects — 정적 v4의 인터랙션 스크립트를 React로 포팅
+   useLandingEffects — landing page interactions
    GSAP + ScrollTrigger + Lenis. gsap.context로 마운트/언마운트 관리.
-   (Three.js 폴백은 Spline 상시 사용으로 데드코드였으므로 제외)
    ================================================================ */
 import { useEffect, type RefObject } from "react";
 import gsap from "gsap";
@@ -21,8 +20,6 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
     const rafTick = (t: number) => lenis.raf(t * 1000);
     gsap.ticker.add(rafTick);
     gsap.ticker.lagSmoothing(0);
-
-    const cleanups: (() => void)[] = [];
 
     const ctx = gsap.context(() => {
       /* ---------- rolling label buttons ---------- */
@@ -87,14 +84,17 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
       });
       heroTl.to(".stage", { y: -80, opacity: 0, ease: "none", duration: 0.3 }, 0.05)
         .to(".top-nav", { opacity: 0, y: -30, duration: 0.2 }, 0.05)
-        .to("#discs", { opacity: 0.38, scale: 1.06, ease: "none", duration: 0.5 }, 0.1)
+        .to("#discs", { scale: 1.015, ease: "none", duration: 0.5 }, 0.1)
+        .to(".hero-dim", { opacity: 1, ease: "none", duration: 0.5 }, 0.1)
         .to(".scroll-ind", { opacity: 0, duration: 0.08 }, 0)
         .set(".taglines", { pointerEvents: "auto" })
         .to(".taglines", { opacity: 1, duration: 0.12 }, 0.38)
         .from(".tagline.tl-slides", { y: 110, opacity: 0, duration: 0.16 }, 0.42)
         .from(".tagline.tl-audio", { y: 110, opacity: 0, duration: 0.16 }, 0.55)
         .from(".tagline.tl-images", { y: 110, opacity: 0, duration: 0.16 }, 0.68)
-        .from(".tagline .icon-card", { rotate: -12, scale: 0.6, duration: 0.14, stagger: 0.12 }, 0.44);
+        .from(".tagline .icon-card", { rotate: -12, scale: 0.6, duration: 0.14, stagger: 0.12 }, 0.44)
+        // 히어로 끝을 walkthrough와 같은 #120F17로 페이드 → 두 섹션 자연스럽게 연결
+        .to(".hero-outro", { opacity: 1, ease: "none", duration: 0.15 }, 0.85);
 
       const scrollInd = root.querySelector<HTMLElement>("#scroll-ind");
       if (scrollInd) scrollInd.onclick = () => lenis.scrollTo("#walkthrough", { offset: 0, duration: 1.4 });
@@ -102,16 +102,10 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
       /* ---------- walkthrough: pinned 5-step ---------- */
       {
         const STEPS = 5;
-        const subs = [
-          "PDF·PPT 슬라이드가 강의의 뼈대가 됩니다",
-          "녹음이 모든 문장에 시간을 부여합니다",
-          "촬영 시각(EXIF)으로 정확한 위치에 자동 삽입",
-          "STT → 추출 → 정렬 → 노트, 페이지를 떠나도 계속",
-          "문장 하나를 클릭하면 전부가 따라옵니다",
-        ];
         const WT_URLS = ["lectra.app/upload", "lectra.app/upload", "lectra.app/upload", "lectra.app/lecture/new", "lectra.app/lecture/new"];
         const lines = root.querySelectorAll<HTMLElement>("#wt-line span");
-        const screens = root.querySelectorAll<HTMLElement>(".screen");
+        const tiles = root.querySelectorAll<HTMLElement>(".tile");
+        const boardEl = root.querySelector<HTMLElement>("#wt-board");
         const stepBtns = root.querySelectorAll<HTMLElement>(".step-btn");
         const bars = root.querySelectorAll<HTMLElement>(".step-btn .bar i");
         let cur = -1;
@@ -123,13 +117,26 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
           if (u) u.textContent = WT_URLS[i] || WT_URLS[0];
           if (i === cur) return;
           cur = i;
-          screens.forEach((s) => s.classList.toggle("on", +(s.dataset.step ?? -1) === i));
+          // 누적 리빌: data-tile ≤ min(i, 타일수-1)인 타일만 표시(되감으면 역순 제거)
+          const filled = Math.min(i, tiles.length - 1);
+          tiles.forEach((t) => {
+            const ti = +(t.dataset.tile ?? -1);
+            t.classList.toggle("in", ti <= filled);
+            t.classList.toggle("active", ti === i);
+          });
+          // 마지막 스텝: 보드 전체 '정렬 완료' 상태
+          if (boardEl) boardEl.classList.toggle("aligned", i >= STEPS - 1);
           stepBtns.forEach((b, bi) => b.classList.toggle("active", bi === i));
           lines.forEach((l, li) => gsap.to(l, { opacity: li === i ? 1 : 0, y: li === i ? 0 : li < i ? -24 : 24, duration: 0.45, ease: "power3.out" }));
-          const sub = root.querySelector("#wt-sub");
-          if (sub) sub.textContent = subs[i];
         };
         setStep(0);
+
+        // 여백(bridge) → walkthrough 자연 연결: #120F17 커버(.wt-intro)를 걷어내며
+        // 콘텐츠 fade-in. 핀 시작 직전 완료. 핀 대상 opacity를 안 건드려 안정적.
+        gsap.fromTo(".wt-intro", { opacity: 1 }, {
+          opacity: 0, ease: "none",
+          scrollTrigger: { trigger: "#walkthrough", start: "top 85%", end: "top 12%", scrub: true },
+        });
 
         const st = ScrollTrigger.create({
           trigger: "#walkthrough", start: "top top", end: "+=3600",
@@ -153,13 +160,18 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
         if (restart) restart.onclick = () => scrollToStep(0);
       }
 
-      /* ---------- app hero: parallax + reveal ---------- */
-      gsap.from(".app-hero .content > *", {
-        scrollTrigger: { trigger: ".app-hero", start: "top 55%" },
-        y: 60, opacity: 0, duration: 1, ease: "power3.out", stagger: 0.1,
-      });
-      gsap.to(".app-hero .fc1", { scrollTrigger: { trigger: ".app-hero", start: "top bottom", end: "bottom top", scrub: true }, y: -110, ease: "none" });
-      gsap.to(".app-hero .fc2", { scrollTrigger: { trigger: ".app-hero", start: "top bottom", end: "bottom top", scrub: true }, y: -50, ease: "none" });
+      /* ---------- testimonials: 스태거 등장 + 둥실 플로팅 ---------- */
+      {
+        const quotes = gsap.utils.toArray<HTMLElement>(".quote-card");
+        gsap.from(quotes, {
+          scrollTrigger: { trigger: ".overview-testimonials", start: "top 80%" },
+          y: 70, opacity: 0, rotate: (i: number) => (i % 2 ? 3 : -3),
+          duration: 0.9, ease: "power3.out", stagger: 0.16,
+        });
+        quotes.forEach((q, i) =>
+          gsap.to(q, { y: i % 2 ? -9 : -14, duration: 2.6 + i * 0.4, ease: "sine.inOut", yoyo: true, repeat: -1, delay: 0.9 + i * 0.35 }),
+        );
+      }
 
       /* ---------- generic reveals ---------- */
       root.querySelectorAll(".reveal").forEach((el) => {
@@ -169,85 +181,6 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
         });
       });
 
-      /* ---------- calculator ---------- */
-      {
-        const RATE = 0.37;
-        const input = root.querySelector<HTMLInputElement>("#calc-in");
-        const out = root.querySelector<HTMLElement>("#calc-out");
-        const saveEl = root.querySelector<HTMLElement>("#calc-save");
-        const dd = root.querySelector<HTMLElement>("#dd-src");
-        if (input && out && saveEl && dd) {
-          let mult = 1, swapped = false, displayed = 0;
-
-          dd.querySelector<HTMLElement>(".dd-btn")!.onclick = (e) => { e.stopPropagation(); dd.classList.toggle("open"); };
-          const closeDd = () => dd.classList.remove("open");
-          document.addEventListener("click", closeDd);
-          cleanups.push(() => document.removeEventListener("click", closeDd));
-          dd.querySelectorAll<HTMLElement>(".dd-list button").forEach((b) => {
-            b.onclick = (e) => {
-              e.stopPropagation();
-              mult = +(b.dataset.mult ?? 1);
-              dd.querySelector<HTMLElement>(".dd-btn .lbl")!.textContent = b.dataset.label ?? "";
-              const ic = dd.querySelector<HTMLElement>(".dd-btn .ic")!;
-              const src = b.querySelector<HTMLElement>(".ic")!;
-              ic.style.background = src.style.background;
-              ic.textContent = src.textContent;
-              dd.classList.remove("open");
-              update();
-            };
-          });
-
-          const fmtMin = (mn: number) =>
-            mn >= 90 ? Math.floor(mn / 60) + "시간 " + Math.round(mn % 60) + "분" : Math.round(mn) + "분";
-
-          function update() {
-            const v = Math.max(0, parseFloat(input!.value.replace(/[^\d.]/g, "")) || 0);
-            const total = v * mult;
-            const result = swapped ? total / RATE : total * RATE;
-            gsap.killTweensOf(out);
-            const obj = { n: displayed };
-            gsap.to(obj, { n: result, duration: 0.55, ease: "power2.out", onUpdate: () => { out!.textContent = String(Math.round(obj.n)); displayed = obj.n; } });
-            const saved = Math.abs(total - result);
-            saveEl!.innerHTML = swapped
-              ? `복습 ${fmtMin(total)}이면 강의 <b>${fmtMin(result)}</b>를 커버해요`
-              : `<b>${fmtMin(saved)}</b> 절약 — 2.7× 빠른 복습`;
-          }
-          input.addEventListener("input", update);
-          const swap = root.querySelector<HTMLElement>("#swap");
-          if (swap) swap.onclick = () => {
-            swapped = !swapped;
-            root.querySelector("#out-label")!.textContent = swapped ? "커버하는 강의" : "Lectra 복습";
-            root.querySelector("#out-cap")!.textContent = swapped ? "역방향 계산" : "정렬 노트 기준";
-            root.querySelector("#calc .row1 .caption")!.textContent = swapped ? "복습 시간" : "강의 길이";
-            update();
-          };
-          update();
-        }
-      }
-
-      /* ---------- testimonials: pinned card stack ---------- */
-      {
-        const cards = gsap.utils.toArray<HTMLElement>(".t-card");
-        cards.forEach((c, i) => gsap.set(c, { y: i * 22, scale: 1 - i * 0.045, zIndex: cards.length - i, transformOrigin: "center top" }));
-        const tl = gsap.timeline({
-          scrollTrigger: { trigger: "#testimonials", start: "top top", end: "+=" + cards.length * 620, pin: "#tst-pin", scrub: 0.5 },
-        });
-        cards.forEach((c, i) => {
-          if (i === cards.length - 1) return;
-          tl.to(c, { y: -420, rotate: i % 2 ? 7 : -7, opacity: 0, duration: 1, ease: "power1.in" })
-            .to(cards.slice(i + 1), {
-              y: (_j: number, t: HTMLElement) => +gsap.getProperty(t, "y") - 22,
-              scale: (_j: number, t: HTMLElement) => Math.min(1, +gsap.getProperty(t, "scale") + 0.045),
-              duration: 1,
-            }, "<");
-        });
-      }
-
-      /* ---------- finale ---------- */
-      gsap.from(".finale h2", {
-        scrollTrigger: { trigger: ".finale", start: "top 70%" },
-        scale: 0.85, opacity: 0, duration: 1.2, ease: "power3.out",
-      });
       gsap.from(".giant-lectra", {
         scrollTrigger: { trigger: ".giant-lectra", start: "top 95%" },
         yPercent: 40, opacity: 0, duration: 1.2, ease: "power3.out",
@@ -261,7 +194,6 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
 
     return () => {
       window.removeEventListener("load", refresh);
-      cleanups.forEach((fn) => fn());
       gsap.ticker.remove(rafTick);
       lenis.destroy();
       ctx.revert(); // 모든 트윈/ScrollTrigger 해제

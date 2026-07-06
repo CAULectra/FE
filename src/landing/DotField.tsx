@@ -1,5 +1,5 @@
 /* ================================================================
-   DotField — react-bits 컴포넌트 (사용자 제공 원본을 TS로 이식)
+   DotField — 워크스루 섹션 인터랙티브 도트 배경
    walkthrough 섹션 배경: 마우스 근처 도트가 볼록하게 밀려나는 필드
    ================================================================ */
 import { useEffect, useRef, memo } from "react";
@@ -58,6 +58,8 @@ const DotField = memo(function DotField({
     const ctx = canvas.getContext("2d", { alpha: true })!;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let resizeTimer: ReturnType<typeof setTimeout>;
+    let speedInterval: ReturnType<typeof setInterval> | null = null;
+    let active = false;
 
     function resize() {
       clearTimeout(resizeTimer);
@@ -93,9 +95,10 @@ const DotField = memo(function DotField({
     }
 
     function onMouseMove(e: MouseEvent) {
-      const s = sizeRef.current;
-      mouseRef.current.x = e.pageX - s.offsetX;
-      mouseRef.current.y = e.pageY - s.offsetY;
+      // 뷰포트 기준 좌표: 핀(position:fixed)으로 고정돼도 스크롤과 무관하게 정확
+      const r = canvas!.getBoundingClientRect();
+      mouseRef.current.x = e.clientX - r.left;
+      mouseRef.current.y = e.clientY - r.top;
     }
 
     function updateMouseSpeed() {
@@ -107,11 +110,19 @@ const DotField = memo(function DotField({
       m.prevX = m.x;
       m.prevY = m.y;
     }
-    const speedInterval = setInterval(updateMouseSpeed, 20);
+
+    function shouldRun() {
+      return active && !document.hidden;
+    }
 
     let frameCount = 0;
 
     function tick() {
+      if (!shouldRun()) {
+        rafRef.current = null;
+        return;
+      }
+
       frameCount++;
       const dots = dotsRef.current;
       const m = mouseRef.current;
@@ -201,10 +212,49 @@ const DotField = memo(function DotField({
       rafRef.current = requestAnimationFrame(tick);
     }
 
+    function startLoop() {
+      if (!shouldRun()) return;
+      if (!speedInterval) speedInterval = setInterval(updateMouseSpeed, 20);
+      if (rafRef.current === null) rafRef.current = requestAnimationFrame(tick);
+    }
+
+    function stopLoop() {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      if (speedInterval) {
+        clearInterval(speedInterval);
+        speedInterval = null;
+      }
+    }
+
+    function syncLoop() {
+      if (shouldRun()) startLoop();
+      else stopLoop();
+    }
+
     doResize();
     window.addEventListener("resize", resize);
     window.addEventListener("mousemove", onMouseMove, { passive: true });
-    rafRef.current = requestAnimationFrame(tick);
+
+    const host = canvas.parentElement;
+    const io = host && "IntersectionObserver" in window
+      ? new IntersectionObserver(([entry]) => {
+        active = entry.isIntersecting;
+        if (active) doResize();
+        syncLoop();
+      }, { rootMargin: "500px 0px" })
+      : null;
+    if (io && host) {
+      io.observe(host);
+    } else {
+      active = true;
+      syncLoop();
+    }
+
+    const onVisibilityChange = () => syncLoop();
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     rebuildRef.current = () => {
       const { w, h } = sizeRef.current;
@@ -212,11 +262,13 @@ const DotField = memo(function DotField({
     };
 
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      clearInterval(speedInterval);
+      active = false;
+      stopLoop();
+      io?.disconnect();
       clearTimeout(resizeTimer);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
