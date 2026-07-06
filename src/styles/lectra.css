@@ -5,8 +5,6 @@
    - 사용자 피드백 반영: 내부 박스는 회색(#F3F4F6) 대신 밝은 웜 톤(흰색/크림)
    - theme.css 뒤에 import 되어 shadcn CSS 변수를 덮어쓴다
    ================================================================ */
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
-
 :root {
   /* ---- 워크스페이스 (light, warm) ---- */
   --background: #FAF9F6;            /* 웜 페이퍼 캔버스 */

@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../app/compone
 import { useApp } from "./store";
 import type { Folder, Lecture } from "./types";
 import UploadModal from "./UploadModal";
+import FolderIcon from "./FolderIcon";
 
 type SortKey = "updated" | "name" | "uploaded" | "status";
 const SORT_LABEL: Record<SortKey, string> = {
@@ -25,13 +26,8 @@ const SORT_LABEL: Record<SortKey, string> = {
 };
 const STATUS_ORDER: Record<Lecture["status"], number> = { processing: 0, queued: 1, failed: 2, uploading: 0, ready: 3 };
 
-/** 과목 폴더 색상 팔레트 (웜 계열 순환) */
-const FOLDER_COLORS = [
-  { tab: "#DF7A55", from: "#F9DCCE", to: "#F3C3AC", text: "#8A3D1F" },
-  { tab: "#E0A23E", from: "#FBE8C4", to: "#F5D69A", text: "#7C5308" },
-  { tab: "#A99677", from: "#EFE7D6", to: "#E3D5BC", text: "#5C4F38" },
-  { tab: "#C98A6B", from: "#F5DFD3", to: "#EBC9B5", text: "#7A4429" },
-];
+/** 과목 폴더 아이콘 색상 (노랑 · 올리브 · 하늘 순환) */
+const FOLDER_ICON_COLORS = ["#EAB308", "#94A13C", "#7DD3FC"];
 
 function StatusBadge({ lec }: { lec: Lecture }) {
   switch (lec.status) {
@@ -43,45 +39,34 @@ function StatusBadge({ lec }: { lec: Lecture }) {
   }
 }
 
-/** Flexcil 스타일 폴더 카드 */
+/** 과목 폴더 아이콘 카드 (노랑·올리브·하늘) */
 function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; lectures: Lecture[]; colorIdx: number; onOpen: () => void }) {
-  const c = FOLDER_COLORS[colorIdx % FOLDER_COLORS.length];
+  const color = FOLDER_ICON_COLORS[colorIdx % FOLDER_ICON_COLORS.length];
   const processing = lectures.filter((l) => l.status === "processing" || l.status === "queued").length;
   const latest = [...lectures].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0];
   return (
-    <button onClick={onOpen} className="group text-left">
-      <div className="relative pt-3">
-        {/* 폴더 탭 */}
-        <div className="absolute left-0 top-0 h-6 w-24 rounded-t-xl" style={{ background: c.tab }} />
-        {/* 폴더 본체 */}
-        <div
-          className="card-lift relative flex aspect-[16/10] flex-col justify-between rounded-2xl rounded-tl-none p-4 shadow-[0_2px_8px_rgba(28,25,23,0.07)]"
-          style={{ background: `linear-gradient(145deg, ${c.from} 0%, ${c.to} 100%)` }}
-        >
-          {/* 안쪽 서류 힌트 */}
-          <div className="absolute left-4 right-4 top-3 h-10 rounded-lg bg-white/45" />
-          <div className="absolute left-6 right-6 top-1.5 h-10 rounded-lg bg-white/30" />
-          <div className="relative" />
-          <div className="relative flex items-end justify-between">
-            <div>
-              <div className="text-[22px] font-bold leading-none" style={{ color: c.text }}>{lectures.length}</div>
-              <div className="mt-1 text-[11px] font-medium" style={{ color: c.text, opacity: 0.75 }}>강의</div>
-            </div>
-            {processing > 0 && (
-              <span className="rounded-full bg-white/75 px-2.5 py-1 text-[10.5px] font-semibold" style={{ color: c.text }}>
-                {processing}개 처리 중
-              </span>
-            )}
-          </div>
-        </div>
+    <div
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); } }}
+      className="group/card flex cursor-pointer flex-col items-center rounded-2xl px-4 py-6 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    >
+      <div className="relative flex h-[132px] items-end justify-center">
+        <FolderIcon color={color} size={1.5} />
+        {processing > 0 && (
+          <span className="absolute -top-1 right-3 z-40 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-white shadow-[0_2px_6px_rgba(0,0,0,0.2)]">
+            {processing} 처리중
+          </span>
+        )}
       </div>
-      <div className="mt-2.5 px-0.5">
-        <div className="text-[15px] font-bold text-card-foreground transition-colors group-hover:text-primary">{folder.name}</div>
+      <div className="mt-6">
+        <div className="text-[15px] font-bold text-card-foreground transition-colors group-hover/card:text-primary">{folder.name}</div>
         <div className="mt-0.5 text-[12px] text-muted-foreground">
           강의 {lectures.length}개{latest ? ` · 최근 수정 ${latest.updatedLabel}` : ""}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
