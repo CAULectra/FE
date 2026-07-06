@@ -19,25 +19,25 @@ export const realApi: LectraApi = {
     return apiPostJson<LoginResponse>("/auth/login/google", { code });
   },
 
-  // POST /upload-pdf  (multipart: title, pdf)
+  // POST /upload-pdf  (multipart: title, file)
   uploadPdf(title, pdf) {
     const form = new FormData();
     form.append("title", title);
-    form.append("pdf", pdf);
+    form.append("file", pdf);
     return apiPostForm<UploadPdfResponse>("/upload-pdf", form);
   },
 
-  // POST /lectures/{id}/upload-audio  (multipart: audio)
+  // POST /lectures/{id}/upload-audio  (multipart: file)
   uploadAudio(lectureId, audio) {
     const form = new FormData();
-    form.append("audio", audio);
+    form.append("file", audio);
     return apiPostForm<UploadAudioResponse>(`/lectures/${lectureId}/upload-audio`, form);
   },
 
-  // POST /lectures/{id}/upload-board  (multipart: image)
+  // POST /lectures/{id}/upload-board  (multipart: file)
   uploadBoard(lectureId, image) {
     const form = new FormData();
-    form.append("image", image);
+    form.append("file", image);
     return apiPostForm<UploadBoardResponse>(`/lectures/${lectureId}/upload-board`, form);
   },
 

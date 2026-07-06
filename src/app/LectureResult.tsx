@@ -5,10 +5,10 @@ import {
 import { api, type Lecture } from "../api";
 import { LectraLogo } from "./components/LectraLogo";
 
+// 백엔드 Language enum(ko, en)에 맞춤
 const LANGS = [
   { code: "en", label: "English" },
-  { code: "ja", label: "日本語" },
-  { code: "zh", label: "中文" },
+  { code: "ko", label: "한국어" },
 ];
 
 // 명세 기반 결과 페이지: GET /lectures/{id}/slides 로 슬라이드·원문·OCR 표시 + 슬라이드 번역
