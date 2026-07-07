@@ -75,7 +75,7 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
           { yPercent: 115, y: 0 },
           { yPercent: 0, y: 0, duration: 1.1, ease: "power4.out", stagger: 0.028, delay: 0.15 });
       }
-      gsap.from(".hero-aside > *", { opacity: 0, y: 40, duration: 1, ease: "power3.out", stagger: 0.12, delay: 0.8 });
+      gsap.from(".hero-sub, .hero-aside > *", { opacity: 0, y: 40, duration: 1, ease: "power3.out", stagger: 0.12, delay: 0.8 });
       gsap.from(".top-nav", { opacity: 0, y: -24, duration: 0.9, ease: "power3.out", delay: 0.4 });
 
       /* scroll phase: 타이틀 아웃 → 태그라인 인 */
