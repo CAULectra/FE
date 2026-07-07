@@ -65,8 +65,9 @@ export default function LandingPage() {
           </div>
           <div className="stage">
             <h1 className="hero-title t-display" id="hero-title">Lectra</h1>
+            {/* 히어로 카피 2줄째 — 대형 Lectra 바로 아래 */}
+            <p className="hero-sub">All your materials,<br />in one clear workspace.</p>
             <aside className="hero-aside">
-              <p>All your materials,<br />in one clear workspace.</p>
               <div className="app-badges">
                 <a className="_app-button" href="/auth"><span className="outline"></span><span><small>무료로 시작하기</small><b>Sign up</b></span></a>
                 <a className="_app-button" href="/auth"><span className="outline"></span><span><small>이미 계정이 있어요</small><b>Log in</b></span></a>
@@ -178,9 +179,10 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* 후기 세로 무한 순환 — 카피 오른쪽 칼럼 (QuoteLoop.tsx) */}
-          <QuoteLoop />
         </div>
+
+        {/* 후기 가로 2줄 풀폭 밴드 — 양옆 페이드아웃 (QuoteLoop.tsx) */}
+        <QuoteLoop />
       </section>
 
       {/* ================= FOOTER ================= */}

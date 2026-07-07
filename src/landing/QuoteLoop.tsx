@@ -1,8 +1,9 @@
 /* ================================================================
-   QuoteLoop — §3 학생 후기 (ReactBits Logo Loop 세로 버전)
-   오버뷰 카피 오른쪽 칼럼: 후기 카드 8장이 1열로 위로 무한 순환.
-   - 속도 일정(px/s) → 세트 높이에서 duration 역산 (ResizeObserver)
-   - hover 시 일시정지, 위아래 페이드 마스크
+   QuoteLoop — §3 학생 후기 (ReactBits Logo Loop 가로 2줄 버전)
+   오버뷰 하단 풀폭 밴드: 후기 카드 8장이 2줄로 무한 순환.
+   - 1줄은 왼쪽으로, 2줄은 오른쪽으로(reverse) 흐름
+   - 속도 일정(px/s) → 세트 폭에서 duration 역산 (ResizeObserver)
+   - hover 시 그 줄만 일시정지, 양옆 페이드아웃 마스크
    - reduced-motion이면 정적
    ================================================================ */
 import { useEffect, useRef } from "react";
@@ -45,7 +46,7 @@ const ROW2: Quote[] = [
     initials: "TY", name: "태윤", role: "경영학부 1학년", bg: "var(--blush)",
   },
 ];
-const SPEED = 26; // px/s — 클수록 빠름 (세로 순환은 느긋하게)
+const SPEED = 40; // px/s — 클수록 빠름
 
 function Cards({ items }: { items: Quote[] }) {
   return (
@@ -63,18 +64,16 @@ function Cards({ items }: { items: Quote[] }) {
   );
 }
 
-const QUOTES: Quote[] = [...ROW1, ...ROW2];
-
-export default function QuoteLoop() {
+function Row({ items, reverse = false }: { items: Quote[]; reverse?: boolean }) {
   const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    const set = track.querySelector<HTMLElement>(".qcol-set");
+    const set = track.querySelector<HTMLElement>(".qband-set");
     if (!set) return;
     const sync = () => {
-      track.style.setProperty("--qd", (set.offsetHeight / SPEED).toFixed(1) + "s");
+      track.style.setProperty("--qd", (set.offsetWidth / SPEED).toFixed(1) + "s");
     };
     sync();
     const ro = new ResizeObserver(sync);
@@ -83,14 +82,21 @@ export default function QuoteLoop() {
   }, []);
 
   return (
-    <aside className="quotes-col reveal" aria-label="Student testimonials">
-      <div className="quotes-label">Students say</div>
-      <div className="qcol-view">
-        <div className="qcol-track" ref={trackRef}>
-          <div className="qcol-set"><Cards items={QUOTES} /></div>
-          <div className="qcol-set" aria-hidden="true"><Cards items={QUOTES} /></div>
-        </div>
+    <div className="qband-row">
+      <div className={`qband-track${reverse ? " rev" : ""}`} ref={trackRef}>
+        <div className="qband-set"><Cards items={items} /></div>
+        <div className="qband-set" aria-hidden="true"><Cards items={items} /></div>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+export default function QuoteLoop() {
+  return (
+    <div className="quotes-band reveal" aria-label="Student testimonials">
+      <div className="wrap"><div className="quotes-label">Students say</div></div>
+      <Row items={ROW1} />
+      <Row items={ROW2} reverse />
+    </div>
   );
 }
