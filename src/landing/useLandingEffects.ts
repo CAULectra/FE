@@ -117,18 +117,8 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
         }
       }
 
-      /* ---------- testimonials: 스태거 등장 + 둥실 플로팅 ---------- */
-      {
-        const quotes = gsap.utils.toArray<HTMLElement>(".quote-card");
-        gsap.from(quotes, {
-          scrollTrigger: { trigger: ".overview-testimonials", start: "top 80%" },
-          y: 70, opacity: 0, rotate: (i: number) => (i % 2 ? 3 : -3),
-          duration: 0.9, ease: "power3.out", stagger: 0.16,
-        });
-        quotes.forEach((q, i) =>
-          gsap.to(q, { y: i % 2 ? -9 : -14, duration: 2.6 + i * 0.4, ease: "sine.inOut", yoyo: true, repeat: -1, delay: 0.9 + i * 0.35 }),
-        );
-      }
+      /* testimonials: Logo Loop 수직 순환(QuoteLoop.tsx)이 담당 —
+         구 스태거 등장·플로팅은 트랙 이동과 충돌해 제거. 등장은 .reveal이 처리 */
 
       /* ---------- generic reveals ---------- */
       root.querySelectorAll(".reveal").forEach((el) => {

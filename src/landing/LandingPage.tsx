@@ -11,6 +11,7 @@ import LiveDemo from "./LiveDemo";
 import LandingDock from "./LandingDock";
 import UploadSources from "./UploadSources";
 import AlignMap from "./AlignMap";
+import QuoteLoop from "./QuoteLoop";
 import { useLandingEffects } from "./useLandingEffects";
 import "./landing.css";
 
@@ -59,8 +60,6 @@ export default function LandingPage() {
             <a className="logo" href="#top">Lectra</a>
             <div className="nav-right">
               <button className="lang-btn">🌐 KO <span style={{fontSize: '9px', opacity: '.7'} as React.CSSProperties}>▼</span></button>
-              <a className="login-btn" href="/auth">Log in</a>
-              <a className="signup-btn" href="/auth">Sign up</a>
             </div>
           </div>
           <div className="stage">
@@ -68,8 +67,8 @@ export default function LandingPage() {
             <aside className="hero-aside">
               <p>Single workspace<br />for all your lectures.</p>
               <div className="app-badges">
-                <a className="_app-button" href="/auth"><span className="outline"></span><span>🌐</span><span><small>지금 바로</small><b>Web App</b></span></a>
-                <a className="_app-button" href="#"><span className="outline"></span><span></span><span><small>곧 출시</small><b>App Store</b></span></a>
+                <a className="_app-button primary" href="/auth"><span className="outline"></span><span><small>무료로 시작하기</small><b>Sign up</b></span></a>
+                <a className="_app-button" href="/auth"><span className="outline"></span><span><small>이미 계정이 있어요</small><b>Log in</b></span></a>
               </div>
             </aside>
           </div>
@@ -179,22 +178,10 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <aside className="overview-testimonials" aria-label="Student testimonials">
-            <div className="quotes-label">Students say</div>
-            <article className="quote-card">
-              <p>"시험 전날 3배속으로 다시 듣던 걸 그만뒀어요. 교수님이 오래 머문 슬라이드만 골라 보니까 복습이 22분에 끝나요."</p>
-              <div className="who"><span className="avatar" style={{background: 'var(--mint)'} as React.CSSProperties}>JH</span><span>지현<small>컴퓨터공학 3학년</small></span></div>
-            </article>
-            <article className="quote-card">
-              <p>"필기 사진이 촬영 시각으로 노트에 자동 배치되는 게 진짜 편해요. 판서 놓친 날에도 친구 사진만 받으면 끝."</p>
-              <div className="who"><span className="avatar" style={{background: 'var(--citrus)'} as React.CSSProperties}>MJ</span><span>민준<small>전자공학 2학년</small></span></div>
-            </article>
-            <article className="quote-card">
-              <p>"Q&A 답변에 인용 칩이 붙어서 원문을 바로 확인할 수 있어요. 챗봇 환각 때문에 불안했던 게 사라졌어요."</p>
-              <div className="who"><span className="avatar" style={{background: '#ffd9d0'} as React.CSSProperties}>SY</span><span>서연<small>수학과 4학년</small></span></div>
-            </article>
-          </aside>
         </div>
+
+        {/* 후기 무한 순환 — Logo Loop 가로 2줄 풀폭 밴드 (QuoteLoop.tsx) */}
+        <QuoteLoop />
       </section>
 
       {/* ================= FOOTER ================= */}
