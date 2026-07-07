@@ -67,7 +67,7 @@ export default function LandingPage() {
             <aside className="hero-aside">
               <p>Single workspace<br />for all your lectures.</p>
               <div className="app-badges">
-                <a className="_app-button primary" href="/auth"><span className="outline"></span><span><small>무료로 시작하기</small><b>Sign up</b></span></a>
+                <a className="_app-button" href="/auth"><span className="outline"></span><span><small>무료로 시작하기</small><b>Sign up</b></span></a>
                 <a className="_app-button" href="/auth"><span className="outline"></span><span><small>이미 계정이 있어요</small><b>Log in</b></span></a>
               </div>
             </aside>
