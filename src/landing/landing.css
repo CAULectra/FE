@@ -408,18 +408,23 @@ html.lenis{height:auto}
 .us-icon svg{width:38%;height:38%}
 .us-item:hover .us-icon{transform:translateY(-4px)}
 .us-item:active .us-icon{transform:scale(.94)}
-.us-item.pop .us-icon{animation:us-pop .45s var(--ease)}
-@keyframes us-pop{35%{transform:scale(1.12)}100%{transform:scale(1)}}
+.us-item.pop .us-icon{animation:us-pop .55s cubic-bezier(.34,1.56,.64,1)}
+/* 젤리 팝 — 눌리며 퍼졌다가(squash) 튀어오르는(stretch) 탄성 */
+@keyframes us-pop{0%{transform:scale(1)}30%{transform:scale(1.26,.8)}55%{transform:scale(.9,1.16)}75%{transform:scale(1.08,.95)}100%{transform:scale(1)}}
 .us-rings{position:absolute;inset:0;z-index:1;pointer-events:none}
-.us-rings i{position:absolute;inset:0;border-radius:50%;opacity:0;transform:scale(.6);animation:us-ripple 1.25s cubic-bezier(.22,.61,.36,1) forwards}
-.us-rings i:nth-child(1){background:rgba(var(--rc),.16)}
-.us-rings i:nth-child(2){border:1.5px solid rgba(var(--rc),.55);animation-delay:.16s}
-.us-rings i:nth-child(3){border:1.5px solid rgba(var(--rc),.32);animation-delay:.32s}
-@keyframes us-ripple{0%{opacity:.85;transform:scale(.62)}100%{opacity:0;transform:scale(2.9)}}
+.us-rings i{position:absolute;inset:0;border-radius:50%;opacity:0;transform:scale(.6);animation:us-ripple 1.05s cubic-bezier(.22,.61,.36,1) forwards}
+.us-rings i:nth-child(1){background:rgba(var(--rc),.18)}
+.us-rings i:nth-child(2){border:1.5px solid rgba(var(--rc),.6);animation-delay:.12s}
+.us-rings i:nth-child(3){border:1.5px solid rgba(var(--rc),.35);animation-delay:.24s}
+@keyframes us-ripple{0%{opacity:.9;transform:scale(.6)}100%{opacity:0;transform:scale(3.25)}}
+/* 파티클 버스트 — 터치 시에만, 방사형으로 튀어나가는 점 8개 */
+.us-parts{position:absolute;inset:0;z-index:3;pointer-events:none}
+.us-parts i{position:absolute;left:50%;top:50%;width:calc(6px*var(--ps,1));height:calc(6px*var(--ps,1));margin:calc(-3px*var(--ps,1));border-radius:50%;background:var(--orange);opacity:0;animation:us-part .62s cubic-bezier(.16,.84,.32,1) forwards}
+@keyframes us-part{0%{opacity:1;transform:rotate(var(--pa)) translateX(10px) scale(1)}100%{opacity:0;transform:rotate(var(--pa)) translateX(var(--pd)) scale(.15)}}
 .us-item b{font-size:clamp(11.5px,1.25vw,14px);font-weight:600;color:#111;letter-spacing:-.01em;white-space:nowrap}
 .us-item:focus-visible{outline:none}
 .us-item:focus-visible .us-icon{box-shadow:0 0 0 3px rgba(247,59,32,.35),0 14px 34px rgba(35,18,12,.14)}
-@media (prefers-reduced-motion:reduce){.us-rings i{animation:none}.us-item.pop .us-icon{animation:none}}
+@media (prefers-reduced-motion:reduce){.us-rings i{animation:none}.us-item.pop .us-icon{animation:none}.us-parts i{animation:none}}
 .align-visual{display:flex;flex-direction:column;justify-content:center;padding:clamp(24px,4vw,48px)}
 .align-wave{height:160px;display:flex;align-items:center;gap:7px;margin-bottom:34px}
 .align-wave i{flex:1;height:var(--h);border-radius:999px;background:linear-gradient(to top,#f73b20,#ff8b73);box-shadow:0 0 22px rgba(247,59,32,.22)}
@@ -427,8 +432,11 @@ html.lenis{height:auto}
 .am{position:relative;display:flex;flex-direction:column;gap:15px}
 .am.noT *{transition:none!important}
 .am .align-wave{height:clamp(90px,17vh,150px);margin-bottom:2px}
-.am .align-wave i{transform:scaleY(.08);opacity:.25;transform-origin:center;transition:transform .5s cubic-bezier(.19,1,.22,1),opacity .5s ease;transition-delay:calc(var(--i)*22ms)}
-.am.play .align-wave i{transform:scaleY(1);opacity:1}
+.am .align-wave i{transform:scaleY(1);opacity:1;transform-origin:center}
+/* 생성 단계 없이 즉시 재생 — 음수 딜레이로 바마다 위상이 이미 어긋난 채 시작(실제 음악 재생 느낌) */
+.am.play .align-wave i{animation:am-eq var(--eqd,.7s) ease-in-out calc(var(--i)*-.13s) infinite alternate}
+@keyframes am-eq{from{transform:scaleY(1)}to{transform:scaleY(var(--eqa,.5))}}
+@media (prefers-reduced-motion:reduce){.am.play .align-wave i{animation:none}}
 .am-connect svg{display:block;width:100%;height:26px;overflow:visible}
 .am-cline{stroke:rgba(255,255,255,.5);stroke-width:1.5;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .6s cubic-bezier(.19,1,.22,1),stroke .3s}
 .am-cline.on{stroke-dashoffset:0;stroke:var(--orange)}
@@ -457,7 +465,11 @@ html.lenis{height:auto}
 .workspace-note{background:#fff;border:1px solid rgba(17,17,17,.08);border-radius:22px;padding:26px;display:flex;flex-direction:column;gap:12px}
 .workspace-note b{font-size:18px;color:#111;margin-bottom:8px}
 .workspace-note i{display:block;height:10px;border-radius:999px;background:#eee5d9}
-.workspace-note i.highlight{background:#ffe07a}
+/* 카라오케 하이라이트 — 현재 문장이 좌→우로 칠해지는 스윕 (서비스 기능 은유) */
+.workspace-note i.highlight{position:relative;overflow:hidden;background:#f3ead2}
+.workspace-note i.highlight::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#ffe07a;transform:scaleX(0);transform-origin:left;animation:note-hl 3.4s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes note-hl{0%{transform:scaleX(0);opacity:1}55%{transform:scaleX(1)}82%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+@media (prefers-reduced-motion:reduce){.workspace-note i.highlight::after{animation:none;transform:scaleX(1)}}
 .workspace-answer{align-self:end;background:#111;color:#fff;border-radius:22px;padding:22px 24px;box-shadow:0 18px 38px rgba(17,17,17,.22)}
 .workspace-answer span{display:block;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px}
 .workspace-answer p{margin:0;color:#fff;font-size:17px;line-height:1.35}

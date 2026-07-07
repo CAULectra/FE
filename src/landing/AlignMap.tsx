@@ -1,8 +1,9 @@
 /* ================================================================
    AlignMap — §2 카드 02 비주얼 (링크 프로토타입 60a6bdcc의 Align 버전)
-   파형 draw → 수직 연결선 3개가 아래로 snap → 슬라이드 썸네일 등장(가운데 cur)
-   → 세그먼트 칩(S9~S15) 점등 → 진행 게이지 100% → ✓ Aligned. 루프 4.9s.
-   화면 밖이면 정지, prefers-reduced-motion이면 완성 정지 상태.
+   파형은 생성 단계 없이 처음부터 음악 재생처럼 이퀄라이저로 춤추고(음수
+   딜레이로 위상 분산), 그 아래로 연결선 snap → 썸네일 → 세그먼트 점등 →
+   게이지 100% → ✓ Aligned 시퀀스가 루프. 화면 밖이면 정지(.play 해제),
+   prefers-reduced-motion이면 완성 정지 상태.
    ================================================================ */
 import { useEffect, useRef } from "react";
 
@@ -42,7 +43,7 @@ export default function AlignMap() {
       timers.forEach(window.clearTimeout);
       timers = [];
       root.classList.add("noT");
-      root.classList.remove("play");
+      /* .play(이퀄라이저)는 유지 — 파형은 루프 사이에도 계속 재생 */
       Array.from(root.querySelectorAll(".on")).forEach((e) => e.classList.remove("on"));
       segs.forEach((s) => s.classList.remove("cur"));
       void root.offsetWidth;
@@ -53,20 +54,20 @@ export default function AlignMap() {
       reset();
       const at = (fn: () => void, t: number) =>
         timers.push(window.setTimeout(() => { if (id === cyc) fn(); }, t));
-      at(() => root.classList.add("play"), 60);                                  /* 파형 스태거 인 */
-      thumbs.forEach((t, i) => at(() => t.classList.add("on"), 800 + i * 130)); /* 썸네일 */
-      lines.forEach((l, i) => at(() => l.classList.add("on"), 1350 + i * 120)); /* 연결선 snap */
-      segs.forEach((s, i) => at(() => s.classList.add("on"), 1900 + i * 90));   /* 세그먼트 */
-      at(() => segs[CUR_SEG]?.classList.add("cur"), 2550);
-      at(() => prog?.classList.add("on"), 2750);                                 /* 게이지 */
-      at(() => aligned?.classList.add("on"), 3700);                              /* ✓ Aligned */
-      at(() => { if (running) play(); }, 5100);
+      /* 파형은 이미 재생 중(.play) — 매핑 시퀀스만 루프 */
+      thumbs.forEach((t, i) => at(() => t.classList.add("on"), 450 + i * 130)); /* 썸네일 */
+      lines.forEach((l, i) => at(() => l.classList.add("on"), 1000 + i * 120)); /* 연결선 snap */
+      segs.forEach((s, i) => at(() => s.classList.add("on"), 1550 + i * 90));   /* 세그먼트 */
+      at(() => segs[CUR_SEG]?.classList.add("cur"), 2200);
+      at(() => prog?.classList.add("on"), 2400);                                 /* 게이지 */
+      at(() => aligned?.classList.add("on"), 3350);                              /* ✓ Aligned */
+      at(() => { if (running) play(); }, 4750);
     };
 
     const io = new IntersectionObserver(
       (es) => es.forEach((e) => {
-        if (e.isIntersecting && !running) { running = true; play(); }
-        else if (!e.isIntersecting && running) { running = false; cyc++; timers.forEach(window.clearTimeout); }
+        if (e.isIntersecting && !running) { running = true; root.classList.add("play"); play(); }
+        else if (!e.isIntersecting && running) { running = false; cyc++; timers.forEach(window.clearTimeout); root.classList.remove("play"); }
       }),
       { threshold: 0.35 },
     );
@@ -78,7 +79,16 @@ export default function AlignMap() {
     <div className="am" ref={rootRef}>
       <div className="align-wave">
         {Array.from({ length: BARS }).map((_, i) => (
-          <i key={i} style={{ "--h": `${28 + ((i * 29) % 60)}%`, "--i": i } as React.CSSProperties} />
+          <i
+            key={i}
+            style={{
+              "--h": `${28 + ((i * 29) % 60)}%`,
+              "--i": i,
+              /* 이퀄라이저 변주 — 바마다 주기·진폭이 달라 실제 음악처럼 위상이 어긋남 */
+              "--eqd": `${(0.55 + ((i * 37) % 40) / 100).toFixed(2)}s`,
+              "--eqa": (0.3 + ((i * 53) % 45) / 100).toFixed(2),
+            } as React.CSSProperties}
+          />
         ))}
       </div>
       <div className="am-connect" aria-hidden="true">
