@@ -1,8 +1,8 @@
 /* ================================================================
    LandingDock — 하단 독 네비 (§0)
-   모양·마크업·CSS는 기존 .dock 그대로, ReactBits Dock의
+   모양·마크업·CSS는 기존 .dock 그대로, 스프링 Dock 패턴의
    macOS식 magnification(마우스 거리 → 스프링 스케일)만 이식.
-   - motion/react 스프링: mass .1 / stiffness 150 / damping 12 (ReactBits 기본값)
+   - motion/react 스프링: mass .1 / stiffness 150 / damping 12 (기본값)
    - 텍스트 필이라 width/height 대신 transform scale + y 리프트 (레이아웃 불변)
    - 드롭업은 .dock-item 기준 앵커라 스케일 영향 없음
    - reduced-motion이면 정적 렌더

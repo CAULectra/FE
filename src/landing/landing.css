@@ -104,8 +104,8 @@ html.lenis{height:auto}
 .wt-intro{position:absolute;inset:0;z-index:8;pointer-events:none;background:#120F17;opacity:0;will-change:opacity}
 .hero-bg{position:absolute;inset:0;background:linear-gradient(115deg,#e94b6e 0%,#f2646a 30%,#f88d64 62%,#fcae72 100%);overflow:hidden}
 .hero-bg .hb{position:absolute;border-radius:50%;filter:blur(90px);mix-blend-mode:soft-light}
-/* Spline 로드 후 폴백 블롭 제거 — 투명 iframe 밑 blur 레이어 상시 합성 방지 */
-.hero-bg.spline-on .hb{display:none}
+/* 3D 씬 로드 후 폴백 블롭 제거 — 투명 iframe 밑 blur 레이어 상시 합성 방지 */
+.hero-bg.scene-on .hb{display:none}
 .hero-bg .hb1{width:70vw;height:70vw;background:#ff2e7e;top:-20%;left:-15%;animation:hbdrift1 16s ease-in-out infinite alternate}
 .hero-bg .hb2{width:60vw;height:60vw;background:#ffd07a;bottom:-25%;right:-12%;animation:hbdrift2 19s ease-in-out infinite alternate}
 .hero-bg .hb3{width:40vw;height:40vw;background:#a2123a;bottom:-10%;left:8%;opacity:.55;animation:hbdrift1 22s ease-in-out infinite alternate-reverse}
@@ -500,12 +500,12 @@ html.lenis{height:auto}
   .workflow-visual{min-height:300px}
 }
 
-/* ================= §2.5 LIVE DEMO — Krepling식 가이드 데모 (밝은 캔버스) =================
+/* ================= §2.5 LIVE DEMO — 가이드 데모 (밝은 캔버스) =================
    큰 문구 → 소프트 그라데이션 위 Lectra 앱 목업(업로드→정렬→학습) + 커서 시연.
-   Krepling 원칙: 플랫(그림자 최소)·1px 보더·radius 8/14/30·weight 낮게. 액센트=Lectra 오렌지. */
+   플랫 디자인 원칙: 플랫(그림자 최소)·1px 보더·radius 8/14/30·weight 낮게. 액센트=Lectra 오렌지. */
 .demo-section{position:relative;background:#f6f1eb;color:#171717;padding:clamp(40px,9vh,120px) 24px clamp(80px,14vh,200px)}
 .demo-pin{position:relative}
-/* ── 스크럽(A): 섹션 핀 고정 → 스크롤하면 목업이 열리며 화면을 채움 (Krepling) ── */
+/* ── 스크럽(A): 섹션 핀 고정 → 스크롤하면 목업이 열리며 화면을 채움  ── */
 .demo-section.is-scrub{height:340vh;padding:0}
 .demo-section.is-scrub .demo-pin{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 clamp(16px,4vw,60px)}
 .demo-section.is-scrub .demo-lead{position:absolute;left:0;right:0;top:22%;margin:0;padding:0 24px;z-index:6;pointer-events:none}
@@ -571,7 +571,7 @@ html.lenis{height:auto}
 .dl-sort{border:1px solid #E5DFD6;background:#fff;border-radius:7px;padding:5px 8px;font-size:8.3px;color:#57534E;white-space:nowrap}
 .dl-upbtn{background:#C2410C;color:#fff;border-radius:7px;padding:5.5px 10px;font-size:8.6px;font-weight:600;box-shadow:0 3px 8px rgba(194,65,12,.25);white-space:nowrap}
 
-/* ── STEP 0 · 과목 폴더 그리드 (react-bits Folder 미니어처) ── */
+/* ── STEP 0 · 과목 폴더 그리드 (폴더 미니어처) ── */
 .dl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:clamp(16px,3vw,38px)}
 .dlf{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 6px;border-radius:12px}
 .dlf>b{margin-top:13px;font-size:9.8px;font-weight:700;color:#1F1B16;transition:color .3s;white-space:nowrap}
@@ -585,7 +585,7 @@ html.lenis{height:auto}
 .dlf-icon .pp.p2{width:74%;height:72%;background:#F2F2F2}
 .dlf-icon .pp.p3{width:86%;height:62%;background:#fff}
 .dlf-icon .ff{inset:0;z-index:3;background:var(--fc);border-radius:4px 7px 7px 7px;transform-origin:bottom;transition:transform .45s var(--ease)}
-/* hover 프리뷰(살짝 들림) / open(플랩 벌어지고 종이 튀어나옴 — react-bits Folder) */
+/* hover 프리뷰(살짝 들림) / open(플랩 벌어지고 종이 튀어나옴 ) */
 .dlf.hov .dlf-icon{transform:translateY(-4px)}
 .dlf.open .dlf-icon{transform:translateY(-5px)}
 .dlf.open .pp.p1{transform:translate(-118%,-64%) rotate(-14deg)}
@@ -653,7 +653,7 @@ html.lenis{height:auto}
 
 @media (max-width:820px){.da-side{display:none}}
 
-/* 우측 단계 탭 (Krepling 탭 스트립) */
+/* 우측 단계 탭 (탭 스트립) */
 .demo-tabs{position:absolute;right:clamp(-6px,-.5vw,0px);top:50%;transform:translateY(-50%);z-index:3;display:flex;flex-direction:column;gap:10px}
 .demo-tab{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid rgba(17,17,17,.1);border-radius:8px;padding:13px 20px 13px 16px;font-size:15px;color:#6c6b6b;min-width:150px;box-shadow:0 8px 24px rgba(60,40,80,.1);transition:color .35s,border-color .35s}
 .demo-tab-n{font-size:11px;color:#b3b3b3}
@@ -665,8 +665,8 @@ html.lenis{height:auto}
 .demo-cursor.click{animation:democlick .4s ease}
 @keyframes democlick{40%{transform:scale(.7)}100%{transform:scale(1)}}
 
-/* ---------- §2.5 기본(autoplay) — Krepling Storefront식 풀블리드 핀 패널 ----------
-   krepling.com 실측 재현: ① 헤딩이 뷰포트에 단독 페이드인(스크롤 연동)
+/* ---------- §2.5 기본(autoplay) — 풀블리드 풀블리드 핀 패널 ----------
+   레퍼런스 실측 재현: ① 헤딩이 뷰포트에 단독 페이드인(스크롤 연동)
    → ② 좌우 20px 풀블리드 라운드 패널이 올라오며 살짝 settle
    → ③ 뷰포트를 채운 채 sticky 핀, 안의 데모 자동 재생 → ④ 다음 섹션이 밀어냄.
    (?demo=scrub 변형은 :not(.is-scrub)으로 제외 — 기존 그대로) */

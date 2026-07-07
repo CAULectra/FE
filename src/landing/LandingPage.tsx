@@ -43,7 +43,7 @@ export default function LandingPage() {
       
       
       {/* ================= BOTTOM DOCK NAV =================
-          모양은 기존 그대로, ReactBits Dock식 magnification만 이식 (LandingDock.tsx) */}
+          모양은 기존 그대로, 스프링 magnification만 이식 (LandingDock.tsx) */}
       <LandingDock />
       <a className="support-pill" href="mailto:focustationcapstone@gmail.com">💬 Support</a>
       
@@ -115,7 +115,7 @@ export default function LandingPage() {
               <h3>Upload once.</h3>
               <p>슬라이드, 녹음, 판서 사진을 따로 관리할 필요 없이 <span className="brand">Lectra</span>가 한 강의 워크스페이스로 모아 정리합니다. 흩어진 자료를 다시 찾는 대신, 생성된 노트를 바로 열어보세요.</p>
             </div>
-            {/* Krepling Personalized experiences 패턴: 아이콘 3개 + 클릭 리플 */}
+            {/* 아이콘 리플 카드 패턴: 아이콘 3개 + 클릭 리플 */}
             <div className="workflow-visual upload-visual">
               <UploadSources />
             </div>
@@ -160,7 +160,7 @@ export default function LandingPage() {
         </ScrollStack>
       </section>
 
-      {/* ================= §2.5 LIVE DEMO (Krepling식 가이드 데모) =================
+      {/* ================= §2.5 LIVE DEMO (가이드 데모) =================
           autoplay(자동 재생 루프, 기본) ↔ scrub(A, 스크롤로 목업이 열리며 화면 채움).
           비교: 기본 = autoplay, URL ?demo=scrub = scrub */}
       <LiveDemo mode={demoMode} />
