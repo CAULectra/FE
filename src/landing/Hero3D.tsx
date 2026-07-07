@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 const HERO_SCENE_URL = "https://my.spline.design/radialglass-bXeLwUVIhfJGztLAHWeVpwLi/";
 const HERO_ORIGIN = "https://my.spline.design";
 
-const RES = 0.6;                       // 내부 해상도 60% → GPU 픽셀 0.36배
+const RES = 0.48;                      // 내부 해상도 48% → GPU 픽셀 0.23배 (0.6→0.48: GPU 부하 ~36% 감소)
 const OVER_X = 0.045, OVER_Y = 0.11;   // 가장자리 오버스캔(외곽 여백 제거)
 const LOAD_DELAY_MS = 420;             // 첫 페인트/타이틀 인트로와 WebGL 초기화를 분리
 const FADE_DELAY_MS = 170;             // 씬이 한 프레임 렌더된 뒤 페이드(팝업 방지)
@@ -89,7 +89,11 @@ export default function Hero3D() {
 
   const handleLoad = () => {
     fadeTimerRef.current = window.setTimeout(() => {
-      requestAnimationFrame(() => setLoaded(true));
+      requestAnimationFrame(() => {
+        setLoaded(true);
+        // Spline이 뜨면 폴백 블롭(blur 90px ×3)을 꺼서 매 프레임 합성 비용 제거
+        document.querySelector(".hero-bg")?.classList.add("spline-on");
+      });
     }, FADE_DELAY_MS);
   };
 
