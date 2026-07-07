@@ -113,7 +113,7 @@ export default function LandingPage() {
             <div className="workflow-card-copy">
               <span className="workflow-index">01</span>
               <h3>Upload once.</h3>
-              <p>슬라이드, 녹음, 판서 사진을 따로 관리할 필요 없이 Lectra가 한 강의 워크스페이스로 모아 정리합니다. 흩어진 자료를 다시 찾는 대신, 생성된 노트를 바로 열어보세요.</p>
+              <p>슬라이드, 녹음, 판서 사진을 따로 관리할 필요 없이 <span className="brand">Lectra</span>가 한 강의 워크스페이스로 모아 정리합니다. 흩어진 자료를 다시 찾는 대신, 생성된 노트를 바로 열어보세요.</p>
             </div>
             {/* Krepling Personalized experiences 패턴: 아이콘 3개 + 클릭 리플 */}
             <div className="workflow-visual upload-visual">
@@ -125,7 +125,7 @@ export default function LandingPage() {
             <div className="workflow-card-copy">
               <span className="workflow-index">02</span>
               <h3>Stay in sync.</h3>
-              <p>녹음 속 설명과 슬라이드, 사진을 따로 맞춰볼 필요 없이, Lectra가 강의 흐름에 맞춰 모든 자료를 연결합니다.</p>
+              <p>녹음 속 설명과 슬라이드, 사진을 따로 맞춰볼 필요 없이, <span className="brand">Lectra</span>가 강의 흐름에 맞춰 모든 자료를 연결합니다.</p>
             </div>
             {/* 파형 세그먼트가 아래 슬라이드로 매핑되는 애니메이션 (AlignMap.tsx) */}
             <div className="workflow-visual align-visual" aria-hidden="true">
@@ -171,7 +171,7 @@ export default function LandingPage() {
           <div className="overview-main">
             <div className="overview-copy reveal">
               <span className="_tag" style={{color: 'var(--orange)'} as React.CSSProperties}><span className="outline"></span>Workspace</span>
-              <h2 className="t5" style={{marginTop: '16px'} as React.CSSProperties}><span className="ov-lead">자료 찾기는 그만,</span>Lectra에서 시작하세요.</h2>
+              <h2 className="t5" style={{marginTop: '16px'} as React.CSSProperties}><span className="ov-lead">자료 찾기는 그만,</span><span className="brand">Lectra</span>에서 시작하세요.</h2>
             </div>
             <div className="ov-check reveal">
               <p>슬라이드, 녹음, 판서 사진을 올리면 강의 흐름에 맞춰 하나의 워크스페이스로 정리됩니다. 다시 듣고 싶은 설명은 바로 찾아가고, 중요한 내용은 요약과 Q&amp;A로 먼저 확인하세요. 시험 전 복습이 더 빠르고 가벼워집니다.</p>
