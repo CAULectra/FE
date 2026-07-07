@@ -493,13 +493,9 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
             </div>
           </div>
 
-          {/* autoplay: 탭·커서를 스테이지 안에 → sticky 핀 중에도 함께 움직임(드리프트 방지) */}
-          {mode === "autoplay" && (
-            <>
-              {tabsEl}
-              {cursorEl}
-            </>
-          )}
+          {/* autoplay: 커서만 스테이지 안에(sticky 핀 동행). 단계 탭은 주소창·사이드바가
+              단계를 이미 보여줘 중복 + 우측에 떠서 워터마크처럼 보여 제거(scrub에만 유지) */}
+          {mode === "autoplay" && cursorEl}
         </div>
 
         {/* scrub: 탭·커서를 핀에 고정 → 스테이지가 확대돼도 스케일 영향 없음 */}

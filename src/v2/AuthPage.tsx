@@ -1,6 +1,7 @@
 /* ================================================================
    AuthPage — Google 소셜 로그인 단독 (현 서비스 방침 기준)
-   레이아웃: Command Center 온보딩 — 좌 화이트 비주얼 / 우 새추레이티드 패널
+   레이아웃: 테라코타 풀스크린 + 중앙 로그인 카드
+   (구 좌측 "Alignment preview" 비주얼 패널은 휑하고 낯설어 제거)
    ================================================================ */
 import { useNavigate } from "react-router";
 import { ChevronLeft } from "lucide-react";
@@ -9,32 +10,9 @@ export default function AuthPage() {
   const navigate = useNavigate();
   return (
     <div className="flex min-h-screen bg-background">
-      {/* 좌: 제품 비주얼 (웜 페이퍼) */}
-      <div className="relative hidden flex-1 flex-col justify-between p-10 lg:flex">
-        <div className="text-[19px] font-bold tracking-tight text-card-foreground">Lectra</div>
-        <div className="mx-auto w-full max-w-md">
-          {/* 미니 정렬 다이어그램 */}
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_4px_16px_rgba(28,25,23,0.06)]">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Alignment preview</div>
-            <div className="mt-3 space-y-2">
-              {[["S9 · Schnorr's Protocol", "23:14", true], ["S11 · Fiat-Shamir", "30:10", false], ["S14 · Schnorr Signature", "42:00", false]].map(([t, ts, hot]) => (
-                <div key={t as string} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-[12.5px] ${hot ? "border-[var(--ember)] bg-[var(--ember-soft)]" : "border-border bg-[#FBFAF8]"}`}>
-                  <span className="font-medium text-card-foreground">{t}</span>
-                  <span className="tabular-nums text-muted-foreground">{ts}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
-              <div className="h-full w-[38%] rounded-full bg-gradient-to-r from-[var(--ember)] to-primary" />
-            </div>
-            <div className="mt-1.5 text-right text-[10.5px] tabular-nums text-muted-foreground">23:14 / 61:30</div>
-          </div>
-        </div>
-        <p className="text-[12px] text-muted-foreground">강의의 모든 문장을 슬라이드에 정렬합니다.</p>
-      </div>
-
-      {/* 우: 테라코타 패널 + 로그인 카드 */}
+      {/* 테라코타 풀스크린 패널 + 중앙 로그인 카드 */}
       <div className="relative flex flex-1 items-center justify-center bg-gradient-to-br from-[#C2410C] via-[#B03A0A] to-[#7C2D12] p-8">
+        <div className="absolute left-8 top-7 text-[19px] font-bold tracking-tight text-white">Lectra</div>
         <button
           onClick={() => navigate("/")}
           className="absolute right-6 top-6 flex items-center gap-1 rounded-full border border-white/30 px-3.5 py-1.5 text-[12.5px] font-medium text-white/90 backdrop-blur transition-colors hover:bg-white/10"
