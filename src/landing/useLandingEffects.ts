@@ -88,13 +88,14 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
         .to(".hero-dim", { opacity: 1, ease: "none", duration: 0.5 }, 0.1)
         .to(".scroll-ind", { opacity: 0, duration: 0.08 }, 0)
         .set(".taglines", { pointerEvents: "auto" })
-        .to(".taglines", { opacity: 1, duration: 0.12 }, 0.38)
-        .from(".tagline.tl-slides", { y: 110, opacity: 0, duration: 0.16 }, 0.42)
-        .from(".tagline.tl-audio", { y: 110, opacity: 0, duration: 0.16 }, 0.55)
-        .from(".tagline.tl-images", { y: 110, opacity: 0, duration: 0.16 }, 0.68)
-        .from(".tagline .icon-card", { rotate: -12, scale: 0.6, duration: 0.14, stagger: 0.12 }, 0.44)
-        // 히어로 끝을 walkthrough와 같은 #120F17로 페이드 → 두 섹션 자연스럽게 연결
-        .to(".hero-outro", { opacity: 1, ease: "none", duration: 0.05 }, 0.95);
+        .to(".taglines", { opacity: 1, duration: 0.12 }, 0.32)
+        .from(".tagline.tl-slides", { y: 110, opacity: 0, duration: 0.16 }, 0.36)
+        .from(".tagline.tl-audio", { y: 110, opacity: 0, duration: 0.16 }, 0.46)
+        .from(".tagline.tl-images", { y: 110, opacity: 0, duration: 0.16 }, 0.56)
+        .from(".tagline .icon-card", { rotate: -12, scale: 0.6, duration: 0.14, stagger: 0.12 }, 0.38)
+        // 태그라인 유지(hold) 후 히어로 끝(0.86→1.0)에 아웃로(다크)가 완전히 덮어 fade-out 완료.
+        // → 언핀 시점엔 이미 태그라인이 사라진 상태 → 그 다음 브릿지(다크 갭) → 카드 등장.
+        .to(".hero-outro", { opacity: 1, ease: "none", duration: 0.14 }, 0.86);
 
       const scrollInd = root.querySelector<HTMLElement>("#scroll-ind");
       if (scrollInd) scrollInd.onclick = () => lenis.scrollTo("#walkthrough", { offset: 0, duration: 1.4 });

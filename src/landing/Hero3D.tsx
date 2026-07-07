@@ -10,8 +10,8 @@ const HERO_ORIGIN = "https://my.spline.design";
 
 const RES = 0.6;                       // 내부 해상도 60% → GPU 픽셀 0.36배
 const OVER_X = 0.045, OVER_Y = 0.11;   // 가장자리 오버스캔(외곽 여백 제거)
-const LOAD_DELAY_MS = 450;             // 첫 페인트/타이틀 인트로와 WebGL 초기화를 분리
-const FADE_DELAY_MS = 180;
+const LOAD_DELAY_MS = 420;             // 첫 페인트/타이틀 인트로와 WebGL 초기화를 분리
+const FADE_DELAY_MS = 170;             // 씬이 한 프레임 렌더된 뒤 페이드(팝업 방지)
 
 type IdleWindow = {
   requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
@@ -65,7 +65,7 @@ export default function Hero3D() {
     loadTimerRef.current = window.setTimeout(() => {
       idleRef.current = requestIdle(() => {
         setSrc(HERO_SCENE_URL);
-      });
+      }, 1200);
     }, LOAD_DELAY_MS);
 
     return () => {
@@ -111,7 +111,7 @@ export default function Hero3D() {
             transformOrigin: "0 0",
             border: 0,
             opacity: loaded ? 1 : 0,
-            transition: "opacity 1.1s cubic-bezier(0.4,0,0.2,1)",
+            transition: "opacity 0.85s cubic-bezier(0.4,0,0.2,1)",
             willChange: "opacity, transform",
           }}
         />
