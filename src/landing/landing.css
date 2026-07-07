@@ -7,9 +7,8 @@
 @font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-SemiBold.otf') format('opentype');font-weight:600;font-style:normal;font-display:swap}
 @font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap}
 @font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-ExtraBold.otf') format('opentype');font-weight:800;font-style:normal;font-display:swap}
-/* ---------- Artonex (라틴 전용) — 영문·숫자만 Artonex, 한글은 SUIT로 폴백 ---------- */
-/* 트라이얼 폰트라 구두점 글리프가 워터마크(▦)로 대체됨 → 영문자·숫자만 Artonex, 구두점·한글은 SUIT */
-@font-face{font-family:'Artonex';src:url('/fonts/Artonex/Artonex-Trial.otf') format('opentype');font-weight:100 900;font-style:normal;font-display:swap;unicode-range:U+0030-0039,U+0041-005A,U+0061-007A}
+/* ---------- Cinzel (라틴 전용, 가변 400~900) — 영문자·숫자만 Cinzel, 구두점·한글은 SUIT ---------- */
+@font-face{font-family:'Cinzel';src:url('/fonts/Cinzel/Cinzel-VariableFont_wght.ttf') format('truetype');font-weight:400 900;font-style:normal;font-display:swap;unicode-range:U+0030-0039,U+0041-005A,U+0061-007A}
 
 /* =====================================================================
    Jeton-style editorial fintech theme
@@ -23,7 +22,7 @@
   --cat-tint:rgba(247,59,32,.05);
   --sh-lg:rgba(247,59,32,.1) 0 8px 24px 0, rgba(247,59,32,.05) 0 2px 8px 0;
   --sh-md:rgba(0,0,0,.05) 0 -4px 16px 0;
-  --font:'Artonex','SUIT','Pretendard Variable',Pretendard,ui-sans-serif,system-ui,sans-serif;
+  --font:'Cinzel','SUIT','Pretendard Variable',Pretendard,ui-sans-serif,system-ui,sans-serif;
   --maxw:1200px;
   --ease:cubic-bezier(.76,0,.24,1);
 }
