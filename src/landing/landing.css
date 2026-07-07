@@ -1,6 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400&display=swap");
 /* Lectra landing — .landing-root scoped styles */
 
+/* ---------- SUIT (public/fonts/SUIT, OTF) — 랜딩 전용 서체 ---------- */
+@font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-Medium.otf') format('opentype');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-SemiBold.otf') format('opentype');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-ExtraBold.otf') format('opentype');font-weight:800;font-style:normal;font-display:swap}
+
 /* =====================================================================
    Jeton-style editorial fintech theme
    백지 캔버스 · 시그널 오렌지 단일 액센트 · 초대형 타이트 타이포
@@ -13,7 +20,7 @@
   --cat-tint:rgba(247,59,32,.05);
   --sh-lg:rgba(247,59,32,.1) 0 8px 24px 0, rgba(247,59,32,.05) 0 2px 8px 0;
   --sh-md:rgba(0,0,0,.05) 0 -4px 16px 0;
-  --font:'DM Sans','Pretendard Variable',Pretendard,ui-sans-serif,system-ui,sans-serif;
+  --font:'SUIT','Pretendard Variable',Pretendard,ui-sans-serif,system-ui,sans-serif;
   --maxw:1200px;
   --ease:cubic-bezier(.76,0,.24,1);
 }
@@ -213,7 +220,7 @@ html.lenis{height:auto}
 /* ---------- workspace overview ---------- */
 .overview{padding:clamp(120px,16vh,190px) 0 clamp(92px,13vh,150px);background:linear-gradient(160deg,#2b0f45 0%,#5b1636 45%,#f73b20 130%);color:#fff;position:relative;overflow:hidden}
 .overview::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(520px 520px at 94% -6%,rgba(247,59,32,.45),transparent 62%),radial-gradient(440px 440px at -4% 102%,rgba(71,126,233,.4),transparent 62%)}
-.overview-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,56px);align-items:start}
+.overview-layout{display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,30vw,430px);gap:clamp(32px,5vw,72px);align-items:start}
 .overview-layout>*{position:relative;z-index:1}
 .overview-main{min-width:0}
 .overview-copy{text-align:left}
@@ -234,15 +241,15 @@ html.lenis{height:auto}
 .quote-card .who span{font-size:14px;font-weight:500;letter-spacing:.2px;color:#fff}
 .quote-card .who small{display:block;font-size:11.5px;font-weight:450;opacity:.62;letter-spacing:.28px;margin-top:1px}
 /* Logo Loop 가로 2줄 — 후기 무한 순환 밴드 (QuoteLoop.tsx) */
-.quotes-band{position:relative;z-index:1;margin-top:clamp(56px,8vw,96px);display:flex;flex-direction:column;gap:18px}
-.qband-row{overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 72px,#000 calc(100% - 72px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 72px,#000 calc(100% - 72px),transparent 100%)}
-.qband-track{display:flex;width:max-content;animation:qband-loop var(--qd,44s) linear infinite;will-change:transform}
-.qband-track.rev{animation-direction:reverse}
-.qband-row:hover .qband-track{animation-play-state:paused}
-.qband-set{display:flex;gap:18px;padding-right:18px}
-.qband-set .quote-card{width:clamp(300px,27vw,400px);flex-shrink:0;padding:22px 22px 20px}
-@keyframes qband-loop{to{transform:translateX(-50%)}}
-@media (prefers-reduced-motion:reduce){.qband-track{animation:none}}
+/* 후기 세로 순환 — 오버뷰 카피 오른쪽 칼럼 (Logo Loop 세로 버전) */
+.quotes-col{position:relative;z-index:1;display:flex;flex-direction:column;gap:14px;min-width:0}
+.qcol-view{overflow:hidden;height:clamp(400px,52vh,540px);-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 56px,#000 calc(100% - 56px),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 56px,#000 calc(100% - 56px),transparent 100%)}
+.qcol-track{display:flex;flex-direction:column;height:max-content;animation:qcol-loop var(--qd,60s) linear infinite;will-change:transform}
+.qcol-view:hover .qcol-track{animation-play-state:paused}
+.qcol-set{display:flex;flex-direction:column;gap:16px;padding-bottom:16px}
+.qcol-set .quote-card{padding:20px 20px 18px}
+@keyframes qcol-loop{to{transform:translateY(-50%)}}
+@media (prefers-reduced-motion:reduce){.qcol-track{animation:none}}
 
 /* ---------- footer ---------- */
 .landing-footer{background:#fff;color:var(--ink);padding:clamp(48px,7vw,96px) 0 0;text-align:left;overflow:hidden}
@@ -264,6 +271,7 @@ html.lenis{height:auto}
   .logo{font-size:22px}
   .lang-btn{display:none}
   .overview-layout{grid-template-columns:1fr}
+  .qcol-view{height:340px}
       .foot-links{grid-template-columns:1fr}
   .snippet{display:none}
   .sn1,.sn4{display:block}

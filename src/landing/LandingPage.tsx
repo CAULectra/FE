@@ -12,6 +12,7 @@ import LandingDock from "./LandingDock";
 import UploadSources from "./UploadSources";
 import AlignMap from "./AlignMap";
 import QuoteLoop from "./QuoteLoop";
+import TextType from "./TextType";
 import { useLandingEffects } from "./useLandingEffects";
 import "./landing.css";
 
@@ -177,10 +178,9 @@ export default function LandingPage() {
             </div>
           </div>
 
+          {/* 후기 세로 무한 순환 — 카피 오른쪽 칼럼 (QuoteLoop.tsx) */}
+          <QuoteLoop />
         </div>
-
-        {/* 후기 무한 순환 — Logo Loop 가로 2줄 풀폭 밴드 (QuoteLoop.tsx) */}
-        <QuoteLoop />
       </section>
 
       {/* ================= FOOTER ================= */}
@@ -205,7 +205,20 @@ export default function LandingPage() {
             <a href="#">Terms</a>
           </div>
         </div>
-        <div className="giant-lectra">Lectra</div>
+        {/* 대형 워드마크 — TextType 무한 타이핑 루프 (type → pause → delete → repeat) */}
+        <div className="giant-lectra">
+          <TextType
+            as="span"
+            text={["Lectra"]}
+            typingSpeed={150}
+            pauseDuration={1800}
+            deletingSpeed={90}
+            loop
+            showCursor
+            cursorCharacter="_"
+            startOnVisible
+          />
+        </div>
       </footer>
       
       </main>
