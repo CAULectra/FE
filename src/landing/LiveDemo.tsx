@@ -335,12 +335,12 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         <div className="demo-lead">
           <p className="demo-eyebrow">See it work</p>
           <h2 className="demo-headline">
-            Lectra <span className="accent">Workspace</span>
+            <span className="brand">Lectra</span> <span className="accent">Workspace</span>
           </h2>
           <p className="demo-sub">
             슬라이드별 요약, 녹음 구간, 판서 내용, 자료 기반 Q&amp;A까지.<br />
             강의가 끝난 뒤 다시 자료를 정리하느라 헤매지 않도록.<br />
-            Lectra가 학습에 필요한 모든 내용을 강의 흐름에 맞춰 정리합니다.
+            <span className="brand">Lectra</span>가 학습에 필요한 모든 내용을 강의 흐름에 맞춰 정리합니다.
           </p>
         </div>
 
@@ -358,7 +358,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
             <div className="da-body">
               {/* 다크 사이드바 — 실제 AppShell 미니어처 (landingpage ex 기준, 스텝 공통) */}
               <div className="da-side">
-                <b className="ds-logo">Lectra</b>
+                <b className="ds-logo brand">Lectra</b>
                 <span className="ds-new">＋ 새 강의 만들기</span>
                 <span className="ds-search">⌕ 검색 (제목 또는 내용)</span>
                 <small className="ds-cap">메뉴</small>

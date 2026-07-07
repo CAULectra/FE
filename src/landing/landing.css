@@ -7,8 +7,10 @@
 @font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-SemiBold.otf') format('opentype');font-weight:600;font-style:normal;font-display:swap}
 @font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap}
 @font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-ExtraBold.otf') format('opentype');font-weight:800;font-style:normal;font-display:swap}
-/* ---------- Cinzel (라틴 전용, 가변 400~900) — 영문자·숫자만 Cinzel, 구두점·한글은 SUIT ---------- */
+/* ---------- Cinzel (라틴 전용, 가변 400~900) — 히어로 카피·독 네비·푸터·'Lectra' 단어 전용 ---------- */
 @font-face{font-family:'Cinzel';src:url('/fonts/Cinzel/Cinzel-VariableFont_wght.ttf') format('truetype');font-weight:400 900;font-style:normal;font-display:swap;unicode-range:U+0030-0039,U+0041-005A,U+0061-007A}
+/* ---------- Artonex (라틴 전용) — 그 외 기본 영문. 트라이얼 구두점 워터마크 회피로 영문자·숫자만 ---------- */
+@font-face{font-family:'Artonex';src:url('/fonts/Artonex/Artonex-Trial.otf') format('opentype');font-weight:100 900;font-style:normal;font-display:swap;unicode-range:U+0030-0039,U+0041-005A,U+0061-007A}
 
 /* =====================================================================
    Jeton-style editorial fintech theme
@@ -22,11 +24,14 @@
   --cat-tint:rgba(247,59,32,.05);
   --sh-lg:rgba(247,59,32,.1) 0 8px 24px 0, rgba(247,59,32,.05) 0 2px 8px 0;
   --sh-md:rgba(0,0,0,.05) 0 -4px 16px 0;
-  --font:'Cinzel','SUIT','Pretendard Variable',Pretendard,ui-sans-serif,system-ui,sans-serif;
+  --font:'Artonex','SUIT','Pretendard Variable',Pretendard,ui-sans-serif,system-ui,sans-serif;
+  --font-display:'Cinzel','SUIT','Pretendard Variable',Pretendard,ui-sans-serif,system-ui,sans-serif;
   --maxw:1200px;
   --ease:cubic-bezier(.76,0,.24,1);
 }
 .landing-root, .landing-root *{margin:0;padding:0;box-sizing:border-box}
+/* Cinzel 혼용 영역 — 히어로 카피 · 독 네비 · 푸터 · 'Lectra' 단어(.brand) */
+.hero-title,.hero-sub,.dock,.landing-footer,.logo,.brand{font-family:var(--font-display)}
 html.lenis{height:auto}
 .lenis.lenis-smooth{scroll-behavior:auto}
 .landing-root{font-family:var(--font);color:var(--ink);background:var(--white);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:clip}
