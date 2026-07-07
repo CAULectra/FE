@@ -87,13 +87,15 @@ const TextType = ({
   useEffect(() => {
     if (showCursor && cursorRef.current) {
       gsap.set(cursorRef.current, { opacity: 1 });
-      gsap.to(cursorRef.current, {
+      const blink = gsap.to(cursorRef.current, {
         opacity: 0,
         duration: cursorBlinkDuration,
         repeat: -1,
         yoyo: true,
         ease: 'power2.inOut'
       });
+      // 무한 반복 트윈은 언마운트 시 반드시 kill — 라우트 이탈 후 누수 방지
+      return () => { blink.kill(); };
     }
   }, [showCursor, cursorBlinkDuration]);
 
