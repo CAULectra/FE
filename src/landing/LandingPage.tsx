@@ -86,7 +86,7 @@ export default function LandingPage() {
               <div className="icon-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4-4-8 8"/></svg></div>
               <h3>Images</h3>
             </div>
-            <p className="tagline-copy">모든 자료를 한 화면에, 간편하게 완성하는 나만의 강의노트</p>
+            <p className="tagline-copy">모든 자료를 한 화면에,<br />간편하게 완성하는 나만의 강의노트</p>
           </div>
           <button className="scroll-ind" id="scroll-ind"><i>↓</i> Scroll</button>
           {/* 히어로 끝을 walkthrough 다크(#120F17)로 페이드 → 두 섹션 자연 연결 */}

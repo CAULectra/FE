@@ -143,13 +143,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
           scrollTrigger: { trigger: lead, start: "top 80%", end: "top 46%", scrub: true },
         })
       : null;
-    /* 확!! 확대 — Krepling의 "콘텐츠 폭 → 풀블리드" 점프 재현: 0.62에서 시작해
-       풀블리드로 인플레이트. origin은 top-center: 패널 상단이 헤딩 밑에 붙은 채
-       아래·옆으로 팽창(중앙 origin이면 시작 시 상단이 밀려 간격이 벌어짐) */
-    const stageSettle = gsap.fromTo(stage, { scale: 0.62 }, {
-      scale: 1, ease: "none", transformOrigin: "50% 0%",
-      scrollTrigger: { trigger: stage, start: "top 96%", end: "top 22%", scrub: true },
-    });
+    /* 스테이지는 항상 원크기 고정 — 축소/인플레이트 없음 (사용자 요청: 클릭시 확대만) */
 
     /* ── Harvest식 카메라 리그 ──────────────────────────────────
        카메라 = .demo-app 전체(크롬 포함)를 origin(0,0) 기준 scale+translate.
@@ -258,23 +252,18 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         .to({}, { duration: 0.55 }, ">")
         .call(() => press(".dlf-ai"), undefined, ">");
 
-      // ② 폴더 상세(/library?folder=…)로 전환 — 강의 카드로 이동
+      // ② 폴더 상세로 전환 — 줌아웃 없이(창 고정) 강의 카드로 팬만
       tl.call(() => setStep(1), undefined, ">+0.25")
-        .to(app, { ...camTo(null, 1), duration: 0.9 }, "<")
-        .to(cursor, { ...curTo(".dlc-ai04", null, 1, 0, -6), duration: 0.9 }, "<");
-      // Ready 강의(06. Zero-Knowledge Proofs) 카드로 줌인 → hover lift → 클릭
-      tl.to(app, { ...camTo(".dlc-ai04", 1.4), duration: 1.05 }, ">+0.15")
-        .to(cursor, { ...curTo(".dlc-ai04", ".dlc-ai04", 1.4, 4, 6), duration: 1.05 }, "<")
+        .to(app, { ...camTo(".dlc-ai04", 1.35), duration: 0.9 }, "<+0.1")
+        .to(cursor, { ...curTo(".dlc-ai04", ".dlc-ai04", 1.35, 4, 6), duration: 0.9 }, "<")
         .call(() => cardZkp?.classList.add("hov"), undefined, ">-0.05")
         .to({}, { duration: 0.35 }, ">")
         .call(() => press(".dlc-ai04"), undefined, ">");
 
-      // ③ 워크스페이스(/lecture/w10)로 전환 — 노트 요약으로 줌인
+      // ③ 워크스페이스로 전환 — 축소 없이 노트로 팬 + 살짝 확대
       tl.call(() => setStep(2), undefined, ">+0.25")
-        .to(app, { ...camTo(null, 1), duration: 0.95 }, "<")
-        .to(cursor, { ...curTo(".dw-note", null, 1, 0, -10), duration: 0.95 }, "<");
-      tl.to(app, { ...camTo(".dw-note-hot", 1.5), duration: CAM }, ">+0.15")
-        .to(cursor, { ...curTo(".dw-note-hot", ".dw-note-hot", 1.5, 40, 30), duration: CAM }, "<")
+        .to(app, { ...camTo(".dw-note-hot", 1.45), duration: 1.0 }, "<+0.1")
+        .to(cursor, { ...curTo(".dw-note-hot", ".dw-note-hot", 1.45, 40, 30), duration: 1.0 }, "<")
         .to({}, { duration: 0.45 }, ">");
 
       // ④ 레퍼런스 패널로 팬 — 챗봇 탭 클릭 → 우측 패널 전체가 챗봇 화면으로 전환 (RAG)
@@ -313,7 +302,6 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
       window.removeEventListener("resize", onResize); window.clearTimeout(rt);
       st.kill(); tl?.kill();
       leadFade?.scrollTrigger?.kill(); leadFade?.kill();
-      stageSettle.scrollTrigger?.kill(); stageSettle.kill();
       gsap.set([app, cursor, ...(chat ? [chat] : [])], { clearProps: "all" });
     };
   }, [mode]);
