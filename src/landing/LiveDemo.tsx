@@ -347,10 +347,13 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         <div className="demo-lead">
           <p className="demo-eyebrow">See it work</p>
           <h2 className="demo-headline">
-            Four sources in.<br />
-            <span className="accent">One exam-ready note out.</span>
+            Lectra <span className="accent">Workspace</span>
           </h2>
-          <p className="demo-sub">업로드부터 복습까지 — Lectra가 클릭 한 번으로 정렬합니다.</p>
+          <p className="demo-sub">
+            슬라이드별 요약, 녹음 구간, 판서 내용, 자료 기반 Q&amp;A까지.<br />
+            강의가 끝난 뒤 다시 자료를 정리하느라 헤매지 않도록.<br />
+            Lectra가 학습에 필요한 모든 내용을 강의 흐름에 맞춰 정리합니다.
+          </p>
         </div>
 
         {/* 큰 화면: 소프트 그라데이션 + 앱 목업 + 탭 */}

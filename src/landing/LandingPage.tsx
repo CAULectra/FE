@@ -63,9 +63,9 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="stage">
-            <h1 className="hero-title t-display" id="hero-title">One app<br />for every lecture</h1>
+            <h1 className="hero-title t-display" id="hero-title">Lectra</h1>
             <aside className="hero-aside">
-              <p>Single workspace<br />for all your lectures.</p>
+              <p>All your materials,<br />in one clear workspace.</p>
               <div className="app-badges">
                 <a className="_app-button" href="/auth"><span className="outline"></span><span><small>무료로 시작하기</small><b>Sign up</b></span></a>
                 <a className="_app-button" href="/auth"><span className="outline"></span><span><small>이미 계정이 있어요</small><b>Log in</b></span></a>
@@ -110,8 +110,8 @@ export default function LandingPage() {
           <ScrollStackItem itemClassName="workflow-card workflow-card-light">
             <div className="workflow-card-copy">
               <span className="workflow-index">01</span>
-              <h3>Upload every source at once.</h3>
-              <p>Drop the slide deck, lecture recording, and board photos into one lecture folder. Lectra keeps the raw material grouped before any AI pass begins.</p>
+              <h3>Upload once.</h3>
+              <p>슬라이드, 녹음, 판서 사진을 따로 관리할 필요 없이 Lectra가 한 강의 워크스페이스로 모아 정리합니다. 흩어진 자료를 다시 찾는 대신, 생성된 노트를 바로 열어보세요.</p>
             </div>
             {/* Krepling Personalized experiences 패턴: 아이콘 3개 + 클릭 리플 */}
             <div className="workflow-visual upload-visual">
@@ -122,8 +122,8 @@ export default function LandingPage() {
           <ScrollStackItem itemClassName="workflow-card workflow-card-dark">
             <div className="workflow-card-copy">
               <span className="workflow-index">02</span>
-              <h3>Align the lecture timeline.</h3>
-              <p>Speech, slide text, and photo timestamps are mapped to the same clock, so every sentence knows where it belongs.</p>
+              <h3>Stay in sync.</h3>
+              <p>녹음 속 설명과 슬라이드, 사진을 따로 맞춰볼 필요 없이, Lectra가 강의 흐름에 맞춰 모든 자료를 연결합니다.</p>
             </div>
             {/* 파형 세그먼트가 아래 슬라이드로 매핑되는 애니메이션 (AlignMap.tsx) */}
             <div className="workflow-visual align-visual" aria-hidden="true">
@@ -134,8 +134,8 @@ export default function LandingPage() {
           <ScrollStackItem itemClassName="workflow-card workflow-card-light">
             <div className="workflow-card-copy">
               <span className="workflow-index">03</span>
-              <h3>Study from the finished workspace.</h3>
-              <p>Review synced notes, jump through cited answers, and see which slides deserve the most attention before the exam.</p>
+              <h3>Study faster.</h3>
+              <p>자료를 다시 열어보고 처음부터 정리하는 대신, 완성된 워크스페이스에서 공부를 시작하세요. 슬라이드별 요약과 핵심 개념, 자료 기반 Q&amp;A를 활용한 나만의 노트를 제공합니다.</p>
             </div>
             <div className="workflow-visual workspace-visual" aria-hidden="true">
               <div className="workspace-rail">
@@ -169,11 +169,10 @@ export default function LandingPage() {
           <div className="overview-main">
             <div className="overview-copy reveal">
               <span className="_tag" style={{color: 'var(--orange)'} as React.CSSProperties}><span className="outline"></span>Workspace</span>
-              <h2 className="t5" style={{marginTop: '16px'} as React.CSSProperties}>Lectra Workspace:<br />your go-to for every exam.</h2>
+              <h2 className="t5" style={{marginTop: '16px'} as React.CSSProperties}><span className="ov-lead">자료 찾기는 그만,</span>Lectra에서 시작하세요.</h2>
             </div>
             <div className="ov-check reveal">
-              <h3 className="t5">Karaoke highlight? Sure.<br />Cited answers? Check.<br />Heatmaps? Also check.</h3>
-              <p>현재 문장 자동 하이라이트, 원문 인용 칩이 달린 Q&A, 교수님이 오래 머문 슬라이드를 보여주는 체류시간 히트맵까지 — 정렬 하나로 전부 따라옵니다.</p>
+              <p>슬라이드, 녹음, 판서 사진을 올리면 강의 흐름에 맞춰 하나의 워크스페이스로 정리됩니다. 다시 듣고 싶은 설명은 바로 찾아가고, 중요한 내용은 요약과 Q&amp;A로 먼저 확인하세요. 시험 전 복습이 더 빠르고 가벼워집니다.</p>
               <a className="link-orange roll-host" href="/lecture/w10" data-roll>Learn more →</a>
             </div>
           </div>
