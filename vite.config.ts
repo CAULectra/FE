@@ -3,7 +3,6 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
-
 function figmaAssetResolver() {
   return {
     name: 'figma-asset-resolver',
@@ -32,22 +31,33 @@ export default defineConfig(({ mode }) => {
     : undefined
 
   return {
-  server: { proxy },
-  plugins: [
-    figmaAssetResolver(),
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
-    react(),
-    tailwindcss(),
-  ],
-  resolve: {
-    alias: {
-      // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
+    server: { proxy },
+    plugins: [
+      react(),
+      tailwindcss(),
+      figmaAssetResolver(),
+    ],
+    resolve: {
+      alias: {
+        // Alias @ to the src directory
+        '@': path.resolve(__dirname, './src'),
+      },
     },
-  },
 
-  // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
-  assetsInclude: ['**/*.svg', '**/*.csv'],
+    // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
+    assetsInclude: ['**/*.svg', '**/*.csv'],
+
+    build: {
+      chunkSizeWarningLimit: 900,
+      rollupOptions: {
+        output: {
+          // 큰 라이브러리를 별도 청크로 분리(캐싱·지연로드 효율)
+          manualChunks(id: string) {
+            if (id.includes('node_modules/three')) return 'three'
+            if (id.includes('node_modules/katex')) return 'katex'
+          },
+        },
+      },
+    },
   }
 })
