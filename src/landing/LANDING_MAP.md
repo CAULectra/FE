@@ -11,6 +11,7 @@
 ▼ 스크롤
 §1 히어로 (Spline)  ──▶  §1.4 태그라인 (Slides/Audio/Images)
 §2 카드 3장 (Upload→Align→Study, 마지막 카드에서 배경 크림 전환)
+§2.5 라이브 데모 (Krepling식: 큰 문구 + 앱 목업 위 커서 자동 시연)
 §3 오버뷰 (붉은 그라데이션 + 후기)
 §4 푸터 (대형 Lectra)
 ```
@@ -48,6 +49,20 @@
 | §2.3 **③ Study 카드** | `.workflow-card.workflow-card-light` (03) | 흰색. "Study from the finished workspace" + 슬라이드 레일 + 노트 + Q&A. **이 카드에서 배경 크림 전환** |
 | (카드 내부) | `.workflow-card-copy`(좌측 카피) / `.workflow-visual`(우측 목업) | 각 카드 = 카피 + 비주얼 2열 |
 
+## §2.5 라이브 데모 (LIVE DEMO) — `.demo-section` `#demo`  *(Krepling식, 밝은 캔버스·오렌지 액센트)*
+> `LiveDemo.tsx`. 두 모드(`mode` prop):
+> - **autoplay** (기본): 화면 안에 들어오면 스스로 **자동 재생 루프**(헤드라인 위·목업 아래 블록, 목업 고정 크기, 탭은 스테이지 내부). 커서가 스스로 이동·클릭하며 upload→align→study→Q&A 시연.
+> - **scrub** (A/보존): 섹션 340vh **핀 고정** → 스크롤하면 크림 위 헤드라인만 있다가 목업이 페이드+확대(→1.16, 좌측 이동해 우측 탭 거터 확보)로 **열리며 화면을 채움**. 커서·단계·클릭이 스크롤 진행도에 **스크럽 동기화**.
+> `LandingPage`가 렌더(기본 autoplay). URL `?demo=scrub`로 스크럽(A) 버전 비교. reduced-motion이면 정적(Study).
+
+| 이름 | 코드 | 설명 |
+|---|---|---|
+| §2.5a **큰 문구** | `.demo-lead` (`.demo-headline` + `.accent`) | "Four sources in. **One exam-ready note out.**"(오렌지 강조) + eyebrow + 한글 서브 |
+| §2.5b **데모 스테이지** | `.demo-stage` (`.demo-gradient`) | 소프트 파스텔 그라데이션 라운드 패널 |
+| §2.5c **앱 목업** | `.demo-app[data-step]` | 3단계 크로스페이드: `.da-upload`(0) / `.da-align`(1) / `.da-study`(2) |
+| §2.5d **커서** | `.demo-cursor` (SVG) | 검은 화살표. scrub=스크롤 웨이포인트, autoplay=GSAP 타임라인. `.click` 피드백. 핀 자식이라 확대 영향 X |
+| §2.5e **단계 탭** | `.demo-tabs` (`.demo-tab`) | 우측 Upload/Align/Study, 단계 동기화(`.active`). scrub=핀 고정(뷰포트 우측 거터), autoplay=스테이지 내부 |
+
 ## §3 오버뷰 (OVERVIEW) — `.overview` `#overview`  *(붉은 그라데이션)*
 | 이름 | 코드 | 설명 |
 |---|---|---|
@@ -70,4 +85,5 @@
 | `useLandingEffects.ts` | GSAP+Lenis 인터랙션 (타이틀 인트로, 태그라인 등장, 워크스루 핀 5단계) |
 | `Hero3D.tsx` | §1.1 Spline 3D iframe (오버스캔·해상도·화면밖 정지) |
 | `ScrollStack.tsx` | §2 sticky 카드 스택 컴포넌트 |
+| `LiveDemo.tsx` | §2.5 Krepling식 커서 자동 시연 데모 |
 | `DotField.tsx` / `FloatingLines.tsx` | (현재 랜딩 미사용 — 이전 워크스루 배경. orphan) |

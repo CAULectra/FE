@@ -10,6 +10,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Hero3D from "./Hero3D";
 import ScrollStack, { ScrollStackItem } from "./ScrollStack";
 import TextType from "./TextType";
+import LiveDemo from "./LiveDemo";
 import { useLandingEffects } from "./useLandingEffects";
 import "./landing.css";
 
@@ -17,6 +18,13 @@ export default function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   useLandingEffects(rootRef);
+
+  /* §2.5 데모 모드: 기본 autoplay(자동재생). ?demo=scrub 로 스크럽(A) 버전 비교 */
+  const demoMode: "scrub" | "autoplay" =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("demo") === "scrub"
+      ? "scrub"
+      : "autoplay";
 
   /* 태그라인 등장 시점(히어로 스크롤 중반)에 TextType 타이핑 시작.
      sticky 히어로 안이라 startOnVisible은 로드 즉시 발동 → 스크롤 진행도로 게이팅. */
@@ -214,7 +222,12 @@ export default function LandingPage() {
         </ScrollStack>
       </section>
 
-            {/* ================= WORKSPACE OVERVIEW ================= */}
+      {/* ================= §2.5 LIVE DEMO (Krepling식 가이드 데모) =================
+          autoplay(자동 재생 루프, 기본) ↔ scrub(A, 스크롤로 목업이 열리며 화면 채움).
+          비교: 기본 = autoplay, URL ?demo=scrub = scrub */}
+      <LiveDemo mode={demoMode} />
+
+      {/* ================= WORKSPACE OVERVIEW ================= */}
       <section className="overview" id="overview">
         <div className="wrap overview-layout">
           <div className="overview-main">
