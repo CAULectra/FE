@@ -67,6 +67,8 @@ html.lenis{height:auto}
 .dock-home{width:52px;height:52px;border-radius:50%;background:var(--orange-tint);display:grid;place-items:center;font-size:19px;color:#fff;transition:background .2s}
 .dock-home:hover{background:#ff6b52}
 .dock-links{display:flex;align-items:center;padding:0 10px;gap:2px}
+/* magnification 래퍼 (LandingDock.tsx) — 스케일은 이 div에만, 드롭업 앵커는 .dock-item 유지 */
+.dock-mag{display:inline-flex;will-change:transform}
 .dock-item{position:relative}
 .dock-link{display:inline-flex;align-items:center;gap:7px;padding:14px 16px;border-radius:9999px;font-size:15px;font-weight:450;letter-spacing:.42px;color:#fff;transition:background .2s}
 .dock-link:hover{background:rgba(255,255,255,.14)}
@@ -387,15 +389,27 @@ html.lenis{height:auto}
 .workflow-card-light .workflow-visual{background:linear-gradient(135deg,#f7f3ec,#ede5db)}
 .workflow-card-dark .workflow-visual{background:radial-gradient(circle at 72% 24%,rgba(247,59,32,.35),transparent 40%),linear-gradient(145deg,#171717,#050505)}
 .upload-visual{display:grid;place-items:center}
-.upload-ring{position:relative;width:clamp(150px,19vw,240px);height:clamp(150px,19vw,240px);border-radius:50%;display:grid;place-items:center;background:conic-gradient(from 90deg,var(--orange) 0 78%,rgba(17,17,17,.08) 78% 100%);box-shadow:0 18px 48px rgba(247,59,32,.24)}
-.upload-ring::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(clamp(150px,19vw,240px) - 34px);height:calc(clamp(150px,19vw,240px) - 34px);border-radius:50%;background:#fff}
-.upload-ring span{position:relative;z-index:1;font-size:clamp(20px,2.2vw,30px);font-weight:700;letter-spacing:-.02em;color:#111}
-.upload-file{position:absolute;width:min(230px,42%);border:1px solid rgba(17,17,17,.08);background:rgba(255,255,255,.78);backdrop-filter:blur(12px);border-radius:16px;padding:16px 18px;box-shadow:0 18px 38px rgba(35,18,12,.12)}
-.upload-file b{display:block;font-size:15px;letter-spacing:-.01em;color:#111}
-.upload-file small{display:block;margin-top:4px;font-size:12px;color:rgba(17,17,17,.48);letter-spacing:.24px}
-.file-slide{left:7%;top:16%;transform:rotate(-5deg)}
-.file-audio{right:6%;top:25%;transform:rotate(4deg)}
-.file-photo{left:18%;bottom:13%;transform:rotate(3deg)}
+/* 카드 01 — 소스 아이콘 3개 + 물방울 리플 (UploadSources.tsx, Krepling 패턴) */
+.upload-sources{display:flex;gap:clamp(20px,4.5vw,60px);align-items:flex-start;justify-content:center}
+.us-item{display:flex;flex-direction:column;align-items:center;gap:12px;-webkit-tap-highlight-color:transparent}
+.us-iconwrap{position:relative;width:clamp(66px,7.4vw,92px);height:clamp(66px,7.4vw,92px);display:grid;place-items:center}
+.us-icon{position:relative;z-index:2;width:100%;height:100%;border-radius:50%;background:#fff;display:grid;place-items:center;color:#111;border:1px solid rgba(17,17,17,.08);box-shadow:0 14px 34px rgba(35,18,12,.14);transition:transform .35s var(--ease)}
+.us-icon svg{width:38%;height:38%}
+.us-item:hover .us-icon{transform:translateY(-4px)}
+.us-item:active .us-icon{transform:scale(.94)}
+.us-item.pop .us-icon{animation:us-pop .45s var(--ease)}
+@keyframes us-pop{35%{transform:scale(1.12)}100%{transform:scale(1)}}
+.us-rings{position:absolute;inset:0;z-index:1;pointer-events:none}
+.us-rings i{position:absolute;inset:0;border-radius:50%;opacity:0;transform:scale(.6);animation:us-ripple 1.25s cubic-bezier(.22,.61,.36,1) forwards}
+.us-rings i:nth-child(1){background:rgba(247,59,32,.14)}
+.us-rings i:nth-child(2){border:1.5px solid rgba(247,59,32,.5);animation-delay:.16s}
+.us-rings i:nth-child(3){border:1.5px solid rgba(247,59,32,.3);animation-delay:.32s}
+@keyframes us-ripple{0%{opacity:.85;transform:scale(.62)}100%{opacity:0;transform:scale(2.9)}}
+.us-item b{font-size:15px;font-weight:600;color:#111;letter-spacing:-.01em}
+.us-item small{font-size:12px;color:rgba(17,17,17,.48);letter-spacing:.24px;margin-top:-6px}
+.us-item:focus-visible{outline:none}
+.us-item:focus-visible .us-icon{box-shadow:0 0 0 3px rgba(247,59,32,.35),0 14px 34px rgba(35,18,12,.14)}
+@media (prefers-reduced-motion:reduce){.us-rings i{animation:none}.us-item.pop .us-icon{animation:none}}
 .align-visual{display:flex;flex-direction:column;justify-content:center;padding:clamp(24px,4vw,48px)}
 .align-wave{height:160px;display:flex;align-items:center;gap:7px;margin-bottom:34px}
 .align-wave i{flex:1;height:var(--h);border-radius:999px;background:linear-gradient(to top,#f73b20,#ff8b73);box-shadow:0 0 22px rgba(247,59,32,.22)}
@@ -452,58 +466,147 @@ html.lenis{height:auto}
 .da-dots i{width:10px;height:10px;border-radius:50%;background:rgba(17,17,17,.14)}
 .da-url{flex:0 1 320px;margin:0 auto;text-align:center;font-size:12px;color:#6c6b6b;background:#f1f1f1;border-radius:8px;padding:5px 14px}
 .da-badge{font-size:11px;font-weight:600;letter-spacing:.2px;border-radius:9999px;padding:3px 11px}
-.da-badge-run{background:#f1f1f1;color:#8a8078}
 .da-badge-done{background:#eaf7ee;color:#0b6b2c;display:none}
-.demo-app[data-step="2"] .da-badge-run{display:none}
 .demo-app[data-step="2"] .da-badge-done{display:inline-block}
 
-.da-body{position:relative;height:clamp(320px,42vw,460px)}
-.da-pane{position:absolute;inset:0;padding:clamp(18px,3vw,34px);opacity:0;transform:scale(.985);transition:opacity .55s var(--ease),transform .55s var(--ease);pointer-events:none}
-.demo-app[data-step="0"] .da-upload{opacity:1;transform:none}
-.demo-app[data-step="1"] .da-align{opacity:1;transform:none}
-.demo-app[data-step="2"] .da-study{opacity:1;transform:none}
+/* ═══ 데모 앱 내부 — 실제 Lectra 화면 미니어처 (라이브러리→폴더→워크스페이스) ═══
+   실측 기준: /library(다크 사이드바+과목 폴더), /library?folder=is(강의 카드),
+   /lecture/w10(슬라이드 스트립+노트+요약/챗봇+재생 타임라인). 앱 primary=#C2410C */
+.da-body{position:relative;height:clamp(340px,44vw,480px);display:flex;background:#FAF7F2}
 
-/* STEP 0 — Upload */
-.da-upload{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
-.da-drop{width:min(420px,86%);border:1.5px dashed #d9c9be;border-radius:14px;padding:26px;text-align:center;background:#fcfaf6}
-.da-drop-ic{width:44px;height:44px;margin:0 auto 12px;border-radius:12px;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:20px}
-.da-drop b{display:block;font-size:18px;color:#111}
-.da-drop small{display:block;margin-top:4px;color:#8a8078;font-size:13px}
-.da-files{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.da-file{display:inline-flex;flex-direction:column;background:#f1f1f1;border-radius:8px;padding:9px 14px;font-size:12px}
-.da-file b{color:#111;font-size:13px}
-.da-file small{color:#8a8078}
-.demo-app .da-cta{background:var(--orange);color:#fff;font-size:15px;font-weight:500;border-radius:8px;padding:12px 30px;transition:transform .15s,filter .15s}
-.demo-app .da-cta.hit{transform:scale(.94);filter:brightness(.9)}
+/* ── 다크 사이드바 (AppShell 미니어처, 스텝 공통) ── */
+.da-side{flex:0 0 clamp(108px,12vw,138px);background:#262220;color:#EDE8E2;padding:12px 10px;display:flex;flex-direction:column;gap:6.5px;font-size:9px;overflow:hidden}
+.ds-logo{font-size:13px;font-weight:700;letter-spacing:-.02em;margin-bottom:2px}
+.ds-new{background:#C2410C;color:#fff;border-radius:7px;padding:6px 0;text-align:center;font-size:9px;font-weight:600}
+.ds-search{background:rgba(255,255,255,.08);border-radius:99px;padding:5px 9px;color:#9d968e;font-size:8px;white-space:nowrap;overflow:hidden}
+.ds-cap{margin-top:5px;font-size:7px;letter-spacing:.1em;color:#8d857c}
+.ds-item{display:flex;justify-content:space-between;gap:4px;padding:4.5px 7px;border-radius:6px;color:#CFC8C0;font-size:8.6px;white-space:nowrap;overflow:hidden;transition:background .4s,color .4s}
+.ds-item i{font-style:normal;color:#8d857c;font-size:7.6px;flex:0 0 auto}
+.ds-item .dot{color:#EAB308}
+.demo-app[data-step="0"] .ds-all{background:rgba(255,255,255,.10);color:#fff}
+.demo-app[data-step="1"] .ds-ai{background:rgba(255,255,255,.10);color:#fff}
+.demo-app[data-step="2"] .ds-ai04{background:rgba(255,255,255,.10);color:#fff}
+.ds-user{margin-top:auto;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border-radius:8px;padding:5px 7px;font-size:8.4px;color:#EDE8E2;white-space:nowrap;overflow:hidden}
+.ds-user i{font-style:normal;width:14px;height:14px;flex:0 0 auto;border-radius:50%;background:#E08A2E;color:#fff;display:grid;place-items:center;font-size:7px;font-weight:700}
+.ds-user small{color:#8d857c;font-size:7px;margin-left:auto}
 
-/* STEP 1 — Align */
-.da-align{display:flex;flex-direction:column;justify-content:center;gap:16px}
-.da-wave{display:flex;align-items:center;gap:4px;height:clamp(90px,14vw,150px)}
-.da-wave i{flex:1;border-radius:999px;background:linear-gradient(to top,var(--orange),#ff9b73)}
-.da-track{display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:10px;color:#8a8078;font-size:11px;letter-spacing:.12em}
-.da-track i{height:1px;background:rgba(17,17,17,.14)}
-.da-segs{display:flex;gap:5px}
-.da-segs span{flex:1;text-align:center;font-size:10px;color:#8a8078;background:#f1f1f1;border-radius:6px;padding:6px 0}
-.da-segs span.cur{background:var(--orange);color:#fff}
-.da-prog{height:7px;border-radius:4px;background:#eee;overflow:hidden}
-.da-prog i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--orange),#ffb38f)}
-.da-prog-label{font-size:12px;color:#6c6b6b}
-.da-prog-label b{color:#0b6b2c}
+.da-main{position:relative;flex:1;min-width:0}
+.da-pane{position:absolute;inset:0;padding:clamp(14px,2.2vw,26px);opacity:0;transform:scale(.985);transition:opacity .55s var(--ease),transform .55s var(--ease);pointer-events:none}
+.da-pane.dw-work{padding:0}
+.demo-app[data-step="0"] .dl-library{opacity:1;transform:none}
+.demo-app[data-step="1"] .dl-folder{opacity:1;transform:none}
+.demo-app[data-step="2"] .dw-work{opacity:1;transform:none}
 
-/* STEP 2 — Study */
-.da-study{display:grid;grid-template-columns:.72fr 1.4fr 1fr;gap:14px}
-.da-col{background:#fff;border:1px solid rgba(17,17,17,.08);border-radius:12px;padding:14px;overflow:hidden}
-.da-h{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#a8a29e;margin-bottom:12px}
-.da-thumb{border:1px solid #ede8e0;border-radius:8px;padding:10px;margin-bottom:9px;background:#fcfaf6}
-.da-thumb i{display:block;height:6px;border-radius:3px;background:#e5dfd4;margin-bottom:5px}
-.da-thumb.cur{border-color:var(--orange);box-shadow:0 0 0 3px rgba(247,59,32,.12)}
-.da-note-t{display:block;font-size:16px;color:#111;margin-bottom:12px}
-.da-ln{display:block;height:8px;border-radius:4px;background:#f1ece2;margin-bottom:9px}
-.da-ln.hl{background:#ffe07a}
-.da-frm{font-size:13px;font-family:ui-monospace,monospace;color:#57534e;background:#fcfaf5;border-left:2px solid var(--orange);border-radius:0 8px 8px 0;padding:9px 12px;margin:4px 0 12px}
-.da-q{background:var(--orange);color:#fff;border-radius:10px 10px 3px 10px;padding:9px 12px;font-size:13px;margin-bottom:10px;margin-left:16px}
-.da-a{background:#f1f1f1;color:#57534e;border-radius:10px 10px 10px 3px;padding:10px 12px;font-size:13px;line-height:1.5;margin-right:12px}
-.da-cite{display:inline-block;margin-top:8px;background:#fff;border:1px solid #f0e3ce;color:#92400e;border-radius:9999px;padding:2px 9px;font-size:11px;font-weight:700}
+/* ── 라이브러리 헤더 (전체 강의 / 폴더 상세 공통) ── */
+.dl-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.dl-title b{display:block;font-size:clamp(12px,1.4vw,16px);font-weight:700;color:#1F1B16;letter-spacing:-.01em}
+.dl-title small{display:block;margin-top:2px;font-size:8.5px;color:#8a8078}
+.dl-back{display:block;font-size:8px;color:#8a8078;margin-bottom:3px}
+.dl-actions{display:flex;gap:6px;align-items:center}
+.dl-sort{border:1px solid #E5DFD6;background:#fff;border-radius:7px;padding:5px 8px;font-size:8.3px;color:#57534E;white-space:nowrap}
+.dl-upbtn{background:#C2410C;color:#fff;border-radius:7px;padding:5.5px 10px;font-size:8.6px;font-weight:600;box-shadow:0 3px 8px rgba(194,65,12,.25);white-space:nowrap}
+
+/* ── STEP 0 · 과목 폴더 그리드 (react-bits Folder 미니어처) ── */
+.dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:clamp(16px,3vw,38px)}
+.dlf{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 6px;border-radius:12px}
+.dlf>b{margin-top:13px;font-size:10.5px;font-weight:700;color:#1F1B16;transition:color .3s}
+.dlf>small{margin-top:2px;font-size:7.6px;color:#8a8078}
+.dlf-icon{position:relative;display:block;width:78px;height:56px;margin-top:14px;transition:transform .3s var(--ease)}
+.dlf-icon i{position:absolute;display:block}
+.dlf-icon .tab{left:0;bottom:100%;width:25px;height:7px;border-radius:3.5px 3.5px 0 0;background:var(--fb)}
+.dlf-icon .back{inset:0;border-radius:0 7px 7px 7px;background:var(--fb)}
+.dlf-icon .pp{left:50%;bottom:8%;z-index:2;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.1);transform:translateX(-50%) translateY(10%);transition:transform .45s var(--ease)}
+.dlf-icon .pp.p1{width:64%;height:80%;background:#E6E6E6}
+.dlf-icon .pp.p2{width:74%;height:72%;background:#F2F2F2}
+.dlf-icon .pp.p3{width:86%;height:62%;background:#fff}
+.dlf-icon .ff{inset:0;z-index:3;background:var(--fc);border-radius:4px 7px 7px 7px;transform-origin:bottom;transition:transform .45s var(--ease)}
+/* hover 프리뷰(살짝 들림) / open(플랩 벌어지고 종이 튀어나옴 — react-bits Folder) */
+.dlf.hov .dlf-icon{transform:translateY(-4px)}
+.dlf.open .dlf-icon{transform:translateY(-5px)}
+.dlf.open .pp.p1{transform:translate(-118%,-64%) rotate(-14deg)}
+.dlf.open .pp.p2{transform:translate(6%,-64%) rotate(14deg)}
+.dlf.open .pp.p3{transform:translate(-50%,-94%) rotate(4deg)}
+.dlf.open .ff.f1{transform:skew(14deg) scaleY(.62)}
+.dlf.open .ff.f2{transform:skew(-14deg) scaleY(.62)}
+.dlf.hit>b{color:#C2410C}
+
+/* ── STEP 1 · 폴더 내 강의 카드 ── */
+.dlc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:clamp(12px,2vw,22px)}
+.dlc{background:#fff;border:1px solid #EAE4DA;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s}
+.dlc-thumb{display:block;height:clamp(50px,7.4vw,80px);background:linear-gradient(135deg,#FBF7F1,#F3EDE4);border-bottom:1px solid #EFE9DF;overflow:hidden}
+.dlc-thumb img{width:100%;height:100%;object-fit:cover;object-position:top;opacity:.92}
+
+/* ── 미니 슬라이드 (landingpage ex의 mock 슬라이드를 CSS로 재현) ── */
+.msl{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;height:100%;background:#fff;padding:6px 8px;text-align:center}
+.msl>b{font-size:6.4px;font-weight:700;color:#2A2523;line-height:1.35;letter-spacing:-.01em;max-width:92%}
+.msl-icons{display:flex;gap:5px}
+.msl-icons i{width:9px;height:9px;border:1px solid #B9AFA2;border-radius:3px;position:relative}
+.msl-icons i::after{content:"";position:absolute;inset:2.5px;border-radius:50%;border:1px solid #C7BFB4}
+.msl-caps{display:flex;gap:5px}
+.msl-caps u{text-decoration:none;font-size:4.6px;color:#8a8078}
+.msl-venn{position:relative;width:36px;height:23px;margin-top:1px}
+.msl-venn i{position:absolute;width:15px;height:15px;border-radius:50%;opacity:.55}
+.msl-venn i:nth-child(1){left:1px;top:0;background:#F9C97C}
+.msl-venn i:nth-child(2){right:1px;top:0;background:#9EC5E8}
+.msl-venn i:nth-child(3){left:10px;bottom:0;background:#A8D8B0}
+.msl-check{display:flex;flex-direction:column;gap:2.5px;width:64%}
+.msl-check i{height:3px;border-radius:2px;background:#E4DCCF;position:relative;margin-left:7px}
+.msl-check i::before{content:"";position:absolute;left:-7px;top:-.5px;width:4px;height:4px;border-radius:1.2px;background:#7CC69B}
+.dlc>b{padding:7px 9px 0;font-size:9.2px;font-weight:700;color:#1F1B16;line-height:1.3}
+.dlc>small{padding:2px 9px 0;font-size:7.4px;color:#8a8078}
+.dlc .chip{margin:6px 9px 9px;align-self:flex-start;font-size:7px;font-weight:700;border-radius:99px;padding:2.5px 7px}
+.chip-ready{background:#E7F6EC;color:#15803D}
+.chip-proc{background:#FDF3D7;color:#A16207}
+.dlc.hov,.dlc.hit{transform:translateY(-3px);box-shadow:0 8px 22px rgba(60,40,20,.13);border-color:#C2410C}
+
+/* ── STEP 2 · 스터디 워크스페이스 ── */
+.dw-work{display:flex;flex-direction:column}
+.dw-cols{flex:1;display:grid;grid-template-columns:.62fr 1.15fr .9fr;min-height:0}
+.dw-strip{border-right:1px solid #EFE9DF;padding:10px;display:flex;flex-direction:column;gap:6px;background:#FAF7F2;min-width:0;overflow:hidden}
+.dw-h{font-size:8.6px;font-weight:700;color:#1F1B16}
+.dw-h i{font-style:normal;font-weight:500;color:#8a8078;margin-left:3px;font-size:7.4px}
+.dw-sync{font-size:7px;color:#B45309;background:#FDF3D7;border-radius:5px;padding:2.5px 6px;align-self:flex-start}
+.dw-ch{font-size:7px;font-weight:700;color:#C2410C;letter-spacing:.04em;margin-top:2px;white-space:nowrap;overflow:hidden}
+.dw-thumb{position:relative;display:block;aspect-ratio:16/9.6;border:1px solid #EAE4DA;border-radius:6px;overflow:hidden;background:#fff}
+.dw-thumb img{display:block;width:100%;height:auto}
+.dw-thumb i{position:absolute;top:3px;left:3px;font-style:normal;background:#3F3A34;color:#fff;font-size:6.5px;font-weight:700;border-radius:4px;padding:1px 4px}
+.dw-thumb.cur{border-color:#C2410C;box-shadow:0 0 0 2px rgba(194,65,12,.18)}
+.dw-note{padding:12px 14px;background:#fff;min-width:0;overflow:hidden}
+.dw-chlabel{display:block;font-size:7.5px;font-weight:700;color:#C2410C;letter-spacing:.05em}
+.dw-note>b{display:block;margin-top:4px;font-size:clamp(10px,1.2vw,13.5px);font-weight:800;color:#1F1B16;line-height:1.25;letter-spacing:-.01em}
+.dw-note>p{margin-top:6px;font-size:8.2px;line-height:1.55;color:#57534E}
+.dw-sum{display:block;margin-top:9px;background:#FBF6EC;border:1px solid #F1E5CB;border-radius:8px;padding:8px 10px}
+.dw-sum small{display:block;font-size:7.4px;font-weight:700;color:#92400E;margin-bottom:4px}
+.dw-sum em{display:block;font-style:normal;font-size:7.8px;line-height:1.65;color:#57534E}
+.dw-sum em::before{content:"·";color:#C2410C;font-weight:700;margin-right:4px}
+.dw-sum em.hl{background:#FFE9A8;border-radius:3px;width:fit-content;padding:0 3px}
+.dw-ref{border-left:1px solid #EFE9DF;padding:10px;background:#FAF7F2;display:flex;flex-direction:column;gap:7px;min-width:0;overflow:hidden}
+.dw-tabs{display:flex;gap:3px;background:#EFE9DF;border-radius:7px;padding:2.5px}
+.dw-tabs i{flex:1;text-align:center;font-style:normal;font-size:7.2px;font-weight:600;color:#8a8078;border-radius:5px;padding:3.5px 0;white-space:nowrap;transition:background .3s,color .3s}
+.dw-tabs i.on{background:#fff;color:#1F1B16;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.dw-tabs i.hit{background:#C2410C;color:#fff}
+.dw-refcard{display:block;background:#fff;border:1.2px solid #C2410C;border-radius:8px;padding:7px 9px;box-shadow:0 0 0 2px rgba(194,65,12,.08)}
+.dw-refcard small{display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:6.8px;color:#8a8078}
+.dw-refcard .mark{font-style:normal;color:#fff;background:#C2410C;border-radius:99px;padding:1px 5px;font-size:6.2px;font-weight:700;white-space:nowrap}
+.dw-refcard b{display:block;margin-top:3px;font-size:8.6px;font-weight:700;color:#1F1B16}
+.dw-chat{display:flex;flex-direction:column;gap:5px}
+.dw-q{align-self:flex-end;font-style:normal;background:#C2410C;color:#fff;border-radius:9px 9px 3px 9px;padding:5.5px 8px;font-size:7.8px;max-width:90%}
+.dw-a{align-self:flex-start;font-style:normal;background:#fff;border:1px solid #EAE4DA;color:#57534E;border-radius:9px 9px 9px 3px;padding:6px 8px;font-size:7.8px;line-height:1.55;max-width:95%}
+.dw-cite{display:inline-block;font-style:normal;margin-left:4px;background:#FBF6EC;border:1px solid #F1E5CB;color:#92400E;border-radius:99px;padding:.5px 6px;font-size:6.6px;font-weight:700}
+.dw-timeline{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:#262220;color:#EDE8E2;padding:8px 12px}
+.dw-play{font-style:normal;width:20px;height:20px;flex:0 0 auto;border-radius:50%;background:#C2410C;color:#fff;display:grid;place-items:center;font-size:8px}
+.dw-time{font-size:8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dw-speed{font-size:7.4px;border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:1.5px 5px;color:#CFC8C0}
+.dw-segs{position:relative;flex:1;display:flex;gap:2.5px;align-items:center;min-width:0}
+.dw-segs i{flex:1;height:9px;border-radius:2.5px;background:rgba(255,255,255,.14)}
+.dw-segs i.fill{background:#D8A23A}
+.dw-marker{position:absolute;left:13%;top:-14px;transform:translateX(-50%);background:#C2410C;color:#fff;font-size:6.5px;font-weight:700;border-radius:4px;padding:1px 5px}
+.dw-extra{display:flex;gap:5px;align-items:center;margin-left:4px;flex:0 0 auto}
+.dw-xbtn{font-style:normal;font-size:6.8px;color:#CFC8C0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2.5px 6px;white-space:nowrap}
+.dw-vol{width:32px;height:3px;border-radius:2px;background:rgba(255,255,255,.25);position:relative}
+.dw-vol::before{content:"";position:absolute;left:0;top:0;bottom:0;width:62%;border-radius:2px;background:#CFC8C0}
+
+@media (max-width:820px){.da-side{display:none}}
 
 /* 우측 단계 탭 (Krepling 탭 스트립) */
 .demo-tabs{position:absolute;right:clamp(-6px,-.5vw,0px);top:50%;transform:translateY(-50%);z-index:3;display:flex;flex-direction:column;gap:10px}
@@ -516,6 +619,24 @@ html.lenis{height:auto}
 .demo-cursor{position:absolute;z-index:5;left:0;top:0;opacity:0;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));pointer-events:none;will-change:transform}
 .demo-cursor.click{animation:democlick .4s ease}
 @keyframes democlick{40%{transform:scale(.7)}100%{transform:scale(1)}}
+
+/* ---------- §2.5 기본(autoplay) — Krepling Storefront식 풀블리드 핀 패널 ----------
+   krepling.com 실측 재현: ① 헤딩이 뷰포트에 단독 페이드인(스크롤 연동)
+   → ② 좌우 20px 풀블리드 라운드 패널이 올라오며 살짝 settle
+   → ③ 뷰포트를 채운 채 sticky 핀, 안의 데모 자동 재생 → ④ 다음 섹션이 밀어냄.
+   (?demo=scrub 변형은 :not(.is-scrub)으로 제외 — 기존 그대로) */
+.demo-section:not(.is-scrub){padding:0 58px 6vh}
+/* 핀 유지 스크롤 구간 — ⚠️ padding-bottom은 안 됨: sticky는 부모 content box에만
+   구속되므로 패딩은 고정 여지를 못 만든다. ::after 스페이서(실제 컨텐츠)로 확보 */
+.demo-section:not(.is-scrub) .demo-pin::after{content:"";display:block;height:105vh}
+.demo-section:not(.is-scrub) .demo-lead{min-height:56vh;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;padding-top:10vh}
+.demo-section:not(.is-scrub) .demo-stage{position:sticky;top:20px;height:calc(100vh - 40px);max-width:none;display:grid;place-items:center;border-radius:clamp(18px,2vw,28px);will-change:transform}
+.demo-section:not(.is-scrub) .demo-app{width:min(1020px,94%);will-change:transform}
+.demo-section:not(.is-scrub) .demo-tabs{right:clamp(14px,2vw,36px)}
+@media (max-width:760px){
+  .demo-section:not(.is-scrub) .demo-pin::after{height:70vh}
+  .demo-section:not(.is-scrub) .demo-stage{top:16px;height:calc(100svh - 32px)}
+}
 
 @media (max-width:820px){
   .da-study{grid-template-columns:1fr}
