@@ -4,11 +4,11 @@
    변신하고, 손(장갑) 커서가 움직이며 클릭 시연.
 
    mode:
-   - "autoplay" (기본) Harvest(getharvest.com) 히어로 비디오 문법:
+   - "autoplay" (기본) 프로덕트 투어 비디오 문법:
                 고정 프레임 안에서 "카메라"가 앱 UI를 줌인/줌아웃·팬 하고,
                 손 커서가 클릭하면 실제 상태가 바뀌는 제품 투어 루프.
    - "scrub"    (A) 섹션을 핀 고정, 스크롤하면 목업이 열리며 화면을 채우고
-                커서·단계가 스크롤 진행도에 맞춰 진행. (Krepling 방식)
+                커서·단계가 스크롤 진행도에 맞춰 진행. (스크럽 방식)
    화면 밖이면 정지, prefers-reduced-motion이면 정적(Study).
    ================================================================ */
 import { useEffect, useRef, type CSSProperties } from "react";
@@ -102,7 +102,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
           // ① 열림: 헤드라인 먼저 페이드아웃 → 목업·탭 페이드인 + 확대(화면 채움)
           const f = clamp01(p / 0.24);
           const appear = clamp01((p - 0.06) / 0.12); // 목업 등장 0.06→0.18
-          // 확대하며 좌측으로 살짝 이동 → 우측에 탭 거터 확보(겹침 방지, Krepling식)
+          // 확대하며 좌측으로 살짝 이동 → 우측에 탭 거터 확보(겹침 방지)
           gsap.set(stage, { scale: lerp(0.66, 1.16, f), x: lerp(0, -135, f), autoAlpha: appear });
           if (tabsBox) gsap.set(tabsBox, { autoAlpha: appear });
           if (lead) gsap.set(lead, { autoAlpha: 1 - clamp01(p / 0.12), y: -40 * clamp01(p / 0.2) });
@@ -134,7 +134,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
     }
 
     /* ---------------- AUTOPLAY (기본) ----------------
-       Krepling Storefront식: 헤딩이 스크롤 연동으로 페이드인(측정값 ~270px 구간)
+       풀블리드: 헤딩이 스크롤 연동으로 페이드인(측정값 ~270px 구간)
        → 풀블리드 패널이 올라오며 살짝 settle(스케일 0.96→1)
        → 핀 고정된 채 아래 타임라인이 자동 재생. 레이아웃은 landing.css 참고 */
     const leadFade = lead
@@ -145,7 +145,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
       : null;
     /* 스테이지는 항상 원크기 고정 — 축소/인플레이트 없음 (사용자 요청: 클릭시 확대만) */
 
-    /* ── Harvest식 카메라 리그 ──────────────────────────────────
+    /* ── 시네마틱 카메라 리그 ──────────────────────────────────
        카메라 = .demo-app 전체(크롬 포함)를 origin(0,0) 기준 scale+translate.
        줌인하면 앱이 스테이지(overflow:hidden)를 넘치며 크롭 — 비디오의 줌 샷.
        좌표는 rect가 아니라 레이아웃(offset 체인)에서 해석적으로 계산 →
@@ -245,7 +245,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         .set(cursor, { scale: 1, opacity: 0, ...curTo(".dl-grid", null, 1, 0, 46) }, 0)
         .to(cursor, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0.15);
 
-      // ① 폴더 그리드로 줌인 — 첫 과목 폴더에 hover → 열림(react-bits Folder) → 클릭
+      // ① 폴더 그리드로 줌인 — 첫 과목 폴더에 hover → 열림 → 클릭
       tl.to(app, { ...camTo(".dl-grid", 1.35), duration: CAM }, 0.55)
         .to(cursor, { ...curTo(".dlf-ai", ".dl-grid", 1.35, 2, -4), duration: CAM }, "<")
         .call(() => folderIs?.classList.add("hov"), undefined, ">-0.1")
@@ -312,7 +312,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
     };
   }, [mode]);
 
-  /* 커서 (Harvest식 흰 장갑 손) — 손끝(16,3)이 핫스팟. 배치는 모드별: autoplay=stage 안 / scrub=pin */
+  /* 커서 (흰 장갑 손) — 손끝(16,3)이 핫스팟. 배치는 모드별: autoplay=stage 안 / scrub=pin */
   const cursorEl = (
     <svg className="demo-cursor" viewBox="0 0 33 38" width="34" height="39" aria-hidden="true">
       <path
@@ -381,7 +381,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
               </div>
 
               <div className="da-main">
-                {/* STEP 0 — /library 과목 폴더 그리드 (react-bits Folder 열림 애니 유지) */}
+                {/* STEP 0 — /library 과목 폴더 그리드 (폴더 열림 애니 유지) */}
                 <div className="da-pane dl-library">
                   <div className="dl-head">
                     <div className="dl-title"><b>전체 강의</b><small>과목 4개 · 강의 12개</small></div>

@@ -40,7 +40,7 @@ export default tseslint.config(
       'react-refresh/only-export-components': 'off',
     },
   },
-  // Vendor components (react-bits 이식 원본) — @ts-nocheck 유지 허용
+  // Vendor components (외부 이식 원본) — @ts-nocheck 유지 허용
   {
     files: ['src/landing/TextType.tsx', 'src/landing/FloatingLines.tsx'],
     rules: {
