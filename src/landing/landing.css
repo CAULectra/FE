@@ -9,8 +9,9 @@
 @font-face{font-family:'SUIT';src:url('/fonts/SUIT/SUIT-ExtraBold.otf') format('opentype');font-weight:800;font-style:normal;font-display:swap}
 /* ---------- Cinzel (라틴 전용, 가변 400~900) — 히어로 카피·독 네비·푸터·'Lectra' 단어 전용 ---------- */
 @font-face{font-family:'Cinzel';src:url('/fonts/Cinzel/Cinzel-VariableFont_wght.ttf') format('truetype');font-weight:400 900;font-style:normal;font-display:swap;unicode-range:U+0030-0039,U+0041-005A,U+0061-007A}
-/* ---------- Artonex (라틴 전용) — 그 외 기본 영문. 트라이얼 구두점 워터마크 회피로 영문자·숫자만 ---------- */
-@font-face{font-family:'Artonex';src:url('/fonts/Artonex/Artonex-Trial.otf') format('opentype');font-weight:100 900;font-style:normal;font-display:swap;unicode-range:U+0030-0039,U+0041-005A,U+0061-007A}
+/* ---------- Artonex (라틴 알파벳 전용) — 트라이얼이 숫자를 깨진/워터마크 글리프로 렌더링
+   (예: 후기 "3배속"의 3) → 숫자를 범위에서 제외해 SUIT 폴백 ---------- */
+@font-face{font-family:'Artonex';src:url('/fonts/Artonex/Artonex-Trial.otf') format('opentype');font-weight:100 900;font-style:normal;font-display:swap;unicode-range:U+0041-005A,U+0061-007A}
 
 /* =====================================================================
    Jeton-style editorial fintech theme
@@ -404,7 +405,7 @@ html.lenis{height:auto}
 .workflow-card-light{background:#fff;color:#111;border:1px solid rgba(17,17,17,.07);box-shadow:0 30px 70px rgba(35,18,12,.16),0 8px 26px rgba(35,18,12,.08)}
 .workflow-card-dark{background:#050505;color:#fff;border:1px solid rgba(255,255,255,.16);box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.09)}
 .workflow-card-copy{max-width:490px}
-.workflow-index{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;border:1px solid currentColor;font-size:14px;font-weight:600;letter-spacing:.04em;opacity:.5;margin-bottom:clamp(22px,4vh,44px)}
+.workflow-index{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;border:1px solid currentColor;font-family:'SUIT',sans-serif;font-size:14px;font-weight:600;letter-spacing:.04em;opacity:.5;margin-bottom:clamp(22px,4vh,44px)}
 .workflow-card h3{font-size:clamp(36px,5.4vw,74px);line-height:.95;font-weight:500;letter-spacing:-.015em}
 .workflow-card p{font-size:clamp(16px,1.5vw,21px);line-height:1.42;letter-spacing:.2px;color:rgba(17,17,17,.58);font-weight:450;margin-top:22px}
 .workflow-card-dark p{color:rgba(255,255,255,.66)}
@@ -511,8 +512,9 @@ html.lenis{height:auto}
 .demo-section.is-scrub .demo-stage{margin:0;width:min(1200px,94vw);will-change:transform}
 .demo-section.is-scrub .demo-tabs{right:clamp(12px,2.5vw,40px);z-index:7}
 .demo-lead{max-width:1000px;margin:0 auto clamp(36px,6vh,72px);text-align:center}
-.demo-eyebrow{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);font-weight:500;margin-bottom:18px}
-.demo-headline{font-size:clamp(38px,6vw,80px);line-height:1.05;font-weight:500;letter-spacing:-.015em;color:#111}
+.demo-headline{font-family:'Artonex','SUIT',sans-serif;font-size:clamp(46px,7vw,96px);line-height:1.05;font-weight:500;letter-spacing:-.015em;color:#111}
+/* 헤드라인은 전체 Artonex — .brand 전역 Cinzel 규칙을 여기서만 해제 */
+.demo-headline .brand{font-family:'Artonex','SUIT',sans-serif}
 .demo-headline .accent{color:var(--orange)}
 .demo-sub{margin-top:22px;font-size:clamp(16px,1.5vw,20px);line-height:1.5;color:#6c6b6b;font-weight:450}
 
@@ -522,7 +524,8 @@ html.lenis{height:auto}
 .demo-gradient::after{content:"";position:absolute;inset:0;background:radial-gradient(60% 50% at 82% 18%,rgba(255,255,255,.55),transparent 70%)}
 
 /* 앱 목업 프레임 (라이트/플랫, 소프트 플로팅 섀도) */
-.demo-app{position:relative;z-index:2;width:min(960px,100%);margin:0 auto;background:#fff;border:1px solid rgba(17,17,17,.08);border-radius:14px;overflow:hidden;box-shadow:0 30px 70px rgba(60,40,80,.18)}
+/* 미니어처 내부는 SUIT 고정 — Artonex 트라이얼 워터마크 글리프 회피 */
+.demo-app{position:relative;z-index:2;width:min(960px,100%);margin:0 auto;background:#fff;border:1px solid rgba(17,17,17,.08);border-radius:14px;overflow:hidden;box-shadow:0 30px 70px rgba(60,40,80,.18);font-family:'SUIT','Pretendard Variable',Pretendard,ui-sans-serif,system-ui,sans-serif}
 .da-chrome{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(17,17,17,.07)}
 .da-dots{display:flex;gap:6px}
 .da-dots i{width:10px;height:10px;border-radius:50%;background:rgba(17,17,17,.14)}
@@ -596,7 +599,7 @@ html.lenis{height:auto}
 .dlc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:clamp(12px,2vw,22px)}
 .dlc{background:#fff;border:1px solid #EAE4DA;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s}
 /* 썸네일 = 슬라이드 원본 비율(222×123) 그대로 → 잘림 없이 온전한 미리보기 */
-.dlc-thumb{display:block;aspect-ratio:222/123;background:#fff;border-bottom:1px solid #EFE9DF;overflow:hidden}
+.dlc-thumb{display:block;aspect-ratio:378/198;background:#fff;border-bottom:1px solid #EFE9DF;overflow:hidden}
 .dlc-thumb img{width:100%;height:100%;object-fit:cover}
 .dlc>b{padding:7px 9px 0;font-size:9.2px;font-weight:700;color:#1F1B16;line-height:1.3}
 .dlc>small{padding:2px 9px 0;font-size:7.4px;color:#8a8078}
@@ -610,19 +613,23 @@ html.lenis{height:auto}
    pane(overflow:hidden)이 아래를 자연스럽게 자르고, 플레이어는 DOM으로 유지. */
 .dw-work{display:flex;flex-direction:column}
 .dw-shot{position:relative;flex:1;min-height:0;overflow:hidden}
-.dw-shot::before{content:"";display:block;padding-top:calc(872/1416*100%)}
-/* 3칼럼 슬라이스(17.94/57.34/24.72%) — 나란히 두면 원본 스크린샷과 동일 픽셀 */
+.dw-shot::before{content:"";display:block;padding-top:calc(1324/2167*100%)}
+/* 3칼럼 슬라이스 — 원본 raw(2560×1440)에서 패널 경계(x393/905/2025/2560, y30~1354)로 재크롭.
+   나란히 두면 원본 스크린샷과 동일 픽셀 (슬라이드 레일 카드 분리·패널 배경 보존) */
 .dw-cols3{position:absolute;inset:0;display:flex}
 .dwc-col{position:relative;display:block;height:100%;overflow:hidden}
-.dwc-col:nth-child(1){width:17.94%}
-.dwc-col:nth-child(2){width:57.34%}
-.dwc-col:nth-child(3){width:24.72%}
-.dwc-col img{display:block;width:100%;height:auto;will-change:transform}
+.dwc-col:nth-child(1){width:23.63%}
+.dwc-col:nth-child(2){width:51.68%}
+.dwc-col:nth-child(3){width:24.69%}
+/* will-change 금지 — 레이어가 레이아웃 크기로 래스터 고정돼 카메라 줌(1.45x)시 업스케일 블러.
+   제거하면 줌이 멈춘 뒤 실제 배율로 재래스터되어 원본 선명도 유지 (.demo-app 때와 동일 이슈) */
+.dwc-col picture{display:block;width:100%}
+.dwc-col img{display:block;width:100%;height:auto}
 /* 보이지 않는 핫스팟 — 카메라 포커스(.dw-note-hot)·챗봇 탭 클릭 지점(.dw-tab-chat) */
-.dw-note-hot{position:absolute;left:25%;top:30%;width:47%;height:20%;pointer-events:none}
-.dw-tab-chat{position:absolute;left:92.9%;top:7.2%;width:6.4%;height:4.2%;pointer-events:none}
+.dw-note-hot{position:absolute;left:26%;top:30%;width:46%;height:15%;pointer-events:none}
+.dw-tab-chat{position:absolute;left:95.1%;top:6%;width:4.2%;height:2.8%;pointer-events:none}
 /* 챗봇 화면 — 탭 클릭 시 우측 패널 영역 전체가 이 패널로 전환 */
-.dw-chat{position:absolute;left:75.3%;right:0;top:6.3%;bottom:0;z-index:3;display:flex;flex-direction:column;gap:5px;background:#FAF7F2;border-left:1px solid #EFE9DF;padding:9px 10px;overflow:hidden}
+.dw-chat{position:absolute;left:75.3%;right:0;top:8.9%;bottom:0;z-index:3;display:flex;flex-direction:column;gap:5px;background:#FAF7F2;border-left:1px solid #EFE9DF;padding:9px 10px;overflow:hidden}
 .dw-chat-h{display:flex;align-items:baseline;gap:5px;font-size:8.6px;font-weight:800;color:#1F1B16;padding-bottom:6px;border-bottom:1px solid #EFE9DF;margin-bottom:3px}
 .dw-chat-h i{font-style:normal;font-weight:500;font-size:6.8px;color:#8a8078}
 .dw-inp{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:6px;background:#fff;border:1px solid #E5DFD6;border-radius:8px;padding:5.5px 8px;font-size:7.4px;color:#A8A29E}

@@ -231,6 +231,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         if (chat) gsap.set(chat, { autoAlpha: 0, x: 18 });
         jumpBack();
         gsap.set(".dwc-col img", { y: 0 });
+        gsap.set(".dwc-col", { clearProps: "filter" }); // 밝기 플래시 잔류 방지
       };
       tl = gsap.timeline({
         repeat: -1, repeatDelay: 1.0, repeatRefresh: true, paused: true,
@@ -244,7 +245,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         .set(cursor, { scale: 1, opacity: 0, ...curTo(".dl-grid", null, 1, 0, 46) }, 0)
         .to(cursor, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0.15);
 
-      // ① 폴더 그리드로 줌인 — 정보보호이론 폴더에 hover → 열림 → 클릭
+      // ① 폴더 그리드로 줌인 — 첫 과목 폴더에 hover → 열림(react-bits Folder) → 클릭
       tl.to(app, { ...camTo(".dl-grid", 1.35), duration: CAM }, 0.55)
         .to(cursor, { ...curTo(".dlf-ai", ".dl-grid", 1.35, 2, -4), duration: CAM }, "<")
         .call(() => folderIs?.classList.add("hov"), undefined, ">-0.1")
@@ -282,7 +283,9 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         .call(() => press(), undefined, ">")
         .call(jumpTo, undefined, ">+0.05")
         .to(".dwc-col img", { y: colShift, duration: 0.7, ease: "back.out(1.1)", stagger: 0.11 }, ">+0.05")
-        .fromTo(".dwc-col", { filter: "brightness(1.25)" }, { filter: "brightness(1)", duration: 0.55, ease: "power2.out", stagger: 0.11 }, "<+0.3")
+        /* immediateRender:false 필수 — 없으면 repeatRefresh 시 from값(1.25)이 루프 시작부터
+           적용돼 워크스페이스가 내내 과노출(패널 배경·카드 보더가 흰색으로 클리핑)됨 */
+        .fromTo(".dwc-col", { filter: "brightness(1.25)" }, { filter: "brightness(1)", duration: 0.55, ease: "power2.out", stagger: 0.11, immediateRender: false }, "<+0.3")
         .to({}, { duration: 1.6 }, ">");
 
       (window as unknown as { __demoTl?: unknown }).__demoTl = tl; // 검증용
@@ -333,7 +336,6 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
       <div className="demo-pin">
         {/* 큰 문구 (오렌지 강조 단어) */}
         <div className="demo-lead">
-          <p className="demo-eyebrow">See it work</p>
           <h2 className="demo-headline">
             <span className="brand">Lectra</span> <span className="accent">Workspace</span>
           </h2>
@@ -376,7 +378,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
               </div>
 
               <div className="da-main">
-                {/* STEP 0 — /library 과목 폴더 그리드 (ex 기준 과목 구성) */}
+                {/* STEP 0 — /library 과목 폴더 그리드 (react-bits Folder 열림 애니 유지) */}
                 <div className="da-pane dl-library">
                   <div className="dl-head">
                     <div className="dl-title"><b>전체 강의</b><small>과목 4개 · 강의 12개</small></div>
@@ -429,19 +431,19 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                   </div>
                   <div className="dlc-grid">
                     <div className="dlc dlc-ai04">
-                      <span className="dlc-thumb"><img src="/demo/exs-1.png" alt="" loading="lazy" /></span>
+                      <span className="dlc-thumb"><img src="/demo/hzs-1.png" alt="" loading="lazy" /></span>
                       <b>04. Designing Reliable AI Systems</b>
                       <small>AI 시스템 설계 · Jul 7 · 슬라이드 26장</small>
                       <span className="chip chip-ready">Ready</span>
                     </div>
                     <div className="dlc">
-                      <span className="dlc-thumb"><img src="/demo/exs-3.png" alt="" loading="lazy" /></span>
+                      <span className="dlc-thumb"><img src="/demo/hzs-3.png" alt="" loading="lazy" /></span>
                       <b>03. Prompt Engineering</b>
                       <small>AI 시스템 설계 · Jul 5 · 슬라이드 22장</small>
                       <span className="chip chip-ready">Ready</span>
                     </div>
                     <div className="dlc">
-                      <span className="dlc-thumb"><img src="/demo/exs-4.png" alt="" loading="lazy" /></span>
+                      <span className="dlc-thumb"><img src="/demo/hzs-4.png" alt="" loading="lazy" /></span>
                       <b>02. Machine Learning Basics</b>
                       <small>AI 시스템 설계 · Jul 2 · 슬라이드 28장</small>
                       <span className="chip chip-ready">Ready</span>
@@ -457,9 +459,20 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                     {/* ex 화면을 3칼럼(스트립/노트/요약) 세로 슬라이스로 — 합치면 원본과 동일.
                         피날레에서 칼럼별 스태거 스크롤(촤라락)로 타임라인 점프 정렬을 연출 */}
                     <span className="dw-cols3" aria-hidden="true">
-                      <span className="dwc-col"><img src="/demo/exwc-1.png" alt="" loading="lazy" /></span>
-                      <span className="dwc-col"><img src="/demo/exwc-2.png" alt="" loading="lazy" /></span>
-                      <span className="dwc-col"><img src="/demo/exwc-3.png" alt="" loading="lazy" /></span>
+                      {/* 기본(DPR1)은 최대 줌(1.45)에서 1:1 픽셀이 되는 고품질 리사이즈본(-1x) —
+                          transform 줌의 bilinear 다운샘플 블러 회피. 고DPI(≥1.5x)는 원본 사용 */}
+                      <span className="dwc-col"><picture>
+                        <source media="(min-resolution: 1.5dppx)" srcSet="/demo/hzc-1.png" />
+                        <img src="/demo/hzc-1-1x.png" alt="" loading="lazy" />
+                      </picture></span>
+                      <span className="dwc-col"><picture>
+                        <source media="(min-resolution: 1.5dppx)" srcSet="/demo/hzc-2.png" />
+                        <img src="/demo/hzc-2-1x.png" alt="" loading="lazy" />
+                      </picture></span>
+                      <span className="dwc-col"><picture>
+                        <source media="(min-resolution: 1.5dppx)" srcSet="/demo/hzc-3.png" />
+                        <img src="/demo/hzc-3-1x.png" alt="" loading="lazy" />
+                      </picture></span>
                     </span>
                     <i className="dw-note-hot" aria-hidden="true" />
                     <i className="dw-tab-chat" aria-hidden="true" />

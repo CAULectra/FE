@@ -59,7 +59,7 @@
 |---|---|---|
 | §2.5a **큰 문구** | `.demo-lead` (`.demo-headline` + `.accent`) | "Four sources in. **One exam-ready note out.**"(오렌지 강조) + eyebrow + 한글 서브 |
 | §2.5b **데모 스테이지** | `.demo-stage` (`.demo-gradient`) | 소프트 파스텔 그라데이션 라운드 패널 |
-| §2.5c **앱 목업** | `.demo-app[data-step]` | **실제 Lectra 화면 미니어처** 3단계 (콘텐츠 = `lectra_ai/landingpage ex.png`의 저작권 안전 mock "AI 시스템 설계 / 04. Designing Reliable AI Systems"): `.dl-library`(0 · 폴더 그리드, react-bits 폴더 open) / `.dl-folder`(1 · 강의 카드+CSS 미니슬라이드 `.msl`) / `.dw-work`(2 · 워크스페이스: 슬라이드 스트립+★핵심 요약 4원칙 노트+요약/챗봇 탭+플레이어 06:42/49:18·1.25×·북마크·구간반복). 다크 사이드바(`.da-side`) 공통, 주소창·활성 메뉴도 단계 연동 |
+| §2.5c **앱 목업** | `.demo-app[data-step]` | **실제 Lectra 화면 미니어처** 3단계 (스텝2 콘텐츠 = `lectra_ai/lectra_note_raw_highzoom_16x9.png` 2560×1440 고배율): `.dl-library`(0 · DOM 폴더 그리드, react-bits Folder 열림 애니) / `.dl-folder`(1 · DOM 강의 카드, 고배율 썸네일 `hzs-1/3/4.png`) / `.dw-work`(2 · 워크스페이스 실사진 3칼럼 슬라이스 `hzc-1/2/3.png`+요약/챗봇 탭+DOM 플레이어). 다크 사이드바(`.da-side`) 공통, 주소창·활성 메뉴도 단계 연동. 미니어처 내부 글꼴은 SUIT 고정(Artonex 트라이얼 워터마크 회피) |
 | §2.5d **커서** | `.demo-cursor` (SVG) | 검은 화살표. scrub=스크롤 웨이포인트, autoplay=GSAP 타임라인. `.click` 피드백. 핀 자식이라 확대 영향 X |
 | §2.5e **단계 탭** | `.demo-tabs` (`.demo-tab`) | 우측 Upload/Align/Study, 단계 동기화(`.active`). scrub=핀 고정(뷰포트 우측 거터), autoplay=스테이지 내부 |
 
