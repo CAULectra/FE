@@ -422,3 +422,103 @@ html.lenis{height:auto}
   .scroll-stack-card{min-height:auto;padding:clamp(24px,6vw,40px)}
   .workflow-visual{min-height:300px}
 }
+
+/* ================= §2.5 LIVE DEMO — Krepling식 가이드 데모 (밝은 캔버스) =================
+   큰 문구 → 소프트 그라데이션 위 Lectra 앱 목업(업로드→정렬→학습) + 커서 시연.
+   Krepling 원칙: 플랫(그림자 최소)·1px 보더·radius 8/14/30·weight 낮게. 액센트=Lectra 오렌지. */
+.demo-section{position:relative;background:#f6f1eb;color:#171717;padding:clamp(40px,9vh,120px) 24px clamp(80px,14vh,200px)}
+.demo-pin{position:relative}
+/* ── 스크럽(A): 섹션 핀 고정 → 스크롤하면 목업이 열리며 화면을 채움 (Krepling) ── */
+.demo-section.is-scrub{height:340vh;padding:0}
+.demo-section.is-scrub .demo-pin{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 clamp(16px,4vw,60px)}
+.demo-section.is-scrub .demo-lead{position:absolute;left:0;right:0;top:22%;margin:0;padding:0 24px;z-index:6;pointer-events:none}
+.demo-section.is-scrub .demo-stage{margin:0;width:min(1200px,94vw);will-change:transform}
+.demo-section.is-scrub .demo-tabs{right:clamp(12px,2.5vw,40px);z-index:7}
+.demo-lead{max-width:1000px;margin:0 auto clamp(36px,6vh,72px);text-align:center}
+.demo-eyebrow{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);font-weight:500;margin-bottom:18px}
+.demo-headline{font-size:clamp(38px,6vw,80px);line-height:1.05;font-weight:500;letter-spacing:-.015em;color:#111}
+.demo-headline .accent{color:var(--orange)}
+.demo-sub{margin-top:22px;font-size:clamp(16px,1.5vw,20px);line-height:1.5;color:#6c6b6b;font-weight:450}
+
+/* 큰 화면(스테이지): 소프트 그라데이션 라운드 패널 + 앱 목업 + 탭 + 커서 */
+.demo-stage{position:relative;max-width:1200px;margin:0 auto;border-radius:clamp(20px,2.6vw,30px);padding:clamp(28px,5vw,72px);overflow:hidden;isolation:isolate}
+.demo-gradient{position:absolute;inset:0;z-index:0;background:linear-gradient(120deg,#ffe3cf 0%,#ffd6e6 34%,#e4dcff 68%,#d6ecff 100%)}
+.demo-gradient::after{content:"";position:absolute;inset:0;background:radial-gradient(60% 50% at 82% 18%,rgba(255,255,255,.55),transparent 70%)}
+
+/* 앱 목업 프레임 (라이트/플랫, 소프트 플로팅 섀도) */
+.demo-app{position:relative;z-index:2;width:min(960px,100%);margin:0 auto;background:#fff;border:1px solid rgba(17,17,17,.08);border-radius:14px;overflow:hidden;box-shadow:0 30px 70px rgba(60,40,80,.18)}
+.da-chrome{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(17,17,17,.07)}
+.da-dots{display:flex;gap:6px}
+.da-dots i{width:10px;height:10px;border-radius:50%;background:rgba(17,17,17,.14)}
+.da-url{flex:0 1 320px;margin:0 auto;text-align:center;font-size:12px;color:#6c6b6b;background:#f1f1f1;border-radius:8px;padding:5px 14px}
+.da-badge{font-size:11px;font-weight:600;letter-spacing:.2px;border-radius:9999px;padding:3px 11px}
+.da-badge-run{background:#f1f1f1;color:#8a8078}
+.da-badge-done{background:#eaf7ee;color:#0b6b2c;display:none}
+.demo-app[data-step="2"] .da-badge-run{display:none}
+.demo-app[data-step="2"] .da-badge-done{display:inline-block}
+
+.da-body{position:relative;height:clamp(320px,42vw,460px)}
+.da-pane{position:absolute;inset:0;padding:clamp(18px,3vw,34px);opacity:0;transform:scale(.985);transition:opacity .55s var(--ease),transform .55s var(--ease);pointer-events:none}
+.demo-app[data-step="0"] .da-upload{opacity:1;transform:none}
+.demo-app[data-step="1"] .da-align{opacity:1;transform:none}
+.demo-app[data-step="2"] .da-study{opacity:1;transform:none}
+
+/* STEP 0 — Upload */
+.da-upload{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.da-drop{width:min(420px,86%);border:1.5px dashed #d9c9be;border-radius:14px;padding:26px;text-align:center;background:#fcfaf6}
+.da-drop-ic{width:44px;height:44px;margin:0 auto 12px;border-radius:12px;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:20px}
+.da-drop b{display:block;font-size:18px;color:#111}
+.da-drop small{display:block;margin-top:4px;color:#8a8078;font-size:13px}
+.da-files{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.da-file{display:inline-flex;flex-direction:column;background:#f1f1f1;border-radius:8px;padding:9px 14px;font-size:12px}
+.da-file b{color:#111;font-size:13px}
+.da-file small{color:#8a8078}
+.demo-app .da-cta{background:var(--orange);color:#fff;font-size:15px;font-weight:500;border-radius:8px;padding:12px 30px;transition:transform .15s,filter .15s}
+.demo-app .da-cta.hit{transform:scale(.94);filter:brightness(.9)}
+
+/* STEP 1 — Align */
+.da-align{display:flex;flex-direction:column;justify-content:center;gap:16px}
+.da-wave{display:flex;align-items:center;gap:4px;height:clamp(90px,14vw,150px)}
+.da-wave i{flex:1;border-radius:999px;background:linear-gradient(to top,var(--orange),#ff9b73)}
+.da-track{display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:10px;color:#8a8078;font-size:11px;letter-spacing:.12em}
+.da-track i{height:1px;background:rgba(17,17,17,.14)}
+.da-segs{display:flex;gap:5px}
+.da-segs span{flex:1;text-align:center;font-size:10px;color:#8a8078;background:#f1f1f1;border-radius:6px;padding:6px 0}
+.da-segs span.cur{background:var(--orange);color:#fff}
+.da-prog{height:7px;border-radius:4px;background:#eee;overflow:hidden}
+.da-prog i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--orange),#ffb38f)}
+.da-prog-label{font-size:12px;color:#6c6b6b}
+.da-prog-label b{color:#0b6b2c}
+
+/* STEP 2 — Study */
+.da-study{display:grid;grid-template-columns:.72fr 1.4fr 1fr;gap:14px}
+.da-col{background:#fff;border:1px solid rgba(17,17,17,.08);border-radius:12px;padding:14px;overflow:hidden}
+.da-h{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#a8a29e;margin-bottom:12px}
+.da-thumb{border:1px solid #ede8e0;border-radius:8px;padding:10px;margin-bottom:9px;background:#fcfaf6}
+.da-thumb i{display:block;height:6px;border-radius:3px;background:#e5dfd4;margin-bottom:5px}
+.da-thumb.cur{border-color:var(--orange);box-shadow:0 0 0 3px rgba(247,59,32,.12)}
+.da-note-t{display:block;font-size:16px;color:#111;margin-bottom:12px}
+.da-ln{display:block;height:8px;border-radius:4px;background:#f1ece2;margin-bottom:9px}
+.da-ln.hl{background:#ffe07a}
+.da-frm{font-size:13px;font-family:ui-monospace,monospace;color:#57534e;background:#fcfaf5;border-left:2px solid var(--orange);border-radius:0 8px 8px 0;padding:9px 12px;margin:4px 0 12px}
+.da-q{background:var(--orange);color:#fff;border-radius:10px 10px 3px 10px;padding:9px 12px;font-size:13px;margin-bottom:10px;margin-left:16px}
+.da-a{background:#f1f1f1;color:#57534e;border-radius:10px 10px 10px 3px;padding:10px 12px;font-size:13px;line-height:1.5;margin-right:12px}
+.da-cite{display:inline-block;margin-top:8px;background:#fff;border:1px solid #f0e3ce;color:#92400e;border-radius:9999px;padding:2px 9px;font-size:11px;font-weight:700}
+
+/* 우측 단계 탭 (Krepling 탭 스트립) */
+.demo-tabs{position:absolute;right:clamp(-6px,-.5vw,0px);top:50%;transform:translateY(-50%);z-index:3;display:flex;flex-direction:column;gap:10px}
+.demo-tab{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid rgba(17,17,17,.1);border-radius:8px;padding:13px 20px 13px 16px;font-size:15px;color:#6c6b6b;min-width:150px;box-shadow:0 8px 24px rgba(60,40,80,.1);transition:color .35s,border-color .35s}
+.demo-tab-n{font-size:11px;color:#b3b3b3}
+.demo-tab.active{color:#111;border-color:var(--orange)}
+.demo-tab.active .demo-tab-n{color:var(--orange)}
+
+/* 커서 (검은 화살표) */
+.demo-cursor{position:absolute;z-index:5;left:0;top:0;opacity:0;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));pointer-events:none;will-change:transform}
+.demo-cursor.click{animation:democlick .4s ease}
+@keyframes democlick{40%{transform:scale(.7)}100%{transform:scale(1)}}
+
+@media (max-width:820px){
+  .da-study{grid-template-columns:1fr}
+  .da-ask,.demo-tabs{display:none}
+  .demo-app{width:100%}
+}
