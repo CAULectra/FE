@@ -18,6 +18,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { LectraLogo } from "./components/LectraLogo";
+import { api, setToken, setUser, getUser, type Lecture, type LoginUser } from "../api";
+import { useGoogleLogin } from "@react-oauth/google";
 
 type Screen = "landing" | "login" | "dashboard" | "upload" | "analysis" | "study";
 
@@ -76,6 +78,9 @@ interface Job {
   status: JobStatus;
   speed: number;         // 초당 진행률(%)
   createdAt: number;     // ms timestamp
+  lectureId?: number;    // 백엔드 lecture_id (업로드 응답)
+  backendJobId?: string; // 백엔드 job_id (분석 진행 폴링용)
+  apiStatus?: string;    // 백엔드가 준 status 문자열 (예: "매핑중")
 }
 
 const MAX_CONCURRENT = 2;
@@ -503,11 +508,6 @@ function LandingPage({ navigate }: NavProps) {
           </div>
           <div className="flex items-center gap-3 text-sm font-medium">
             <button onClick={() => navigate("login")}
-              className="text-muted-foreground hover:text-foreground transition-colors">
-              회원가입
-            </button>
-            <span className="text-border">|</span>
-            <button onClick={() => navigate("login")}
               className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all hover:shadow-md hover:shadow-primary/25">
               로그인
             </button>
@@ -663,7 +663,39 @@ function LandingPage({ navigate }: NavProps) {
 
 // ─── LOGIN PAGE ───────────────────────────────────────────────────────────────
 
-function LoginPage({ navigate }: NavProps) {
+function LoginPage({ navigate, onLogin }: NavProps & { onLogin: (user: LoginUser | null) => void }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // (B) 실제 구글 로그인: 팝업 code flow로 구글 code를 받아 백엔드(POST /auth/login/google)로 전송.
+  //     응답 { access_token, user } → 토큰 저장 + onLogin(user)로 사용자 정보 앱 상태에 반영.
+  const googleLogin = useGoogleLogin({
+    flow: "auth-code",
+    onSuccess: async ({ code }) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { access_token, user } = await api.loginGoogle(code);
+        setToken(access_token);
+        onLogin(user ?? null);
+        navigate("dashboard");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "로그인에 실패했습니다.");
+        setLoading(false);
+      }
+    },
+    onError: err => {
+      setLoading(false);
+      const detail = err.error_description || err.error || "";
+      setError(`구글 로그인 실패${detail ? ` (${detail})` : ""} — 구글 콘솔에 http://localhost:5173 이 승인된 JavaScript 원본으로 등록됐는지 확인하세요.`);
+    },
+  });
+
+  const handleGoogleLogin = () => {
+    setError(null);
+    googleLogin();
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="min-h-screen bg-gradient-to-br from-blue-50/70 via-background to-violet-50/40 flex items-center justify-center p-6">
@@ -684,16 +716,23 @@ function LoginPage({ navigate }: NavProps) {
             <p className="text-sm text-muted-foreground mt-1.5">AI 학습 노트 자동 생성 플랫폼</p>
           </div>
 
-          <button onClick={() => navigate("dashboard")}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-border rounded-xl hover:bg-muted/50 transition-all text-sm font-medium mb-4">
-            <svg width="18" height="18" viewBox="0 0 48 48">
-              <path d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12 c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24 c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" fill="#FFC107" />
-              <path d="M6.306,14.691l6.571,4.819C14.655,15.108,19.001,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657 C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" fill="#FF3D00" />
-              <path d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36 c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" fill="#4CAF50" />
-              <path d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571 c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" fill="#1976D2" />
-            </svg>
-            Google로 계속하기
+          <button onClick={handleGoogleLogin} disabled={loading}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-border rounded-xl hover:bg-muted/50 transition-all text-sm font-medium mb-4 disabled:opacity-60 disabled:cursor-not-allowed">
+            {loading ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> 로그인 중...</>
+            ) : (
+              <>
+                <svg width="18" height="18" viewBox="0 0 48 48">
+                  <path d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12 c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24 c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" fill="#FFC107" />
+                  <path d="M6.306,14.691l6.571,4.819C14.655,15.108,19.001,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657 C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" fill="#FF3D00" />
+                  <path d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36 c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" fill="#4CAF50" />
+                  <path d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571 c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" fill="#1976D2" />
+                </svg>
+                Google로 계속하기
+              </>
+            )}
           </button>
+          {error && <p className="text-xs text-destructive text-center mb-2">{error}</p>}
 
           <p className="text-[11px] text-muted-foreground text-center mt-5 leading-relaxed">
             계속 진행하면 Lectra의{" "}
@@ -851,13 +890,14 @@ function FavoriteButton({ active, onClick }: { active: boolean; onClick: (e: Rea
   );
 }
 
-function DashboardPage({ navigate, setProjectDraft, jobs, cancelJob, activeTab, setActiveTab, onViewAnalysis }: NavProps & {
+function DashboardPage({ navigate, setProjectDraft, jobs, cancelJob, activeTab, setActiveTab, onViewAnalysis, user }: NavProps & {
   setProjectDraft: (d: ProjectDraft) => void;
   jobs: Job[];
   cancelJob: (id: string) => void;
   activeTab: DashTab;
   setActiveTab: (t: DashTab) => void;
   onViewAnalysis: (id: string) => void;
+  user: LoginUser | null;
 }) {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [showNewFolder, setShowNewFolder] = useState(false);
@@ -922,10 +962,17 @@ function DashboardPage({ navigate, setProjectDraft, jobs, cancelJob, activeTab, 
       </nav>
       <div className="p-3 border-t border-border">
         <div className="flex items-center gap-2.5 px-2 py-1">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-violet-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">K</div>
+          {user?.profile_image ? (
+            <img src={user.profile_image} alt={user.name ?? "프로필"}
+              className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-violet-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+              {(user?.name ?? "게").charAt(0)}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium truncate">김학생</div>
-            <div className="text-xs text-muted-foreground truncate">student@univ.ac.kr</div>
+            <div className="text-sm font-medium truncate">{user?.name ?? "게스트"}</div>
+            <div className="text-xs text-muted-foreground truncate">{user?.email ?? "로그인이 필요합니다"}</div>
           </div>
         </div>
       </div>
@@ -1186,24 +1233,65 @@ function DashboardPage({ navigate, setProjectDraft, jobs, cancelJob, activeTab, 
 
 // ─── UPLOAD PAGE ──────────────────────────────────────────────────────────────
 
+type UploadKey = "pdf" | "audio" | "image";
+
 function UploadPage({ navigate, projectDraft, onAnalyze }: NavProps & {
   projectDraft: ProjectDraft;
   onAnalyze: (partial: Partial<Job>) => void;
 }) {
-  const [files, setFiles] = useState<{ pdf: string[]; audio: string[]; image: string[] }>({
-    pdf: ["강의슬라이드_1주차.pdf"],
+  const [files, setFiles] = useState<{ pdf: File[]; audio: File[]; image: File[] }>({
+    pdf: [],
     audio: [],
-    image: ["칠판사진_01.jpg"],
+    image: [],
   });
   const [dragOver, setDragOver] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const pdfInput = useRef<HTMLInputElement>(null);
+  const audioInput = useRef<HTMLInputElement>(null);
+  const imageInput = useRef<HTMLInputElement>(null);
+  const inputRef = (key: UploadKey) => (key === "pdf" ? pdfInput : key === "audio" ? audioInput : imageInput);
+
+  const addFiles = (key: UploadKey, list: FileList | null) => {
+    if (!list || list.length === 0) return;
+    setFiles(prev => ({ ...prev, [key]: [...prev[key], ...Array.from(list)] }));
+  };
 
   const zones = [
-    { key: "pdf" as const, icon: FileText, label: "PDF 강의 슬라이드", desc: "PDF 형식의 강의 자료", iconBg: "bg-blue-50", iconColor: "text-blue-500", borderActive: "border-blue-300 bg-blue-50/60", btnColor: "text-blue-500" },
-    { key: "audio" as const, icon: Mic, label: "강의 녹음 파일", desc: "mp3, wav, m4a 형식", iconBg: "bg-violet-50", iconColor: "text-violet-500", borderActive: "border-violet-300 bg-violet-50/60", btnColor: "text-violet-500" },
-    { key: "image" as const, icon: ImageIcon, label: "판서 이미지", desc: "jpg, png 형식", iconBg: "bg-emerald-50", iconColor: "text-emerald-500", borderActive: "border-emerald-300 bg-emerald-50/60", btnColor: "text-emerald-500" },
+    { key: "pdf" as const, icon: FileText, label: "PDF 강의 슬라이드", desc: "PDF 형식의 강의 자료", accept: "application/pdf", multiple: false, iconBg: "bg-blue-50", iconColor: "text-blue-500", borderActive: "border-blue-300 bg-blue-50/60", btnColor: "text-blue-500" },
+    { key: "audio" as const, icon: Mic, label: "강의 녹음 파일", desc: "mp3, wav, m4a 형식", accept: "audio/*", multiple: true, iconBg: "bg-violet-50", iconColor: "text-violet-500", borderActive: "border-violet-300 bg-violet-50/60", btnColor: "text-violet-500" },
+    { key: "image" as const, icon: ImageIcon, label: "판서 이미지", desc: "jpg, png 형식", accept: "image/*", multiple: true, iconBg: "bg-emerald-50", iconColor: "text-emerald-500", borderActive: "border-emerald-300 bg-emerald-50/60", btnColor: "text-emerald-500" },
   ];
 
-  const totalFiles = Object.values(files).flat().length;
+  const totalFiles = files.pdf.length + files.audio.length + files.image.length;
+
+  // 업로드 순서: PDF(→lecture_id) → 음성 → 판서 → 분석 시작(→job_id) → 분석 화면
+  const handleAnalyze = async () => {
+    if (files.pdf.length === 0) { setError("PDF 슬라이드는 필수입니다."); return; }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const title = projectDraft.name || projectDraft.subject || files.pdf[0].name.replace(/\.pdf$/i, "") || "새 강의";
+      const { lecture_id, total_pages } = await api.uploadPdf(title, files.pdf[0]);
+      for (const audio of files.audio) await api.uploadAudio(lecture_id, audio);
+      for (const image of files.image) await api.uploadBoard(lecture_id, image);
+      const { job_id } = await api.startAnalysis(lecture_id);
+      onAnalyze({
+        title,
+        lectureId: lecture_id,
+        backendJobId: job_id,
+        slides: total_pages,
+        audioMin: files.audio.length > 0 ? 45 : 0,
+        whiteboard: files.image.length,
+        hasPdf: true,
+        hasAudio: files.audio.length > 0,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "업로드에 실패했습니다. 서버 연결을 확인해주세요.");
+      setSubmitting(false);
+    }
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen bg-background">
@@ -1244,19 +1332,28 @@ function UploadPage({ navigate, projectDraft, onAnalyze }: NavProps & {
             const isOver = dragOver === zone.key;
             return (
               <div key={zone.key}>
+                <input
+                  ref={inputRef(zone.key)}
+                  type="file"
+                  accept={zone.accept}
+                  multiple={zone.multiple}
+                  className="hidden"
+                  onChange={e => { addFiles(zone.key, e.target.files); e.target.value = ""; }}
+                />
                 <div
+                  onClick={() => inputRef(zone.key).current?.click()}
                   onDragOver={e => { e.preventDefault(); setDragOver(zone.key); }}
                   onDragLeave={() => setDragOver(null)}
-                  onDrop={e => { e.preventDefault(); setDragOver(null); }}
+                  onDrop={e => { e.preventDefault(); setDragOver(null); addFiles(zone.key, e.dataTransfer.files); }}
                   className={`rounded-xl border-2 border-dashed p-5 transition-all cursor-pointer ${isOver ? zone.borderActive : "border-border hover:border-primary/30 hover:bg-white"}`}>
                   <div className={`w-10 h-10 ${zone.iconBg} rounded-xl flex items-center justify-center mb-3`}>
                     <Icon className={`w-5 h-5 ${zone.iconColor}`} />
                   </div>
                   <h3 className="font-semibold text-sm mb-1">{zone.label}</h3>
                   <p className="text-xs text-muted-foreground mb-3">{zone.desc}</p>
-                  <button className={`text-xs font-medium ${zone.btnColor} flex items-center gap-1 hover:underline`}>
-                    <Upload className="w-3 h-3" /> 파일 선택
-                  </button>
+                  <span className={`text-xs font-medium ${zone.btnColor} inline-flex items-center gap-1`}>
+                    <Upload className="w-3 h-3" /> 파일 선택 또는 드래그
+                  </span>
                 </div>
 
                 {zoneFiles.length > 0 && (
@@ -1264,7 +1361,7 @@ function UploadPage({ navigate, projectDraft, onAnalyze }: NavProps & {
                     {zoneFiles.map((f, i) => (
                       <div key={i} className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-border text-xs">
                         <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                        <span className="truncate flex-1 text-foreground">{f}</span>
+                        <span className="truncate flex-1 text-foreground">{f.name}</span>
                         <button onClick={() => setFiles(prev => ({ ...prev, [zone.key]: prev[zone.key].filter((_, fi) => fi !== i) }))}
                           className="text-muted-foreground hover:text-destructive transition-colors">
                           <X className="w-3 h-3" />
@@ -1278,27 +1375,28 @@ function UploadPage({ navigate, projectDraft, onAnalyze }: NavProps & {
           })}
         </div>
 
+        {error && (
+          <div className="mb-4 px-4 py-3 bg-destructive/10 text-destructive rounded-xl text-sm flex items-center gap-2">
+            <X className="w-4 h-4 flex-shrink-0" /> {error}
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">총 {totalFiles}개 파일 업로드됨</p>
+          <p className="text-sm text-muted-foreground">
+            총 {totalFiles}개 파일 · <span className={files.pdf.length > 0 ? "text-emerald-600" : ""}>PDF {files.pdf.length > 0 ? "준비됨" : "필수"}</span>
+          </p>
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate("dashboard")}
-              className="px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors">
+            <button onClick={() => navigate("dashboard")} disabled={submitting}
+              className="px-5 py-2.5 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50">
               취소
             </button>
             <button
-              onClick={() => {
-                onAnalyze({
-                  title: projectDraft.name || projectDraft.subject || "새 강의",
-                  slides: files.pdf.length > 0 ? 24 : 0,
-                  audioMin: files.audio.length > 0 ? 45 : 0,
-                  whiteboard: files.image.length,
-                  hasPdf: files.pdf.length > 0,
-                  hasAudio: files.audio.length > 0,
-                });
-              }}
-              disabled={totalFiles === 0}
-              className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2">
-              <Sparkles className="w-4 h-4" /> AI 분석 시작
+              onClick={handleAnalyze}
+              disabled={files.pdf.length === 0 || submitting}
+              className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+              {submitting
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> 업로드 중...</>
+                : <><Sparkles className="w-4 h-4" /> AI 분석 시작</>}
             </button>
           </div>
         </div>
@@ -1339,11 +1437,49 @@ function donutSegment(rInner: number, rOuter: number, start: number, end: number
 
 type StageState = "done" | "active" | "pending";
 
-function AnalysisPage({ navigate, job, goToWorkspace }: NavProps & {
+function AnalysisPage({ navigate, job, goToWorkspace, onJobUpdate }: NavProps & {
   job?: Job;
   goToWorkspace: () => void;
+  onJobUpdate: (id: string, patch: Partial<Job>) => void;
 }) {
-  const progress = job ? job.progress : 0;
+  const backendJobId = job?.backendJobId;
+  const jobId = job?.id;
+  const [polled, setPolled] = useState<{ progress: number; status: string }>({
+    progress: job?.progress ?? 0,
+    status: job?.apiStatus ?? "",
+  });
+  const [pollError, setPollError] = useState<string | null>(null);
+
+  // 백엔드 job_id가 있으면 GET /jobs/{job_id} 를 1.5초마다 폴링
+  useEffect(() => {
+    if (!backendJobId) return;
+    let alive = true;
+    const holder: { timer?: ReturnType<typeof setInterval> } = {};
+    const tick = async () => {
+      try {
+        const p = await api.getJob(backendJobId);
+        if (!alive) return;
+        setPolled({ progress: p.progress, status: p.status });
+        setPollError(null);
+        if (jobId) onJobUpdate(jobId, {
+          progress: p.progress,
+          apiStatus: p.status,
+          status: p.progress >= 100 ? "completed" : "processing",
+        });
+        if (p.progress >= 100 && holder.timer) clearInterval(holder.timer);
+      } catch (e) {
+        if (!alive) return;
+        setPollError(e instanceof Error ? e.message : "진행 상황을 불러오지 못했습니다.");
+      }
+    };
+    tick();
+    holder.timer = setInterval(tick, 1500);
+    return () => { alive = false; if (holder.timer) clearInterval(holder.timer); };
+  }, [backendJobId, jobId, onJobUpdate]);
+
+  // backendJobId가 있으면 폴링 결과, 없으면(초기 데모 job) 전역 타이머의 job.progress 사용
+  const progress = backendJobId ? polled.progress : (job?.progress ?? 0);
+  const apiStatus = backendJobId ? polled.status : "";
   const done = progress >= 100;
   const N = ANALYSIS_STAGES.length;
   const stageIndex = done ? N : Math.min(N - 1, Math.floor(progress / (100 / N)));
@@ -1356,6 +1492,7 @@ function AnalysisPage({ navigate, job, goToWorkspace }: NavProps & {
     s === "done" ? "#93C5FD" : s === "active" ? "#2563EB" : "#E7ECF3";
 
   const current = ANALYSIS_STAGES[Math.min(stageIndex, N - 1)];
+  const centerLabel = done ? "완료" : (apiStatus || current.label);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -1436,7 +1573,7 @@ function AnalysisPage({ navigate, job, goToWorkspace }: NavProps & {
               {Math.round(progress)}%
             </div>
             <div className="text-[11px] text-muted-foreground mt-1 px-2 truncate max-w-full">
-              {done ? "완료" : current.label}
+              {centerLabel}
             </div>
           </div>
         </div>
@@ -1450,6 +1587,11 @@ function AnalysisPage({ navigate, job, goToWorkspace }: NavProps & {
           <p className="text-xs text-muted-foreground mt-2.5 text-center">
             {done ? "학습 노트가 준비되었습니다." : current.sub}
           </p>
+          {pollError && (
+            <p className="text-xs text-destructive mt-2 text-center">
+              진행 상황 조회 실패: 서버 연결을 확인해주세요.
+            </p>
+          )}
         </div>
 
         {/* 액션 */}
@@ -1461,7 +1603,7 @@ function AnalysisPage({ navigate, job, goToWorkspace }: NavProps & {
           {done ? (
             <button onClick={() => navigate("study")}
               className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all hover:shadow-md hover:shadow-primary/25">
-              <BookOpen className="w-4 h-4" /> 노트 열기 <ArrowRight className="w-4 h-4" />
+              <BookOpen className="w-4 h-4" /> 결과 보기 <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <button onClick={() => navigate("dashboard")}
@@ -1532,15 +1674,6 @@ const STUDY_CHAPTERS = [
 
 const STUDY_OVERALL =
   "이 강의는 선형 자료구조인 배열과 연결 리스트를 다룬다. 배열은 연속된 메모리로 O(1) 임의 접근을 제공하지만 크기가 고정되고 삽입·삭제가 느리다(O(n)). 연결 리스트는 포인터 기반으로 동적 크기와 빠른 삽입·삭제(O(1))가 장점이나 임의 접근이 느리다(O(n)). 이를 확장한 이중·원형 연결 리스트는 양방향 순회와 순환 구조를 구현할 수 있다.";
-
-const STUDY_OVERALL_EN =
-  "This lecture covers arrays and linked lists, the two fundamental linear data structures. Arrays store elements in contiguous memory, offering O(1) random access but fixed size and O(n) insertion/deletion. Linked lists use pointers, giving dynamic size and O(1) insertion/deletion at the cost of O(n) access. Doubly and circular linked lists extend this to enable bidirectional traversal and cyclic structures.";
-
-const STUDY_CHAPTERS_EN = [
-  ["An array stores same-typed elements in contiguous memory.", "Any element is accessible in O(1) via its index.", "Insertion/deletion needs shifting, costing O(n).", "Fixed size, but excellent cache locality."],
-  ["A linked list chains nodes (data + next pointer).", "Insertion/deletion is O(1); search is O(n).", "The head pointer is critical — losing it leaks memory.", "Dynamically resizable and memory-flexible."],
-  ["Each node holds both prev and next pointers.", "Enables bidirectional traversal; deletion is simpler.", "If the tail points to the head, it becomes circular.", "More pointers mean higher memory overhead."],
-];
 
 // AI 정리본 — 슬라이드 + 판서 + 녹음을 통합 분석해 새로 생성한 노트
 type NoteBlock =
@@ -1671,52 +1804,6 @@ function NoteBlocks({ blocks, onSlide }: { blocks: NoteBlock[]; onSlide: (n: num
 }
 
 // PDF 원본 슬라이드처럼 보이는 목업 (설명 없이 이미지로만)
-function MockSlide({ slide }: { slide: SlideDef }) {
-  if (slide.kind === "board") {
-    return (
-      <div className="w-full h-full bg-slate-900 p-4 flex flex-col justify-center gap-2.5">
-        <div className="flex gap-3">
-          <div className="h-2 w-1/3 rounded-full bg-green-400/80 -rotate-1" />
-          <div className="h-2 w-1/4 rounded-full bg-rose-400/80 rotate-1" />
-        </div>
-        <div className="h-2 w-3/4 rounded-full bg-sky-400/80" />
-        <div className="flex gap-3">
-          <div className="h-2 w-1/2 rounded-full bg-amber-400/80" />
-          <div className="h-2 w-1/5 rounded-full bg-rose-400/70" />
-        </div>
-        <div className="h-2 w-2/3 rounded-full bg-green-400/70 rotate-1" />
-        <div className="h-2 w-2/5 rounded-full bg-sky-400/70" />
-      </div>
-    );
-  }
-  if (slide.kind === "title") {
-    return (
-      <div className="w-full h-full bg-slate-900 flex flex-col justify-center px-6">
-        <div className="w-10 h-1 bg-amber-400 rounded-full mb-3" />
-        <div className="text-amber-300 font-bold text-lg leading-tight mb-1.5" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{slide.title}</div>
-        <div className="text-slate-400 text-xs">{slide.subtitle}</div>
-      </div>
-    );
-  }
-  return (
-    <div className="w-full h-full bg-white flex flex-col">
-      <div className="bg-slate-900 px-4 py-2 flex-shrink-0">
-        <span className="text-amber-300 font-bold text-sm">{slide.title}</span>
-      </div>
-      <div className="flex-1 p-4 space-y-2">
-        {slide.kind === "example" && (
-          <span className="inline-block text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded font-semibold mb-1">Example</span>
-        )}
-        <div className="h-2 bg-slate-200 rounded-full w-5/6" />
-        <div className="h-2 bg-slate-200 rounded-full w-full" />
-        <div className="h-9 bg-blue-50 border border-blue-100 rounded-lg my-1" />
-        <div className="h-2 bg-slate-200 rounded-full w-2/3" />
-        <div className="h-2 bg-slate-200 rounded-full w-3/4" />
-      </div>
-    </div>
-  );
-}
-
 // 하단 녹음 원본 플레이어 (두 번째 이미지 참고)
 function AudioPlayer() {
   const [playing, setPlaying] = useState(false);
@@ -1765,13 +1852,20 @@ function AudioPlayer() {
   );
 }
 
-function StudyPage({ navigate }: NavProps) {
+function StudyPage({ navigate, lectureId }: NavProps & { lectureId: number }) {
   const [leftW, setLeftW] = useState(300);
   const [rightW, setRightW] = useState(360);
-  const [activeSlide, setActiveSlide] = useState(2);
   const [activeChapter, setActiveChapter] = useState(0);
   const [rightTab, setRightTab] = useState<"summary" | "translate" | "chat">("summary");
-  const [bookmarks, setBookmarks] = useState<Set<number>>(new Set([2]));
+  const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
+  // API 연동: 왼쪽 슬라이드 목록 (GET /lectures/{id}/slides)
+  const [apiLecture, setApiLecture] = useState<Lecture | null>(null);
+  const [apiLoading, setApiLoading] = useState(true);
+  const [apiSlideId, setApiSlideId] = useState<number | null>(null);
+  // API 연동: 번역 탭 (POST /slides/{id}/translate)
+  const [transLang, setTransLang] = useState("en");
+  const [transText, setTransText] = useState<string | null>(null);
+  const [transLoading, setTransLoading] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "ai"; text: string }[]>([
     { role: "ai", text: "안녕하세요! 이 강의 내용에 대해 무엇이든 물어보세요. 예: \"연결 리스트의 삽입은 왜 O(1)인가요?\"" },
@@ -1802,19 +1896,45 @@ function StudyPage({ navigate }: NavProps) {
   }, [handleMouseMove, handleMouseUp]);
 
   const chapterOf = (n: number) => STUDY_SLIDES.find(s => s.n === n)?.ch ?? 0;
-  const selectSlide = (n: number) => { setActiveSlide(n); setActiveChapter(chapterOf(n)); };
+  const selectSlide = (n: number) => { setActiveChapter(chapterOf(n)); };
   const selectChapter = (i: number) => {
     setActiveChapter(i);
-    const first = STUDY_CHAPTERS[i].slides[0];
-    setActiveSlide(first);
-    const el = listRef.current?.querySelector(`[data-slide="${first}"]`);
-    el?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
   const toggleBookmark = (n: number) => setBookmarks(prev => {
     const s = new Set(prev);
     if (s.has(n)) s.delete(n); else s.add(n);
     return s;
   });
+
+  // 강의 슬라이드 로드 (실제 API — 지금은 목)
+  useEffect(() => {
+    let alive = true;
+    setApiLoading(true);
+    api.getLectureSlides(lectureId)
+      .then(l => { if (!alive) return; setApiLecture(l); setApiSlideId(l.slides[0]?.id ?? null); })
+      .catch(() => { if (alive) setApiLecture(null); })
+      .finally(() => { if (alive) setApiLoading(false); });
+    return () => { alive = false; };
+  }, [lectureId]);
+
+  const apiSlides = apiLecture?.slides ?? [];
+  const apiActiveSlide = apiSlides.find(s => s.id === apiSlideId) ?? null;
+
+  // 선택 슬라이드가 바뀌면 이전 번역 초기화
+  useEffect(() => { setTransText(null); }, [apiSlideId]);
+
+  const translateActive = async () => {
+    if (!apiActiveSlide) return;
+    setTransLoading(true);
+    try {
+      const r = await api.translateSlide(apiActiveSlide.id, transLang);
+      setTransText(r.translated_text);
+    } catch (e) {
+      setTransText(e instanceof Error ? `번역 실패: ${e.message}` : "번역에 실패했습니다.");
+    } finally {
+      setTransLoading(false);
+    }
+  };
 
   const activeCh = STUDY_CHAPTERS[activeChapter];
   const activeNote = STUDY_NOTES[activeChapter];
@@ -1860,29 +1980,38 @@ function StudyPage({ navigate }: NavProps) {
         <div className="flex-shrink-0 border-r border-border bg-white overflow-hidden flex flex-col" style={{ width: leftW }}>
           <div className="px-4 py-3 border-b border-border flex-shrink-0">
             <div className="text-sm font-bold" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>슬라이드</div>
-            <div className="text-xs text-muted-foreground mt-0.5">전체 {STUDY_SLIDES.length}페이지 · {STUDY_CHAPTERS.length}챕터</div>
+            <div className="text-xs text-muted-foreground mt-0.5">전체 {apiSlides.length}페이지</div>
           </div>
 
           <div ref={listRef} className="flex-1 overflow-y-auto p-3 space-y-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border">
-            {STUDY_SLIDES.map(slide => {
-              const isActive = slide.n === activeSlide;
-              const inActiveChapter = slide.ch === activeChapter;
-              const marked = bookmarks.has(slide.n);
+            {apiLoading ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                <span className="text-xs">슬라이드 불러오는 중...</span>
+              </div>
+            ) : apiSlides.length === 0 ? (
+              <div className="text-center text-xs text-muted-foreground py-10">슬라이드가 없습니다.</div>
+            ) : apiSlides.map(slide => {
+              const isActive = slide.id === apiSlideId;
+              const marked = bookmarks.has(slide.id);
               return (
-                <div key={slide.n} data-slide={slide.n}>
+                <div key={slide.id} data-slide={slide.id}>
                   <div className="flex items-center justify-between mb-1 px-0.5">
-                    <span className={`text-xs font-semibold ${isActive ? "text-primary" : "text-muted-foreground"}`}>{slide.n}</span>
-                    {inActiveChapter && <span className="text-[10px] font-medium text-sky-500">Chapter {slide.ch + 1}</span>}
+                    <span className={`text-xs font-semibold ${isActive ? "text-primary" : "text-muted-foreground"}`}>{slide.page_num}</span>
                   </div>
-                  <button onClick={() => selectSlide(slide.n)}
-                    className={`w-full aspect-[4/3] rounded-lg overflow-hidden relative border-2 transition-all ${
-                      isActive ? "border-primary ring-2 ring-primary/20"
-                      : inActiveChapter ? "border-sky-300 bg-sky-50"
-                      : "border-border hover:border-primary/30"
+                  <button onClick={() => setApiSlideId(slide.id)}
+                    className={`w-full rounded-lg overflow-hidden relative border-2 transition-all text-left ${
+                      isActive ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/30"
                     }`}>
-                    <MockSlide slide={slide} />
-                    {inActiveChapter && !isActive && <div className="absolute inset-0 bg-sky-400/10 pointer-events-none" />}
-                    <span onClick={e => { e.stopPropagation(); toggleBookmark(slide.n); }}
+                    <div className="aspect-[4/3] bg-gradient-to-br from-slate-50 to-slate-100 p-3 flex flex-col">
+                      <div className="flex items-center gap-1 mb-1.5 text-[10px] font-medium text-muted-foreground">
+                        <FileText className="w-3 h-3" /> 슬라이드 {slide.page_num}
+                      </div>
+                      <p className="text-xs font-semibold text-foreground leading-snug line-clamp-3">
+                        {slide.text_content || `슬라이드 ${slide.page_num}`}
+                      </p>
+                    </div>
+                    <span onClick={e => { e.stopPropagation(); toggleBookmark(slide.id); }}
                       className="absolute top-1.5 right-1.5 p-1 rounded-md bg-white/80 backdrop-blur-sm hover:bg-white transition-colors cursor-pointer">
                       <Bookmark className={`w-3.5 h-3.5 ${marked ? "fill-amber-400 text-amber-400" : "text-slate-400"}`} />
                     </span>
@@ -2021,53 +2150,44 @@ function StudyPage({ navigate }: NavProps) {
             </div>
           )}
 
-          {/* 번역 */}
+          {/* 번역 (실제 API: POST /slides/{id}/translate) */}
           {rightTab === "translate" && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border">
-              <div className="flex items-center gap-2 text-xs">
-                <span className="px-2.5 py-1 bg-muted rounded-lg font-medium">한국어</span>
-                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-lg font-medium">English</span>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border">
+              <div className="flex items-center gap-2">
+                <select value={transLang} onChange={e => setTransLang(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/25">
+                  <option value="en">English</option>
+                  <option value="ja">日本語</option>
+                  <option value="zh">中文</option>
+                </select>
+                <button onClick={translateActive} disabled={transLoading || !apiActiveSlide}
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
+                  {transLoading
+                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> 번역 중...</>
+                    : <><Languages className="w-3.5 h-3.5" /> 번역하기</>}
+                </button>
               </div>
 
-              <div>
-                <div className="flex items-center gap-1.5 mb-2.5">
-                  <BookOpen className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-bold">Chapter Summaries</h3>
-                </div>
-                <div className="space-y-2.5">
-                  {STUDY_CHAPTERS.map((ch, i) => {
-                    const selected = activeChapter === i;
-                    return (
-                      <button key={i} onClick={() => selectChapter(i)}
-                        className={`w-full text-left p-3.5 rounded-xl border transition-all ${selected ? "border-sky-300 bg-sky-50 ring-1 ring-sky-200" : "border-border bg-background hover:border-primary/20"}`}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`text-xs font-bold ${selected ? "text-sky-600" : "text-primary"}`}>{ch.title}</span>
-                          <span className="text-[11px] text-muted-foreground">{ch.pages}</span>
-                        </div>
-                        <ul className="space-y-1.5">
-                          {STUDY_CHAPTERS_EN[i].map((s, j) => (
-                            <li key={j} className="flex items-start gap-2 text-xs text-foreground leading-relaxed">
-                              <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${selected ? "bg-sky-400" : "bg-primary/40"}`} />
-                              {s}
-                            </li>
-                          ))}
-                        </ul>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5 mb-2.5">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-bold">Overall Summary</h3>
-                </div>
-                <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200">
-                  <p className="text-sm text-blue-900 leading-relaxed">{STUDY_OVERALL_EN}</p>
-                </div>
-              </div>
+              {apiActiveSlide ? (
+                <>
+                  <div>
+                    <div className="text-xs font-semibold text-muted-foreground mb-1.5">원문 · 슬라이드 {apiActiveSlide.page_num}</div>
+                    <div className="p-3 rounded-xl border border-border bg-background text-sm leading-relaxed whitespace-pre-wrap">
+                      {apiActiveSlide.text_content || <span className="text-muted-foreground">텍스트 없음</span>}
+                    </div>
+                  </div>
+                  {transText !== null && (
+                    <div>
+                      <div className="text-xs font-semibold text-emerald-600 mb-1.5">번역 결과</div>
+                      <div className="p-3 rounded-xl border border-emerald-100 bg-emerald-50/60 text-sm leading-relaxed whitespace-pre-wrap">
+                        {transText}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-8">왼쪽에서 슬라이드를 선택하세요.</p>
+              )}
             </div>
           )}
 
@@ -2110,6 +2230,7 @@ function StudyPage({ navigate }: NavProps) {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
+  const [currentUser, setCurrentUser] = useState<LoginUser | null>(() => getUser());
   const [projectDraft, setProjectDraft] = useState<ProjectDraft>(EMPTY_DRAFT);
   const [dashTab, setDashTab] = useState<DashTab>("lectures");
   const [jobs, setJobs] = useState<Job[]>(makeInitialJobs);
@@ -2120,7 +2241,8 @@ export default function App() {
     const t = setInterval(() => {
       setJobs(prev => {
         let next = prev.map(j => {
-          if (j.status !== "processing") return j;
+          // 실제 백엔드 작업(backendJobId 보유)은 API 폴링이 진행률을 갱신하므로 건너뜀
+          if (j.status !== "processing" || j.backendJobId) return j;
           const np = Math.min(100, j.progress + j.speed);
           return { ...j, progress: np, status: np >= 100 ? "completed" : "processing" as JobStatus };
         });
@@ -2154,11 +2276,19 @@ export default function App() {
         status: "processing",
         speed: 0.7,
         createdAt: Date.now(),
+        lectureId: partial.lectureId,
+        backendJobId: partial.backendJobId,
+        apiStatus: partial.apiStatus,
       },
       ...prev,
     ]);
     return id;
   };
+
+  // 특정 작업 부분 갱신 (분석 화면의 API 폴링 결과를 워크스페이스에도 반영)
+  const updateJob = useCallback((id: string, patch: Partial<Job>) => {
+    setJobs(prev => prev.map(j => (j.id === id ? { ...j, ...patch } : j)));
+  }, []);
 
   const cancelJob = (id: string) => {
     setJobs(prev => prev.filter(j => j.id !== id));
@@ -2168,6 +2298,12 @@ export default function App() {
   const navigate = (s: Screen) => {
     window.scrollTo(0, 0);
     setScreen(s);
+  };
+
+  // 로그인 성공 → 사용자 정보를 localStorage + 앱 상태에 저장
+  const handleLogin = (u: LoginUser | null) => {
+    setUser(u);          // localStorage 영속화
+    setCurrentUser(u);   // 화면 즉시 반영
   };
 
   // 업로드 완료 → 새 작업 생성 후 분석 화면으로 이동
@@ -2190,20 +2326,21 @@ export default function App() {
     <div className="min-h-screen" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <AnimatePresence mode="wait">
         {screen === "landing" && <LandingPage key="landing" navigate={navigate} />}
-        {screen === "login" && <LoginPage key="login" navigate={navigate} />}
+        {screen === "login" && <LoginPage key="login" navigate={navigate} onLogin={handleLogin} />}
         {screen === "dashboard" && (
           <DashboardPage key="dashboard" navigate={navigate} setProjectDraft={setProjectDraft}
             jobs={jobs} cancelJob={cancelJob} activeTab={dashTab} setActiveTab={setDashTab}
-            onViewAnalysis={viewAnalysis} />
+            onViewAnalysis={viewAnalysis} user={currentUser} />
         )}
         {screen === "upload" && (
           <UploadPage key="upload" navigate={navigate} projectDraft={projectDraft}
             onAnalyze={beginAnalysis} />
         )}
         {screen === "analysis" && (
-          <AnalysisPage key="analysis" navigate={navigate} job={activeJob} goToWorkspace={goToWorkspace} />
+          <AnalysisPage key="analysis" navigate={navigate} job={activeJob} goToWorkspace={goToWorkspace}
+            onJobUpdate={updateJob} />
         )}
-        {screen === "study" && <StudyPage key="study" navigate={navigate} />}
+        {screen === "study" && <StudyPage key="study" navigate={navigate} lectureId={activeJob?.lectureId ?? 1} />}
       </AnimatePresence>
     </div>
   );
