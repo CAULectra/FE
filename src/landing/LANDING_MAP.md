@@ -67,7 +67,7 @@
 | 이름 | 코드 | 설명 |
 |---|---|---|
 | §3.1 **오버뷰 카피** | `.overview-copy` + `.ov-check` | Workspace 태그 + 헤딩, "Karaoke/Cited/Heatmaps" + 설명 + `Learn more →` |
-| §3.2 **후기 카드** | `.overview-testimonials` → `.quote-card` ×3 | "Students say" (지현·민준·서연) |
+| §3.2 **후기 세로 루프** | `.quotes-col` → `.qcol-track` (`QuoteLoop.tsx`) | "Students say" — 카피 오른쪽 칼럼에서 후기 8장이 위로 무한 순환(hover 정지, 상하 페이드 마스크) |
 
 ## §4 푸터 (FOOTER) — `.landing-footer` `#footer`
 | 이름 | 코드 | 설명 |
