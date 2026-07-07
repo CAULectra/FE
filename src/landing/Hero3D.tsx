@@ -10,8 +10,8 @@ const HERO_ORIGIN = "https://my.spline.design";
 
 const RES = 0.48;                      // 내부 해상도 48% → GPU 픽셀 0.23배 (0.6→0.48: GPU 부하 ~36% 감소)
 const OVER_X = 0.045, OVER_Y = 0.11;   // 가장자리 오버스캔(외곽 여백 제거)
-const LOAD_DELAY_MS = 420;             // 첫 페인트/타이틀 인트로와 WebGL 초기화를 분리
-const FADE_DELAY_MS = 170;             // 씬이 한 프레임 렌더된 뒤 페이드(팝업 방지)
+const LOAD_DELAY_MS = 120;             // 첫 페인트 직후 바로 로드 시작 (폴백 노출 최소화)
+const FADE_DELAY_MS = 100;             // 씬이 한 프레임 렌더된 뒤 페이드(팝업 방지)
 
 type IdleWindow = {
   requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
@@ -65,7 +65,7 @@ export default function Hero3D() {
     loadTimerRef.current = window.setTimeout(() => {
       idleRef.current = requestIdle(() => {
         setSrc(HERO_SCENE_URL);
-      }, 1200);
+      }, 450);
     }, LOAD_DELAY_MS);
 
     return () => {
@@ -89,13 +89,18 @@ export default function Hero3D() {
 
   const handleLoad = () => {
     fadeTimerRef.current = window.setTimeout(() => {
-      requestAnimationFrame(() => {
-        setLoaded(true);
-        // Spline이 뜨면 폴백 블롭(blur 90px ×3)을 꺼서 매 프레임 합성 비용 제거
-        document.querySelector(".hero-bg")?.classList.add("spline-on");
-      });
+      requestAnimationFrame(() => setLoaded(true));
     }, FADE_DELAY_MS);
   };
+
+  /* Spline이 뜨면 폴백 블롭(blur 90px ×3)을 꺼서 매 프레임 합성 비용 제거.
+     (loaded state 기반 effect — 타이머/StrictMode 경합에도 확실히 반영) */
+  useEffect(() => {
+    if (!loaded) return;
+    const bg = document.querySelector(".hero-bg");
+    bg?.classList.add("spline-on");
+    return () => bg?.classList.remove("spline-on");
+  }, [loaded]);
 
   return (
     <div id="discs" style={{ overflow: "hidden" }}>
