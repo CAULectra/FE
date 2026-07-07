@@ -25,16 +25,16 @@
 | **독 (하단 네비)** | `.dock` `#dock` | 하단 중앙 오렌지 알약 네비 (Product·Workspace·Company 드롭업) |
 | **서포트 필** | `.support-pill` | 우하단 `💬 Support` |
 
-## §1 히어로 (HERO) — `.hero` `#hero`  *(260vh, 스크롤 핀)*
+## §1 히어로 (HERO) — `.hero` `#hero`  *(240vh, 스크롤 핀)*
 | 이름 | 코드 | 설명 |
 |---|---|---|
 | §1.1 **히어로 배경** | `.hero-bg`(+블롭 `.hb`), `Hero3D`(`#discs`) | Spline 3D 원판 + 그라데이션 폴백 + `.hero-dim`/`.hero-vignette`/`.hero-grain` |
 | §1.2 **상단바** | `.top-nav` | 로고 `Lectra`, 언어(KO), `Log in`, `Sign up` |
 | §1.3 **히어로 타이틀** | `.stage` → `.hero-title` | "One app for every lecture" + `.hero-aside`(부제 + `.app-badges` Web App/App Store) |
 | §1.4 **태그라인** | `.taglines` `#taglines` | 스크롤하며 하나씩 등장하는 3개: **Slides**(`.tl-slides`) · **Audio recordings**(`.tl-audio`) · **Images**(`.tl-images`) |
-| §1.4b **태그라인 카피** | `.tagline-copy` (`TextType`) | 태그라인 아래 큰 타이핑 문구 "모든 자료를 한 화면에, 간편하게 완성하는 나만의 강의노트" (히어로 스크롤 진행도 0.55에 타이핑 시작) |
+| §1.4b **태그라인 카피** | `.tagline-copy` | 태그라인 아래 큰 **정적** 문구 "모든 자료를 한 화면에, 간편하게 완성하는 나만의 강의노트" (타이핑 애니메이션 없음 — 애니메이션은 위 태그라인에만) |
 | §1.5 **스크롤 인디케이터** | `.scroll-ind` | 좌하단 "↓ Scroll" |
-| §1.6 **히어로 아웃로** | `.hero-outro` | 히어로 끝을 검정(#120F17)으로 페이드 |
+| §1.6 **히어로 아웃로** | `.hero-outro` | 검정(#120F17) 오버레이. heroTl 아님 — **카드 섹션 진입 시**(`start:"top bottom"→end:"top 58%"`) 페이드인해 태그라인을 덮어 fade-out + Spline→다크 seam 연결 |
 | (브릿지) | `.bridge` | 히어로↔워크스루 사이 다크 여백 |
 
 ## §2 카드 섹션 (CARDS) — `.cards-section` `#walkthrough`  *(스크롤하며 쌓이는 3장 + 크림 전환)*

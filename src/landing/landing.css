@@ -83,7 +83,7 @@ html.lenis{height:auto}
 .support-pill:hover{background:rgba(255,255,255,.8)}
 
 /* ---------- hero (그라데이션 + 원판 스택) ---------- */
-.hero{height:260vh;position:relative;background:#120F17}
+.hero{height:240vh;position:relative;background:#120F17}
 .hero .sticky-slot{position:sticky;top:0;height:100vh;overflow:hidden;display:grid}
 /* 히어로 끝을 walkthrough 다크로 페이드(스크럽) → 두 섹션 자연 연결 */
 .hero-outro{position:absolute;inset:0;z-index:7;pointer-events:none;background:#120F17;opacity:0;will-change:opacity}
@@ -110,11 +110,11 @@ html.lenis{height:auto}
 .hero-aside p{font-size:clamp(19px,1.9vw,26px);font-weight:500;line-height:1.25;letter-spacing:.23px;margin-bottom:26px}
 .hero-aside .app-badges{margin-top:0;flex-direction:column;align-items:flex-start;gap:12px;display:flex}
 /* taglines phase */
-.taglines{grid-area:1/1;position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.4vh,28px);opacity:0;pointer-events:none;color:#fff;will-change:opacity,transform}
-.tagline{display:flex;gap:clamp(14px,2vw,26px);align-items:center}
-.tagline .icon-card{width:clamp(58px,7vw,96px);height:clamp(58px,7vw,96px);border-radius:24px;display:grid;place-items:center;color:#fff;box-shadow:var(--sh-lg)}
+.taglines{grid-area:1/1;position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(22px,4.4vh,58px);opacity:0;pointer-events:none;color:#fff;will-change:opacity,transform}
+.tagline{display:flex;gap:clamp(18px,2.4vw,32px);align-items:center}
+.tagline .icon-card{width:clamp(60px,8vw,116px);height:clamp(60px,8vw,116px);border-radius:26px;display:grid;place-items:center;color:#fff;box-shadow:var(--sh-lg)}
 .tagline .icon-card svg{width:52%;height:52%}
-.tagline h3{font-size:clamp(44px,7vw,96px);line-height:1;font-weight:500;letter-spacing:.01em}
+.tagline h3{font-size:clamp(48px,8.6vw,120px);line-height:1;font-weight:500;letter-spacing:.01em}
 .tagline.tl-slides .icon-card{background:var(--emerald)}
 .tagline.tl-audio .icon-card{background:var(--cobalt)}
 .tagline.tl-images .icon-card{background:var(--coral)}
@@ -357,7 +357,7 @@ html.lenis{height:auto}
 }
 
 /* 히어로 → 워크스루 사이 여백 (다크, 히어로/워크스루와 동일 톤) */
-.bridge{height:clamp(220px,42vh,460px);background:#120F17}
+.bridge{height:clamp(140px,20vh,280px);background:#120F17}
 
 /* 섹션 경계 완화: walkthrough 위/아래 가장자리를 부드럽게(인접 섹션으로 스며듦) */
 .walkthrough::before,.walkthrough::after{content:"";position:absolute;left:0;right:0;height:16vh;z-index:1;pointer-events:none}
@@ -371,7 +371,7 @@ html.lenis{height:auto}
 
 /* ================= §2 카드 섹션 (워크스루 대체) — 3장 스택 + 마지막 카드에서 크림 전환 =================
    배경(.cards-section)은 다크(#120F17)로 시작, useLandingEffects가 마지막 카드 스크롤에 맞춰 크림으로 스크럽. */
-.cards-section{position:relative;z-index:1;background:#120F17;color:#fff;padding-top:clamp(40px,10vh,120px)}
+.cards-section{position:relative;z-index:1;background:#120F17;color:#fff;padding-top:clamp(16px,3vh,44px)}
 .scroll-stack{position:relative;z-index:2;max-width:1240px;margin:0 auto;padding:0 28px clamp(120px,24vh,300px)}
 .scroll-stack-card{position:sticky;top:clamp(64px,12vh,120px);margin-bottom:clamp(48px,9vh,92px);border-radius:clamp(22px,2.6vw,34px);padding:clamp(36px,4.6vw,80px);min-height:clamp(460px,66vh,720px);overflow:hidden;transform-origin:50% 0%;will-change:transform}
 .scroll-stack-card:last-child{margin-bottom:0}
