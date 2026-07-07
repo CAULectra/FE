@@ -44,3 +44,4 @@ temp/
 .omc/
 .bkit/
 src/**/.omc/
+.vercel/
