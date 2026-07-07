@@ -130,7 +130,7 @@ html.lenis{height:auto}
 .tagline{display:flex;gap:clamp(18px,2.4vw,32px);align-items:center}
 .tagline .icon-card{width:clamp(60px,8vw,116px);height:clamp(60px,8vw,116px);border-radius:26px;display:grid;place-items:center;color:#fff;box-shadow:var(--sh-lg)}
 .tagline .icon-card svg{width:52%;height:52%}
-.tagline h3{font-size:clamp(48px,8.6vw,120px);line-height:1;font-weight:500;letter-spacing:.01em}
+.tagline h3{font-family:'SUIT','Pretendard Variable',Pretendard,sans-serif;font-size:clamp(48px,8.6vw,120px);line-height:1;font-weight:500;letter-spacing:.01em}
 .tagline.tl-slides .icon-card{background:var(--emerald)}
 .tagline.tl-audio .icon-card{background:var(--cobalt)}
 .tagline.tl-images .icon-card{background:var(--coral)}
