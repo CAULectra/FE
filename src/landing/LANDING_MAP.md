@@ -44,7 +44,7 @@
 | 이름 | 코드 | 설명 |
 |---|---|---|
 | §2.0 **카드 스택** | `.cards-stack` (`ScrollStack`) | 3장을 sticky로 쌓는 래퍼 |
-| §2.1 **① Upload 카드** | `.workflow-card.workflow-card-light` (01) | 흰색. "Upload every source" + 업로드 링 + 파일칩(slides.pdf·recording.m4a·board-photos) |
+| §2.1 **① Upload 카드** | `.workflow-card.workflow-card-light` (01) | 흰색. "Upload every source" + **merged-shape**(유기적 라운드 셀 3개, `UploadSources.tsx`) 안에 Slides·Audio·Images 아이템 + 물방울 리플. 파스텔 그라데이션 패널 |
 | §2.2 **② Align 카드** | `.workflow-card.workflow-card-dark` (02) | 검정. "Align the lecture timeline" + 파형 + 타임라인 + 정렬 스크립트 |
 | §2.3 **③ Study 카드** | `.workflow-card.workflow-card-light` (03) | 흰색. "Study from the finished workspace" + 슬라이드 레일 + 노트 + Q&A. **이 카드에서 배경 크림 전환** |
 | (카드 내부) | `.workflow-card-copy`(좌측 카피) / `.workflow-visual`(우측 목업) | 각 카드 = 카피 + 비주얼 2열 |
