@@ -213,7 +213,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         cardZkp?.classList.remove("hov");
         chatTab?.classList.remove("on");
         sumTab?.classList.add("on");
-        if (chat) gsap.set(chat, { autoAlpha: 0, y: 8 });
+        if (chat) gsap.set(chat, { autoAlpha: 0, x: 18 });
       };
       tl = gsap.timeline({
         repeat: -1, repeatDelay: 1.0, repeatRefresh: true, paused: true,
@@ -250,16 +250,16 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
       tl.call(() => setStep(2), undefined, ">+0.25")
         .to(app, { ...camTo(null, 1), duration: 0.95 }, "<")
         .to(cursor, { ...curTo(".dw-note", null, 1, 0, -10), duration: 0.95 }, "<");
-      tl.to(app, { ...camTo(".dw-noteimg", 1.55), duration: CAM }, ">+0.15")
-        .to(cursor, { ...curTo(".dw-noteimg", ".dw-noteimg", 1.55, 60, 40), duration: CAM }, "<")
+      tl.to(app, { ...camTo(".dw-note-hot", 1.5), duration: CAM }, ">+0.15")
+        .to(cursor, { ...curTo(".dw-note-hot", ".dw-note-hot", 1.5, 40, 30), duration: CAM }, "<")
         .to({}, { duration: 0.45 }, ">");
 
-      // ④ 레퍼런스 패널로 팬 — 챗봇 탭 클릭 → 인용 달린 Q&A 등장 (RAG)
-      tl.to(app, { ...camTo(".dw-ref", 1.6), duration: 1.0 }, ">")
-        .to(cursor, { ...curTo(".dw-tab-chat", ".dw-ref", 1.6), duration: 1.0 }, "<")
+      // ④ 레퍼런스 패널로 팬 — 챗봇 탭 클릭 → 우측 패널 전체가 챗봇 화면으로 전환 (RAG)
+      tl.to(app, { ...camTo(".dw-chat", 1.45), duration: 1.0 }, ">")
+        .to(cursor, { ...curTo(".dw-tab-chat", ".dw-chat", 1.45), duration: 1.0 }, "<")
         .call(() => press(".dw-tab-chat"), undefined, ">")
         .call(() => { sumTab?.classList.remove("on"); chatTab?.classList.add("on"); }, undefined, ">+0.1");
-      if (chat) tl.to(chat, { autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out" }, ">+0.05");
+      if (chat) tl.to(chat, { autoAlpha: 1, x: 0, duration: 0.45, ease: "power2.out" }, ">+0.05");
       tl.to({}, { duration: 0.9 }, ">");
 
       // ⑤ 줌아웃 — 전체 워크스페이스, 커서는 재생 버튼으로 (Ready ✓)
@@ -430,30 +430,21 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                   </div>
                 </div>
 
-                {/* STEP 2 — /lecture/ai04 스터디 워크스페이스 (landingpage ex 재현) */}
+                {/* STEP 2 — /lecture/ai04: landingpage ex 화면을 통짜 이미지로 그대로 사용.
+                    보이지 않는 핫스팟(.dw-tab-chat/.dw-note-hot)으로 카메라·클릭 좌표를 잡고,
+                    챗봇 탭 클릭 시 우측 패널 영역 전체가 DOM 챗봇 화면으로 전환된다. */}
                 <div className="da-pane dw-work">
-                  <div className="dw-cols">
-                    <div className="dw-strip">
-                      <small className="dw-h">슬라이드 <i>전체 26페이지 · 4챕터</i></small>
-                      <small className="dw-sync">동기화 ON — 재생 따라옴</small>
-                      <small className="dw-ch">CHAPTER 1 · 신뢰할 수 있는 AI란 무엇인가?</small>
-                      <span className="dw-thumb cur"><img src="/demo/exs-1.png" alt="" loading="lazy" /></span>
-                      <span className="dw-thumb"><img src="/demo/exs-2.png" alt="" loading="lazy" /></span>
-                    </div>
-                    <div className="dw-note">
-                      {/* 실제 노트 화면(landingpage ex 크롭) — 제목·핵심 요약·프레임워크 다이어그램 */}
-                      <img className="dw-noteimg" src="/demo/exn-note.png" alt="" loading="lazy" />
-                    </div>
-                    <div className="dw-ref">
-                      <span className="dw-tabs">
-                        <i className="on">✦ 요약</i><i>번역</i><i>사진</i><i className="dw-tab-chat">💬 챗봇</i>
-                      </span>
-                      {/* 실제 요약 패널(핵심 요약·핵심 개념·한눈에 보기) 크롭 */}
-                      <img className="dw-refimg" src="/demo/exn-ref.png" alt="" loading="lazy" />
-                      <span className="dw-chat">
-                        <em className="dw-q">견고성과 정확성은 뭐가 다른가요?</em>
-                        <em className="dw-a">정확성은 목표 지표에서의 예측 성능이고, 견고성은 데이터가 변하거나 노이즈가 섞여도 일관되게 작동하는 안정성이에요.<i className="dw-cite">S2 · 06:42</i></em>
-                      </span>
+                  <div className="dw-shot">
+                    <img className="dw-full" src="/demo/exw-main.png" alt="" loading="lazy" />
+                    <i className="dw-note-hot" aria-hidden="true" />
+                    <i className="dw-tab-chat" aria-hidden="true" />
+                    <div className="dw-chat" aria-hidden="true">
+                      <b className="dw-chat-h">💬 챗봇<i>이 강의 자료에서만 답해요</i></b>
+                      <span className="dw-q">견고성과 정확성은 뭐가 다른가요?</span>
+                      <span className="dw-a">정확성은 목표 지표에서의 예측 성능이고, 견고성은 데이터가 변하거나 노이즈가 섞여도 일관되게 작동하는 안정성이에요.<i className="dw-cite">S2 · 06:42</i></span>
+                      <span className="dw-q">시험에 나올 포인트는?</span>
+                      <span className="dw-a">네 가지 원칙의 정의 비교와, 신뢰성 설계 프레임워크 5단계의 순서·피드백 루프가 핵심이에요.<i className="dw-cite">S3 · 12:05</i></span>
+                      <span className="dw-inp">질문을 입력하세요…<i>➤</i></span>
                     </div>
                   </div>
                   <div className="dw-timeline">
