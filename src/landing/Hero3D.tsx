@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 const HERO_SCENE_URL = "https://my.spline.design/radialglass-bXeLwUVIhfJGztLAHWeVpwLi/";
 const HERO_ORIGIN = "https://my.spline.design";
 
-const RES = 0.48;                      // 내부 해상도 48% → GPU 픽셀 0.23배 (0.6→0.48: GPU 부하 ~36% 감소)
+const RES = 0.6;                       // 내부 해상도 60% (0.48은 Spline 반응형 카메라가 확대돼 보여 원복)
 const OVER_X = 0.045, OVER_Y = 0.11;   // 가장자리 오버스캔(외곽 여백 제거)
 const LOAD_DELAY_MS = 120;             // 첫 페인트 직후 바로 로드 시작 (폴백 노출 최소화)
 const FADE_DELAY_MS = 100;             // 씬이 한 프레임 렌더된 뒤 페이드(팝업 방지)
