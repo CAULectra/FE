@@ -8,6 +8,9 @@ import { useNavigate } from "react-router";
 import Hero3D from "./Hero3D";
 import ScrollStack, { ScrollStackItem } from "./ScrollStack";
 import LiveDemo from "./LiveDemo";
+import LandingDock from "./LandingDock";
+import UploadSources from "./UploadSources";
+import AlignMap from "./AlignMap";
 import { useLandingEffects } from "./useLandingEffects";
 import "./landing.css";
 
@@ -37,29 +40,9 @@ export default function LandingPage() {
     <div ref={rootRef} className="landing-root" onClick={onRootClick}>
       
       
-      {/* ================= BOTTOM DOCK NAV ================= */}
-      <nav className="dock" id="dock">
-        <button className="dock-home" id="dock-home" title="맨 위로">⌂</button>
-        <div className="dock-links">
-          <div className="dock-item">
-            <button className="dock-link">Product <span className="chev">▼</span></button>
-            <div className="dropup">
-              <a href="/lecture/w10">Workspace <small>동기화 노트 · Q&A · 번역</small></a>
-              <a href="/library">Library <small>폴더 · 검색 · 처리 현황</small></a>
-              <a href="#walkthrough">How it works <small>5단계 워크스루</small></a>
-            </div>
-          </div>
-          <a className="dock-link" href="/library">Workspace ↗</a>
-          <div className="dock-item">
-            <button className="dock-link">Company <span className="chev">▼</span></button>
-            <div className="dropup">
-              <a href="mailto:focustationcapstone@gmail.com">Team contact</a>
-              <a href="#">Privacy</a>
-              <a href="#">Terms</a>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* ================= BOTTOM DOCK NAV =================
+          모양은 기존 그대로, ReactBits Dock식 magnification만 이식 (LandingDock.tsx) */}
+      <LandingDock />
       <a className="support-pill" href="mailto:focustationcapstone@gmail.com">💬 Support</a>
       
       <main id="top">
@@ -131,11 +114,9 @@ export default function LandingPage() {
               <h3>Upload every source at once.</h3>
               <p>Drop the slide deck, lecture recording, and board photos into one lecture folder. Lectra keeps the raw material grouped before any AI pass begins.</p>
             </div>
-            <div className="workflow-visual upload-visual" aria-hidden="true">
-              <div className="upload-ring"><span>Ready</span></div>
-              <div className="upload-file file-slide"><b>slides.pdf</b><small>42 pages</small></div>
-              <div className="upload-file file-audio"><b>recording.m4a</b><small>61:30</small></div>
-              <div className="upload-file file-photo"><b>board-photos</b><small>8 images</small></div>
+            {/* Krepling Personalized experiences 패턴: 아이콘 3개 + 클릭 리플 */}
+            <div className="workflow-visual upload-visual">
+              <UploadSources />
             </div>
           </ScrollStackItem>
 
@@ -145,20 +126,9 @@ export default function LandingPage() {
               <h3>Align the lecture timeline.</h3>
               <p>Speech, slide text, and photo timestamps are mapped to the same clock, so every sentence knows where it belongs.</p>
             </div>
+            {/* 파형 세그먼트가 아래 슬라이드로 매핑되는 애니메이션 (AlignMap.tsx) */}
             <div className="workflow-visual align-visual" aria-hidden="true">
-              <div className="align-wave">
-                {Array.from({ length: 20 }).map((_, i) => (
-                  <i key={i} style={{ "--h": `${28 + ((i * 17) % 62)}%` } as React.CSSProperties} />
-                ))}
-              </div>
-              <div className="align-track">
-                <span>00:00</span><i></i><span>23:14</span><i></i><span>61:30</span>
-              </div>
-              <div className="align-script">
-                <p><b>S12</b> the median key moves up</p>
-                <p><b>S13</b> child nodes stay balanced</p>
-                <p><b>S14</b> search remains logarithmic</p>
-              </div>
+              <AlignMap />
             </div>
           </ScrollStackItem>
 
