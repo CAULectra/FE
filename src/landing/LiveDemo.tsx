@@ -288,12 +288,15 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         .fromTo(".dwc-col", { filter: "brightness(1.25)" }, { filter: "brightness(1)", duration: 0.55, ease: "power2.out", stagger: 0.11, immediateRender: false }, "<+0.3")
         .to({}, { duration: 1.6 }, ">");
 
-      (window as unknown as { __demoTl?: unknown }).__demoTl = tl; // 검증용
     };
     build();
     const st = ScrollTrigger.create({
       trigger: section, start: "top 78%", end: "bottom 22%",
-      onToggle: (self) => { if (!tl) return; self.isActive ? tl.play() : tl.pause(); },
+      onToggle: (self) => {
+        if (!tl) return;
+        if (self.isActive) tl.play();
+        else tl.pause();
+      },
     });
     let rt = 0;
     const onResize = () => {
