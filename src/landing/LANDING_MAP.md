@@ -51,7 +51,7 @@
 
 ## §2.5 라이브 데모 (LIVE DEMO) — `.demo-section` `#demo`  *(Krepling식, 밝은 캔버스·오렌지 액센트)*
 > `LiveDemo.tsx`. 두 모드(`mode` prop):
-> - **autoplay** (기본): 화면 안에 들어오면 스스로 **자동 재생 루프**(헤드라인 위·목업 아래 블록, 목업 고정 크기, 탭은 스테이지 내부). 커서가 스스로 이동·클릭하며 upload→align→study→Q&A 시연.
+> - **autoplay** (기본, **Harvest식 카메라 투어** — getharvest.com 히어로 비디오 문법): 고정 프레임(그라데이션 패널) 안에서 **"카메라"가 앱 UI를 줌인/줌아웃·팬**(`.demo-app` 전체를 scale+translate, 줌인 시 스테이지를 넘치며 크롭)하고, **흰 장갑 손 커서**가 클릭하면 실제 상태가 바뀌는 제품 투어 루프(~13s): 오버뷰 → 드롭존 줌인·Process 클릭 → 줌아웃+Align 전환 → 세그먼트 줌인·게이지 100% → 줌아웃+Study 전환 → Ask 줌인·질문 클릭→답변+인용칩 → 줌아웃 Ready ✓. 좌표는 offset 체인 기반 해석 계산(줌 중에도 정확). 헤딩 스크롤 페이드인 + 스테이지 0.62→1 인플레이트는 스크롤 스크럽.
 > - **scrub** (A/보존): 섹션 340vh **핀 고정** → 스크롤하면 크림 위 헤드라인만 있다가 목업이 페이드+확대(→1.16, 좌측 이동해 우측 탭 거터 확보)로 **열리며 화면을 채움**. 커서·단계·클릭이 스크롤 진행도에 **스크럽 동기화**.
 > `LandingPage`가 렌더(기본 autoplay). URL `?demo=scrub`로 스크럽(A) 버전 비교. reduced-motion이면 정적(Study).
 
@@ -59,7 +59,7 @@
 |---|---|---|
 | §2.5a **큰 문구** | `.demo-lead` (`.demo-headline` + `.accent`) | "Four sources in. **One exam-ready note out.**"(오렌지 강조) + eyebrow + 한글 서브 |
 | §2.5b **데모 스테이지** | `.demo-stage` (`.demo-gradient`) | 소프트 파스텔 그라데이션 라운드 패널 |
-| §2.5c **앱 목업** | `.demo-app[data-step]` | 3단계 크로스페이드: `.da-upload`(0) / `.da-align`(1) / `.da-study`(2) |
+| §2.5c **앱 목업** | `.demo-app[data-step]` | **실제 Lectra 화면 미니어처** 3단계 (콘텐츠 = `lectra_ai/landingpage ex.png`의 저작권 안전 mock "AI 시스템 설계 / 04. Designing Reliable AI Systems"): `.dl-library`(0 · 폴더 그리드, react-bits 폴더 open) / `.dl-folder`(1 · 강의 카드+CSS 미니슬라이드 `.msl`) / `.dw-work`(2 · 워크스페이스: 슬라이드 스트립+★핵심 요약 4원칙 노트+요약/챗봇 탭+플레이어 06:42/49:18·1.25×·북마크·구간반복). 다크 사이드바(`.da-side`) 공통, 주소창·활성 메뉴도 단계 연동 |
 | §2.5d **커서** | `.demo-cursor` (SVG) | 검은 화살표. scrub=스크롤 웨이포인트, autoplay=GSAP 타임라인. `.click` 피드백. 핀 자식이라 확대 영향 X |
 | §2.5e **단계 탭** | `.demo-tabs` (`.demo-tab`) | 우측 Upload/Align/Study, 단계 동기화(`.active`). scrub=핀 고정(뷰포트 우측 거터), autoplay=스테이지 내부 |
 
