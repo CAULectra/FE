@@ -250,8 +250,8 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
       tl.call(() => setStep(2), undefined, ">+0.25")
         .to(app, { ...camTo(null, 1), duration: 0.95 }, "<")
         .to(cursor, { ...curTo(".dw-note", null, 1, 0, -10), duration: 0.95 }, "<");
-      tl.to(app, { ...camTo(".dw-sum", 1.6), duration: CAM }, ">+0.15")
-        .to(cursor, { ...curTo(".dw-sum", ".dw-sum", 1.6, 30, 26), duration: CAM }, "<")
+      tl.to(app, { ...camTo(".dw-noteimg", 1.55), duration: CAM }, ">+0.15")
+        .to(cursor, { ...curTo(".dw-noteimg", ".dw-noteimg", 1.55, 60, 40), duration: CAM }, "<")
         .to({}, { duration: 0.45 }, ">");
 
       // ④ 레퍼런스 패널로 팬 — 챗봇 탭 클릭 → 인용 달린 Q&A 등장 (RAG)
@@ -352,6 +352,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                 <span className="ds-item ds-ai">▸ AI 시스템 설계<i>4</i></span>
                 <span className="ds-item">▸ 데이터 사이언스<i>3</i></span>
                 <span className="ds-item">▸ 소프트웨어 공학<i>2</i></span>
+                <span className="ds-item">▸ 운영체제<i>3</i></span>
                 <span className="ds-user"><i>F</i>focusstation<small>Pro 플랜</small></span>
               </div>
 
@@ -359,7 +360,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                 {/* STEP 0 — /library 과목 폴더 그리드 (ex 기준 과목 구성) */}
                 <div className="da-pane dl-library">
                   <div className="dl-head">
-                    <div className="dl-title"><b>전체 강의</b><small>과목 3개 · 강의 12개</small></div>
+                    <div className="dl-title"><b>전체 강의</b><small>과목 4개 · 강의 12개</small></div>
                     <span className="dl-upbtn">↥ Upload</span>
                   </div>
                   <div className="dl-grid">
@@ -387,6 +388,14 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                       </span>
                       <b>소프트웨어 공학</b><small>강의 2개 · 최근 수정 Jul 3</small>
                     </div>
+                    <div className="dlf" style={{ "--fc": "#C3ABEB", "--fb": "#B29ADF" } as CSSProperties}>
+                      <span className="dlf-icon">
+                        <i className="tab" /><i className="back" />
+                        <i className="pp p1" /><i className="pp p2" /><i className="pp p3" />
+                        <i className="ff f1" /><i className="ff f2" />
+                      </span>
+                      <b>운영체제</b><small>강의 3개 · 최근 수정 Jul 1</small>
+                    </div>
                   </div>
                 </div>
 
@@ -401,35 +410,19 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                   </div>
                   <div className="dlc-grid">
                     <div className="dlc dlc-ai04">
-                      <span className="dlc-thumb">
-                        <span className="msl">
-                          <b>신뢰할 수 있는 AI 시스템의 설계 원칙</b>
-                          <span className="msl-icons"><i /><i /><i /><i /></span>
-                          <span className="msl-caps"><u>정확성</u><u>견고성</u><u>공정성</u><u>투명성</u></span>
-                        </span>
-                      </span>
+                      <span className="dlc-thumb"><img src="/demo/exs-1.png" alt="" loading="lazy" /></span>
                       <b>04. Designing Reliable AI Systems</b>
                       <small>AI 시스템 설계 · Jul 7 · 슬라이드 26장</small>
                       <span className="chip chip-ready">Ready</span>
                     </div>
                     <div className="dlc">
-                      <span className="dlc-thumb">
-                        <span className="msl">
-                          <b>프롬프트 설계 체크리스트</b>
-                          <span className="msl-check"><i /><i /><i /><i /></span>
-                        </span>
-                      </span>
+                      <span className="dlc-thumb"><img src="/demo/exs-3.png" alt="" loading="lazy" /></span>
                       <b>03. Prompt Engineering</b>
                       <small>AI 시스템 설계 · Jul 5 · 슬라이드 22장</small>
                       <span className="chip chip-ready">Ready</span>
                     </div>
                     <div className="dlc">
-                      <span className="dlc-thumb">
-                        <span className="msl">
-                          <b>학습·검증·테스트 데이터</b>
-                          <span className="msl-venn"><i /><i /><i /></span>
-                        </span>
-                      </span>
+                      <span className="dlc-thumb"><img src="/demo/exs-4.png" alt="" loading="lazy" /></span>
                       <b>02. Machine Learning Basics</b>
                       <small>AI 시스템 설계 · Jul 2 · 슬라이드 28장</small>
                       <span className="chip chip-ready">Ready</span>
@@ -444,42 +437,19 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                       <small className="dw-h">슬라이드 <i>전체 26페이지 · 4챕터</i></small>
                       <small className="dw-sync">동기화 ON — 재생 따라옴</small>
                       <small className="dw-ch">CHAPTER 1 · 신뢰할 수 있는 AI란 무엇인가?</small>
-                      <span className="dw-thumb cur">
-                        <span className="msl">
-                          <b>신뢰할 수 있는 AI 시스템의 설계 원칙</b>
-                          <span className="msl-icons"><i /><i /><i /><i /></span>
-                          <span className="msl-caps"><u>정확성</u><u>견고성</u><u>공정성</u><u>투명성</u></span>
-                        </span>
-                        <i>1</i>
-                      </span>
-                      <span className="dw-thumb">
-                        <span className="msl">
-                          <b>AI 신뢰성의 주요 위험 요인</b>
-                          <span className="msl-venn"><i /><i /><i /></span>
-                        </span>
-                        <i>2</i>
-                      </span>
+                      <span className="dw-thumb cur"><img src="/demo/exs-1.png" alt="" loading="lazy" /></span>
+                      <span className="dw-thumb"><img src="/demo/exs-2.png" alt="" loading="lazy" /></span>
                     </div>
                     <div className="dw-note">
-                      <small className="dw-chlabel">CHAPTER 1 · 1~4페이지</small>
-                      <b>신뢰할 수 있는 AI 시스템의 설계 원칙</b>
-                      <p>신뢰할 수 있는 AI 시스템은 단순히 성능이 높은 모델을 넘어, 다양한 상황에서도 일관되게 안전하고 공정하게 작동하는 것을 의미합니다.</p>
-                      <span className="dw-sum">
-                        <small>★ 핵심 요약</small>
-                        <em><b>정확성:</b> 비즈니스 목표에 부합하는 높은 예측 성능을 달성해야 합니다.</em>
-                        <em><b>견고성:</b> 데이터 변화나 예상치 못한 상황에도 안정적으로 작동해야 합니다.</em>
-                        <em><b>공정성:</b> 모든 사용자 집단에 대해 공정한 결과를 제공해야 합니다.</em>
-                        <em><b>투명성:</b> 모델의 의사결정 과정을 이해하고 설명할 수 있어야 합니다.</em>
-                      </span>
+                      {/* 실제 노트 화면(landingpage ex 크롭) — 제목·핵심 요약·프레임워크 다이어그램 */}
+                      <img className="dw-noteimg" src="/demo/exn-note.png" alt="" loading="lazy" />
                     </div>
                     <div className="dw-ref">
                       <span className="dw-tabs">
                         <i className="on">✦ 요약</i><i>번역</i><i>사진</i><i className="dw-tab-chat">💬 챗봇</i>
                       </span>
-                      <span className="dw-refcard">
-                        <small>CHAPTER 1 · 1~4페이지 <i className="mark">✓ 슬라이드 표시</i></small>
-                        <b>신뢰할 수 있는 AI란 무엇인가?</b>
-                      </span>
+                      {/* 실제 요약 패널(핵심 요약·핵심 개념·한눈에 보기) 크롭 */}
+                      <img className="dw-refimg" src="/demo/exn-ref.png" alt="" loading="lazy" />
                       <span className="dw-chat">
                         <em className="dw-q">견고성과 정확성은 뭐가 다른가요?</em>
                         <em className="dw-a">정확성은 목표 지표에서의 예측 성능이고, 견고성은 데이터가 변하거나 노이즈가 섞여도 일관되게 작동하는 안정성이에요.<i className="dw-cite">S2 · 06:42</i></em>
