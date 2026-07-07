@@ -3,13 +3,10 @@
    인터랙션은 useLandingEffects, 히어로 3D는 Hero3D,
    §2 카드 섹션은 ScrollStack(3장) + 마지막 카드에서 크림 전환.
    ================================================================ */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
 import { useNavigate } from "react-router";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Hero3D from "./Hero3D";
 import ScrollStack, { ScrollStackItem } from "./ScrollStack";
-import TextType from "./TextType";
 import LiveDemo from "./LiveDemo";
 import { useLandingEffects } from "./useLandingEffects";
 import "./landing.css";
@@ -25,25 +22,6 @@ export default function LandingPage() {
     new URLSearchParams(window.location.search).get("demo") === "scrub"
       ? "scrub"
       : "autoplay";
-
-  /* 태그라인 등장 시점(히어로 스크롤 중반)에 TextType 타이핑 시작.
-     sticky 히어로 안이라 startOnVisible은 로드 즉시 발동 → 스크롤 진행도로 게이팅. */
-  const [copyOn, setCopyOn] = useState(false);
-  useEffect(() => {
-    let fired = false;
-    const st = ScrollTrigger.create({
-      trigger: ".hero",
-      start: "top top",
-      end: "bottom bottom",
-      onUpdate: (self) => {
-        if (!fired && self.progress >= 0.86) {
-          fired = true;
-          setCopyOn(true);
-        }
-      },
-    });
-    return () => st.kill();
-  }, []);
 
   /* 내부 링크(/auth, /library, /lecture/…)는 SPA 네비게이션으로 */
   const onRootClick = (e: React.MouseEvent) => {
@@ -125,18 +103,7 @@ export default function LandingPage() {
               <div className="icon-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4-4-8 8"/></svg></div>
               <h3>Images</h3>
             </div>
-            <p className="tagline-copy">
-              {copyOn && (
-                <TextType
-                  as="span"
-                  text="모든 자료를 한 화면에, 간편하게 완성하는 나만의 강의노트"
-                  typingSpeed={55}
-                  loop={false}
-                  showCursor
-                  cursorCharacter="|"
-                />
-              )}
-            </p>
+            <p className="tagline-copy">모든 자료를 한 화면에, 간편하게 완성하는 나만의 강의노트</p>
           </div>
           <button className="scroll-ind" id="scroll-ind"><i>↓</i> Scroll</button>
           {/* 히어로 끝을 walkthrough 다크(#120F17)로 페이드 → 두 섹션 자연 연결 */}
