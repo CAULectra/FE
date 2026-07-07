@@ -267,7 +267,13 @@ export default function LibraryPage() {
             <AlertDialogCancel>취소</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-red-700"
-              onClick={() => { if (deleting) { deleting.status === "ready" || deleting.status === "failed" ? removeLecture(deleting.id) : cancelJob(deleting.id); } setDeleting(null); }}
+              onClick={() => {
+                if (deleting) {
+                  if (deleting.status === "ready" || deleting.status === "failed") removeLecture(deleting.id);
+                  else cancelJob(deleting.id);
+                }
+                setDeleting(null);
+              }}
             >
               삭제
             </AlertDialogAction>
