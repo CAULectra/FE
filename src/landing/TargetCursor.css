@@ -1,0 +1,67 @@
+/* TargetCursor — 커서 시각 스타일. 위치/크기는 TargetCursor.tsx가 GSAP로 제어. */
+
+/* 네이티브 커서 숨김(컴포넌트가 활성일 때만). 링크/버튼의 pointer까지 덮어야 함 */
+html.tc-active,
+html.tc-active * {
+  cursor: none !important;
+}
+
+.target-cursor-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none; /* 커서는 클릭을 가로채지 않는다 */
+}
+
+.tc-frame,
+.tc-dot,
+.tc-label {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* 가운데 점 */
+.tc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tc-color, #b154f9);
+}
+
+/* 4코너 프레임 (평소엔 작은 사각, 락온 시 요소를 감싸도록 커진다) */
+.tc-frame {
+  width: 30px;
+  height: 30px;
+}
+.tc-corner {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--tc-color, #b154f9);
+  transition: width 0.2s ease, height 0.2s ease;
+}
+.tc-corner.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.tc-corner.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+.tc-corner.br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+.tc-corner.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+
+/* 락온 상태: 코너를 조금 키워 "붙잡은" 느낌 */
+.tc-frame.is-locked .tc-corner { width: 15px; height: 15px; }
+
+/* 맥락 라벨 pill — 커서 우하단에 붙는다(margin으로 오프셋) */
+.tc-label {
+  margin: 18px 0 0 18px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--tc-color, #b154f9);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 8px 22px rgba(177, 84, 249, 0.35);
+}
