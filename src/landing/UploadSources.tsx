@@ -40,17 +40,28 @@ const SOURCES = [
   },
 ];
 
+/* 파티클 버스트 궤적 — 각도 지터 + 거리·크기 변주 (터치 피드백) */
+const PARTS = [
+  { a: -8, d: 56, s: 1 }, { a: 38, d: 66, s: 0.7 }, { a: 82, d: 52, s: 0.9 },
+  { a: 128, d: 68, s: 0.65 }, { a: 172, d: 54, s: 1 }, { a: 216, d: 64, s: 0.75 },
+  { a: 262, d: 50, s: 0.9 }, { a: 312, d: 70, s: 0.7 },
+];
+
 export default function UploadSources() {
   const rootRef = useRef<HTMLDivElement>(null);
   /* 아이템별 리플 세대 카운터 — 값이 바뀌면 rings가 key 교체로 리마운트되어 애니메이션 재생 */
   const [bursts, setBursts] = useState<number[]>([0, 0, 0]);
+  /* 클릭 전용 세대 카운터 — 파티클 버스트는 터치했을 때만 (자동 리플엔 없음) */
+  const [clicks, setClicks] = useState<number[]>([0, 0, 0]);
   const [pop, setPop] = useState(-1);
   const visRef = useRef(false);
-  const cycleRef = useRef(0);
 
   const ripple = (i: number, withPop: boolean) => {
     setBursts((b) => b.map((v, k) => (k === i ? v + 1 : v)));
-    if (withPop) setPop(i);
+    if (withPop) {
+      setPop(i);
+      setClicks((c) => c.map((v, k) => (k === i ? v + 1 : v)));
+    }
   };
 
   /* 자동 리플 순환 (화면 안 + 모션 허용 시에만) */
@@ -63,12 +74,13 @@ export default function UploadSources() {
       { threshold: 0.4 },
     );
     io.observe(root);
+    const inner: number[] = [];
     const t = window.setInterval(() => {
       if (!visRef.current) return;
-      ripple(cycleRef.current % SOURCES.length, false);
-      cycleRef.current += 1;
+      // 모든 아이콘에 물방울 — 살짝 스태거로 차례차례 퍼짐
+      SOURCES.forEach((_, i) => inner.push(window.setTimeout(() => ripple(i, false), i * 170)));
     }, 2600);
-    return () => { io.disconnect(); window.clearInterval(t); };
+    return () => { io.disconnect(); window.clearInterval(t); inner.forEach(window.clearTimeout); };
   }, []);
 
   return (
@@ -98,6 +110,13 @@ export default function UploadSources() {
             {bursts[i] > 0 && (
               <span className="us-rings" key={bursts[i]} aria-hidden="true">
                 <i></i><i></i><i></i>
+              </span>
+            )}
+            {clicks[i] > 0 && (
+              <span className="us-parts" key={clicks[i]} aria-hidden="true">
+                {PARTS.map((p, j) => (
+                  <i key={j} style={{ "--pa": `${p.a}deg`, "--pd": `${p.d}px`, "--ps": p.s } as React.CSSProperties}></i>
+                ))}
               </span>
             )}
             <span className="us-icon">{s.icon}</span>
