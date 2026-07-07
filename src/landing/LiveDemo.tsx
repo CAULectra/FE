@@ -161,6 +161,27 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
     const cardZkp = root.querySelector<HTMLElement>(".dlc-ai04");
     const chatTab = root.querySelector<HTMLElement>(".dw-tab-chat");
     const sumTab = root.querySelector<HTMLElement>(".dw-tabs i.on");
+    /* 피날레: 타임라인 점프 — 마커·시간·클릭 세그먼트 갱신 */
+    const timeEl = root.querySelector<HTMLElement>(".dw-time");
+    const marker = root.querySelector<HTMLElement>(".dw-marker");
+    const segEls = Array.from(root.querySelectorAll<HTMLElement>(".dw-segs i"));
+    const jumpTo = () => {
+      if (marker) { marker.style.left = "66%"; marker.textContent = "3-2"; }
+      if (timeEl) timeEl.textContent = "31:07 / 49:18";
+      segEls[9]?.classList.add("on");
+    };
+    const jumpBack = () => {
+      if (marker) { marker.style.left = ""; marker.textContent = "1-1"; }
+      if (timeEl) timeEl.textContent = "06:42 / 49:18";
+      segEls[9]?.classList.remove("on");
+    };
+    /* 칼럼 스크롤 목표: 이미지 하단 끝까지(보이는 높이만큼 빼고) — 빈 여백 없이 최대 점프 */
+    const colShift = () => {
+      const img = root.querySelector<HTMLElement>(".dwc-col img");
+      const shot = root.querySelector<HTMLElement>(".dw-shot");
+      if (!img || !shot) return 0;
+      return -Math.max(0, img.clientHeight - shot.clientHeight - 2);
+    };
 
     /* 앱-로컬(무변환) 좌표: offsetParent 체인을 app까지 누적 */
     const localCenter = (sel: string) => {
@@ -214,6 +235,8 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         chatTab?.classList.remove("on");
         sumTab?.classList.add("on");
         if (chat) gsap.set(chat, { autoAlpha: 0, x: 18 });
+        jumpBack();
+        gsap.set(".dwc-col img", { y: 0 });
       };
       tl = gsap.timeline({
         repeat: -1, repeatDelay: 1.0, repeatRefresh: true, paused: true,
@@ -262,11 +285,16 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
       if (chat) tl.to(chat, { autoAlpha: 1, x: 0, duration: 0.45, ease: "power2.out" }, ">+0.05");
       tl.to({}, { duration: 0.9 }, ">");
 
-      // ⑤ 줌아웃 — 전체 워크스페이스, 커서는 재생 버튼으로 (Ready ✓)
-      tl.to(app, { ...camTo(null, 1), duration: 1.05 }, ">")
-        .to(cursor, { ...curTo(".dw-play", null, 1, 3, 0), duration: 1.05 }, "<")
+      // ⑤ 줌아웃 + 챗 닫기 → 녹음바 뒷부분 클릭 → 슬라이드/노트/요약 3칼럼이
+      //    촤라락(스태거) 스크롤하며 그 시점으로 정렬 점프 — "빰!" (밝기 플래시)
+      tl.to(app, { ...camTo(null, 1), duration: 1.05 }, ">");
+      if (chat) tl.to(chat, { autoAlpha: 0, x: 18, duration: 0.35, ease: "power2.in" }, "<+0.15");
+      tl.to(cursor, { ...curTo(".dw-segs i:nth-child(10)", null, 1, 0, -3), duration: 1.05 }, "<")
         .call(() => press(), undefined, ">")
-        .to({}, { duration: 1.35 }, ">");
+        .call(jumpTo, undefined, ">+0.05")
+        .to(".dwc-col img", { y: colShift, duration: 0.7, ease: "back.out(1.1)", stagger: 0.11 }, ">+0.05")
+        .fromTo(".dwc-col", { filter: "brightness(1.25)" }, { filter: "brightness(1)", duration: 0.55, ease: "power2.out", stagger: 0.11 }, "<+0.3")
+        .to({}, { duration: 1.6 }, ">");
 
       (window as unknown as { __demoTl?: unknown }).__demoTl = tl; // 검증용
     };
@@ -435,7 +463,13 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                     챗봇 탭 클릭 시 우측 패널 영역 전체가 DOM 챗봇 화면으로 전환된다. */}
                 <div className="da-pane dw-work">
                   <div className="dw-shot">
-                    <img className="dw-full" src="/demo/exw-main.png" alt="" loading="lazy" />
+                    {/* ex 화면을 3칼럼(스트립/노트/요약) 세로 슬라이스로 — 합치면 원본과 동일.
+                        피날레에서 칼럼별 스태거 스크롤(촤라락)로 타임라인 점프 정렬을 연출 */}
+                    <span className="dw-cols3" aria-hidden="true">
+                      <span className="dwc-col"><img src="/demo/exwc-1.png" alt="" loading="lazy" /></span>
+                      <span className="dwc-col"><img src="/demo/exwc-2.png" alt="" loading="lazy" /></span>
+                      <span className="dwc-col"><img src="/demo/exwc-3.png" alt="" loading="lazy" /></span>
+                    </span>
                     <i className="dw-note-hot" aria-hidden="true" />
                     <i className="dw-tab-chat" aria-hidden="true" />
                     <div className="dw-chat" aria-hidden="true">

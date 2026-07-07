@@ -236,6 +236,13 @@ html.lenis{height:auto}
 .quote-card .avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:13px;color:var(--ink);flex-shrink:0}
 .quote-card .who span{font-size:14px;font-weight:500;letter-spacing:.2px;color:#fff}
 .quote-card .who small{display:block;font-size:11.5px;font-weight:450;opacity:.62;letter-spacing:.28px;margin-top:1px}
+/* Logo Loop 수직 버전 — 후기 무한 순환 (QuoteLoop.tsx) */
+.quotes-viewport{overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%)}
+.quotes-track{display:flex;flex-direction:column;animation:quotes-loop var(--qd,20s) linear infinite;will-change:transform}
+.quotes-viewport:hover .quotes-track{animation-play-state:paused}
+.quotes-set{display:flex;flex-direction:column;gap:14px;padding-bottom:14px}
+@keyframes quotes-loop{to{transform:translateY(-50%)}}
+@media (prefers-reduced-motion:reduce){.quotes-track{animation:none}}
 
 /* ---------- footer ---------- */
 .landing-footer{background:#fff;color:var(--ink);padding:clamp(48px,7vw,96px) 0 0;text-align:left;overflow:hidden}
@@ -576,7 +583,13 @@ html.lenis{height:auto}
 .dw-work{display:flex;flex-direction:column}
 .dw-shot{position:relative;flex:1;min-height:0;overflow:hidden}
 .dw-shot::before{content:"";display:block;padding-top:calc(872/1416*100%)}
-.dw-full{position:absolute;inset:0;width:100%;height:auto;display:block}
+/* 3칼럼 슬라이스(17.94/57.34/24.72%) — 나란히 두면 원본 스크린샷과 동일 픽셀 */
+.dw-cols3{position:absolute;inset:0;display:flex}
+.dwc-col{position:relative;display:block;height:100%;overflow:hidden}
+.dwc-col:nth-child(1){width:17.94%}
+.dwc-col:nth-child(2){width:57.34%}
+.dwc-col:nth-child(3){width:24.72%}
+.dwc-col img{display:block;width:100%;height:auto;will-change:transform}
 /* 보이지 않는 핫스팟 — 카메라 포커스(.dw-note-hot)·챗봇 탭 클릭 지점(.dw-tab-chat) */
 .dw-note-hot{position:absolute;left:25%;top:30%;width:47%;height:20%;pointer-events:none}
 .dw-tab-chat{position:absolute;left:92.9%;top:7.2%;width:6.4%;height:4.2%;pointer-events:none}
@@ -596,6 +609,7 @@ html.lenis{height:auto}
 .dw-segs{position:relative;flex:1;display:flex;gap:2.5px;align-items:center;min-width:0}
 .dw-segs i{flex:1;height:9px;border-radius:2.5px;background:rgba(255,255,255,.14)}
 .dw-segs i.fill{background:#D8A23A}
+.dw-segs i.on{background:#C2410C;box-shadow:0 0 0 2px rgba(194,65,12,.35)}
 .dw-marker{position:absolute;left:13%;top:-14px;transform:translateX(-50%);background:#C2410C;color:#fff;font-size:6.5px;font-weight:700;border-radius:4px;padding:1px 5px}
 .dw-extra{display:flex;gap:5px;align-items:center;margin-left:4px;flex:0 0 auto}
 .dw-xbtn{font-style:normal;font-size:6.8px;color:#CFC8C0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2.5px 6px;white-space:nowrap}
