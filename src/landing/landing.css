@@ -388,16 +388,17 @@ html.lenis{height:auto}
 .workflow-visual{position:relative;min-height:clamp(340px,52vh,560px);border-radius:22px;overflow:hidden}
 .workflow-card-light .workflow-visual{background:linear-gradient(135deg,#f7f3ec,#ede5db)}
 .workflow-card-dark .workflow-visual{background:radial-gradient(circle at 72% 24%,rgba(247,59,32,.35),transparent 40%),linear-gradient(145deg,#171717,#050505)}
-.workflow-visual.upload-visual{display:grid;place-items:center;background:linear-gradient(135deg,#FFE9D6 0%,#FFDDE9 48%,#E9E2FF 100%);padding:clamp(18px,2.6vw,36px)}
+.workflow-visual.upload-visual{display:grid;place-items:center;background:linear-gradient(135deg,#FFE9D6 0%,#FFDDE9 48%,#E9E2FF 100%);padding:clamp(12px,1.8vw,24px)}
 /* 카드 01 — merged-shape(유기적으로 이어진 라운드 셀 3개) 안에 소스 아이템 + 물방울 리플 */
-.upload-sources{position:relative;width:min(560px,100%);aspect-ratio:522/322;margin:0 auto}
+.upload-sources{position:relative;width:min(660px,100%);aspect-ratio:522/322;margin:0 auto;--rc:247,59,32}
 .us-shape{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 20px 44px rgba(90,45,30,.14))}
-.us-item{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:7px;-webkit-tap-highlight-color:transparent}
+.us-item{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent}
 /* 셀 중심(522×322 viewBox 기준): ①(106,101) ②(266,221) ③(421,131) */
 .us-item.us-c0{left:20.3%;top:31.4%}
 .us-item.us-c1{left:51%;top:68.6%}
 .us-item.us-c2{left:80.6%;top:40.7%}
-.us-iconwrap{position:relative;width:clamp(44px,5vw,60px);height:clamp(44px,5vw,60px);display:grid;place-items:center}
+/* 아이콘 크기는 셰이프 폭에 비례(660px 기준 셀 안에 안착) — 셀 밖 이탈 방지 */
+.us-iconwrap{position:relative;width:clamp(44px,9.5%,62px);height:auto;aspect-ratio:1;display:grid;place-items:center}
 .us-icon{position:relative;z-index:2;width:100%;height:100%;border-radius:50%;background:#fff;display:grid;place-items:center;color:#111;border:1px solid rgba(17,17,17,.08);box-shadow:0 14px 34px rgba(35,18,12,.14);transition:transform .35s var(--ease)}
 .us-icon svg{width:38%;height:38%}
 .us-item:hover .us-icon{transform:translateY(-4px)}
@@ -406,12 +407,11 @@ html.lenis{height:auto}
 @keyframes us-pop{35%{transform:scale(1.12)}100%{transform:scale(1)}}
 .us-rings{position:absolute;inset:0;z-index:1;pointer-events:none}
 .us-rings i{position:absolute;inset:0;border-radius:50%;opacity:0;transform:scale(.6);animation:us-ripple 1.25s cubic-bezier(.22,.61,.36,1) forwards}
-.us-rings i:nth-child(1){background:rgba(247,59,32,.14)}
-.us-rings i:nth-child(2){border:1.5px solid rgba(247,59,32,.5);animation-delay:.16s}
-.us-rings i:nth-child(3){border:1.5px solid rgba(247,59,32,.3);animation-delay:.32s}
+.us-rings i:nth-child(1){background:rgba(var(--rc),.16)}
+.us-rings i:nth-child(2){border:1.5px solid rgba(var(--rc),.55);animation-delay:.16s}
+.us-rings i:nth-child(3){border:1.5px solid rgba(var(--rc),.32);animation-delay:.32s}
 @keyframes us-ripple{0%{opacity:.85;transform:scale(.62)}100%{opacity:0;transform:scale(2.9)}}
-.us-item b{font-size:clamp(11px,1.1vw,13px);font-weight:600;color:#111;letter-spacing:-.01em;white-space:nowrap}
-.us-item small{font-size:clamp(9px,.9vw,10.5px);color:rgba(17,17,17,.48);letter-spacing:.18px;margin-top:-3px;white-space:nowrap}
+.us-item b{font-size:clamp(11.5px,1.25vw,14px);font-weight:600;color:#111;letter-spacing:-.01em;white-space:nowrap}
 .us-item:focus-visible{outline:none}
 .us-item:focus-visible .us-icon{box-shadow:0 0 0 3px rgba(247,59,32,.35),0 14px 34px rgba(35,18,12,.14)}
 @media (prefers-reduced-motion:reduce){.us-rings i{animation:none}.us-item.pop .us-icon{animation:none}}
@@ -560,8 +560,9 @@ html.lenis{height:auto}
 /* ── STEP 1 · 폴더 내 강의 카드 ── */
 .dlc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:clamp(12px,2vw,22px)}
 .dlc{background:#fff;border:1px solid #EAE4DA;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s}
-.dlc-thumb{display:block;height:clamp(50px,7.4vw,80px);background:linear-gradient(135deg,#FBF7F1,#F3EDE4);border-bottom:1px solid #EFE9DF;overflow:hidden}
-.dlc-thumb img{width:100%;height:100%;object-fit:cover;object-position:top;opacity:.96}
+/* 썸네일 = 슬라이드 원본 비율(222×123) 그대로 → 잘림 없이 온전한 미리보기 */
+.dlc-thumb{display:block;aspect-ratio:222/123;background:#fff;border-bottom:1px solid #EFE9DF;overflow:hidden}
+.dlc-thumb img{width:100%;height:100%;object-fit:cover}
 .dlc>b{padding:7px 9px 0;font-size:9.2px;font-weight:700;color:#1F1B16;line-height:1.3}
 .dlc>small{padding:2px 9px 0;font-size:7.4px;color:#8a8078}
 .dlc .chip{margin:6px 9px 9px;align-self:flex-start;font-size:7px;font-weight:700;border-radius:99px;padding:2.5px 7px}
@@ -569,29 +570,22 @@ html.lenis{height:auto}
 .chip-proc{background:#FDF3D7;color:#A16207}
 .dlc.hov,.dlc.hit{transform:translateY(-3px);box-shadow:0 8px 22px rgba(60,40,20,.13);border-color:#C2410C}
 
-/* ── STEP 2 · 스터디 워크스페이스 ── */
+/* ── STEP 2 · 스터디 워크스페이스 — landingpage ex 화면을 통짜 이미지로 그대로 ──
+   .dw-shot = 이미지의 원본 비율(1416×872) 래퍼: %좌표 핫스팟이 양축 모두 정확.
+   pane(overflow:hidden)이 아래를 자연스럽게 자르고, 플레이어는 DOM으로 유지. */
 .dw-work{display:flex;flex-direction:column}
-.dw-cols{flex:1;display:grid;grid-template-columns:.62fr 1.15fr .9fr;min-height:0}
-.dw-strip{border-right:1px solid #EFE9DF;padding:10px;display:flex;flex-direction:column;gap:6px;background:#FAF7F2;min-width:0;overflow:hidden}
-.dw-h{font-size:8.6px;font-weight:700;color:#1F1B16}
-.dw-h i{font-style:normal;font-weight:500;color:#8a8078;margin-left:3px;font-size:7.4px}
-.dw-sync{font-size:7px;color:#B45309;background:#FDF3D7;border-radius:5px;padding:2.5px 6px;align-self:flex-start}
-.dw-ch{font-size:7px;font-weight:700;color:#C2410C;letter-spacing:.04em;margin-top:2px;white-space:nowrap;overflow:hidden}
-.dw-thumb{position:relative;display:block;aspect-ratio:16/9.6;border:1px solid #EAE4DA;border-radius:6px;overflow:hidden;background:#fff}
-.dw-thumb img{display:block;width:100%;height:auto}
-.dw-thumb i{position:absolute;top:3px;left:3px;font-style:normal;background:#3F3A34;color:#fff;font-size:6.5px;font-weight:700;border-radius:4px;padding:1px 4px}
-.dw-thumb.cur{border-color:#C2410C;box-shadow:0 0 0 2px rgba(194,65,12,.18)}
-.dw-note{padding:8px 10px;background:#fff;min-width:0;overflow:hidden;display:flex}
-/* 실제 노트 화면 크롭(landingpage ex) — 칼럼을 가득 채움 */
-.dw-noteimg{width:100%;height:100%;object-fit:cover;object-position:top;border-radius:6px}
-.dw-ref{position:relative;border-left:1px solid #EFE9DF;padding:10px;background:#FAF7F2;display:flex;flex-direction:column;gap:7px;min-width:0;overflow:hidden}
-.dw-refimg{flex:1;min-height:0;width:100%;object-fit:cover;object-position:top;border-radius:8px;border:1px solid #EFE9DF;background:#FAF7F2}
-.dw-tabs{display:flex;gap:3px;background:#EFE9DF;border-radius:7px;padding:2.5px}
-.dw-tabs i{flex:1;text-align:center;font-style:normal;font-size:7.2px;font-weight:600;color:#8a8078;border-radius:5px;padding:3.5px 0;white-space:nowrap;transition:background .3s,color .3s}
-.dw-tabs i.on{background:#fff;color:#1F1B16;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.dw-tabs i.hit{background:#C2410C;color:#fff}
-/* 챗봇 답변 — 요약 패널 위에 뜨는 오버레이(탭 클릭 시 리빌) */
-.dw-chat{position:absolute;left:10px;right:10px;bottom:10px;z-index:3;display:flex;flex-direction:column;gap:5px;background:rgba(250,247,242,.97);border:1px solid #EAE4DA;border-radius:10px;padding:8px;box-shadow:0 12px 30px rgba(35,18,12,.18)}
+.dw-shot{position:relative;flex:1;min-height:0;overflow:hidden}
+.dw-shot::before{content:"";display:block;padding-top:calc(872/1416*100%)}
+.dw-full{position:absolute;inset:0;width:100%;height:auto;display:block}
+/* 보이지 않는 핫스팟 — 카메라 포커스(.dw-note-hot)·챗봇 탭 클릭 지점(.dw-tab-chat) */
+.dw-note-hot{position:absolute;left:25%;top:30%;width:47%;height:20%;pointer-events:none}
+.dw-tab-chat{position:absolute;left:92.9%;top:7.2%;width:6.4%;height:4.2%;pointer-events:none}
+/* 챗봇 화면 — 탭 클릭 시 우측 패널 영역 전체가 이 패널로 전환 */
+.dw-chat{position:absolute;left:75.3%;right:0;top:6.3%;bottom:0;z-index:3;display:flex;flex-direction:column;gap:5px;background:#FAF7F2;border-left:1px solid #EFE9DF;padding:9px 10px;overflow:hidden}
+.dw-chat-h{display:flex;align-items:baseline;gap:5px;font-size:8.6px;font-weight:800;color:#1F1B16;padding-bottom:6px;border-bottom:1px solid #EFE9DF;margin-bottom:3px}
+.dw-chat-h i{font-style:normal;font-weight:500;font-size:6.8px;color:#8a8078}
+.dw-inp{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:6px;background:#fff;border:1px solid #E5DFD6;border-radius:8px;padding:5.5px 8px;font-size:7.4px;color:#A8A29E}
+.dw-inp i{font-style:normal;width:14px;height:14px;flex:0 0 auto;border-radius:50%;background:#C2410C;color:#fff;display:grid;place-items:center;font-size:6.5px}
 .dw-q{align-self:flex-end;font-style:normal;background:#C2410C;color:#fff;border-radius:9px 9px 3px 9px;padding:5.5px 8px;font-size:7.8px;max-width:90%}
 .dw-a{align-self:flex-start;font-style:normal;background:#fff;border:1px solid #EAE4DA;color:#57534E;border-radius:9px 9px 9px 3px;padding:6px 8px;font-size:7.8px;line-height:1.55;max-width:95%}
 .dw-cite{display:inline-block;font-style:normal;margin-left:4px;background:#FBF6EC;border:1px solid #F1E5CB;color:#92400E;border-radius:99px;padding:.5px 6px;font-size:6.6px;font-weight:700}
