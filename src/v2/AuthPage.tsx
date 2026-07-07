@@ -1,26 +1,53 @@
 /* ================================================================
    AuthPage — Google 소셜 로그인 단독 (현 서비스 방침 기준)
-   레이아웃: 테라코타 풀스크린 + 중앙 로그인 카드
-   (구 좌측 "Alignment preview" 비주얼 패널은 휑하고 낯설어 제거)
+   배경: 구 walkthrough 재활용 — 검은 배경(#060504) + DotField(도트 필드)
+   + FloatingLines(네온 라인 웨이브). 중앙에 화이트 로그인 카드.
    ================================================================ */
 import { useNavigate } from "react-router";
 import { ChevronLeft } from "lucide-react";
+import DotField from "../landing/DotField";
+import FloatingLines from "../landing/FloatingLines";
 
 export default function AuthPage() {
   const navigate = useNavigate();
   return (
     <div className="flex min-h-screen bg-background">
-      {/* 테라코타 풀스크린 패널 + 중앙 로그인 카드 */}
-      <div className="relative flex flex-1 items-center justify-center bg-gradient-to-br from-[#C2410C] via-[#B03A0A] to-[#7C2D12] p-8">
-        <div className="absolute left-8 top-7 text-[19px] font-bold tracking-tight text-white">Lectra</div>
+      {/* 다크 풀스크린 패널 + 중앙 로그인 카드 */}
+      <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-[#060504] p-8">
+        {/* 배경 레이어 — 구 워크스루와 동일 설정 */}
+        <div className="absolute inset-0" aria-hidden="true">
+          <DotField
+            dotRadius={1.5}
+            dotSpacing={14}
+            bulgeStrength={67}
+            glowRadius={160}
+            cursorRadius={300}
+            bulgeOnly
+            gradientFrom="#ffffff"
+            gradientTo="#B497CF"
+            glowColor="#120F17"
+          />
+          <FloatingLines
+            enabledWaves={["top", "middle", "bottom"]}
+            lineCount={[8, 8, 8]}
+            lineDistance={[8, 8, 8]}
+            bendRadius={10}
+            bendStrength={-2}
+            interactive
+            parallax
+            animationSpeed={1}
+            linesGradient={["#ed9cf3", "#6f6f6f", "#6a6a6a"]}
+          />
+        </div>
+        <div className="absolute left-8 top-7 z-10 text-[19px] font-bold tracking-tight text-white">Lectra</div>
         <button
           onClick={() => navigate("/")}
-          className="absolute right-6 top-6 flex items-center gap-1 rounded-full border border-white/30 px-3.5 py-1.5 text-[12.5px] font-medium text-white/90 backdrop-blur transition-colors hover:bg-white/10"
+          className="absolute right-6 top-6 z-10 flex items-center gap-1 rounded-full border border-white/30 px-3.5 py-1.5 text-[12.5px] font-medium text-white/90 transition-colors hover:bg-white/10"
         >
           <ChevronLeft size={13} /> Back
         </button>
 
-        <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-[0_24px_48px_rgba(28,25,23,0.25)]">
+        <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-8 shadow-[0_24px_48px_rgba(0,0,0,0.45)]">
           <div className="text-[15px] font-bold tracking-tight text-primary">Lectra</div>
           <h1 className="mt-4 text-[22px] font-bold tracking-tight text-card-foreground">Sign in to Lectra</h1>
           <p className="mt-1 text-[13px] text-muted-foreground">Access your library and lectures</p>
