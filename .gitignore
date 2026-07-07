@@ -33,3 +33,14 @@ dist-ssr
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Temp: 원본 강의 PDF / 스크린샷 등 임시 업로드 (커밋 대상 아님)
+temp/
+
+# Claude Code 로컬 도구 설정 (개인용 — 커밋 안 함)
+.mcp.json
+
+# 로컬 도구 상태 (커밋 제외)
+.omc/
+.bkit/
+src/**/.omc/

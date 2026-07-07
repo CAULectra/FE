@@ -1,0 +1,22 @@
+/* ScrollFloat — 구조 스타일만 담는다.
+   글자 크기·두께·색·정렬·행간은 이 컴포넌트를 감싸는 요소(.giant-lectra 등)에서 상속.
+   그래서 여기서는 font 관련 값을 하드코딩하지 않는다. */
+
+/* .scroll-float은 <h2>라서 전역 @layer base의 h2 폰트 규칙(작은 고정 크기)에 걸린다.
+   폰트 계열을 전부 부모(.giant-lectra 등)에서 상속하도록 되돌려 그 규칙을 무력화한다.
+   (레이어 밖 규칙이라 @layer base보다 우선하고, .scroll-float가 h2보다 명시도도 높다) */
+.scroll-float {
+  font: inherit;
+  letter-spacing: inherit;
+  margin: 0;
+}
+
+.scroll-float-text {
+  display: block;
+}
+
+/* 글자별 transform이 먹으려면 inline-block 필수 */
+.scroll-float .char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
