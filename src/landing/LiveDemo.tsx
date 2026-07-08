@@ -143,7 +143,12 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
           scrollTrigger: { trigger: lead, start: "top 80%", end: "top 46%", scrub: true },
         })
       : null;
-    /* 스테이지는 항상 원크기 고정 — 축소/인플레이트 없음 (사용자 요청: 클릭시 확대만) */
+    /* 파스텔 스테이지 인플레이트 — 스크롤 진입 시 0.62 → 1로 확장(패널이 커지며 등장).
+       내부 앱 창의 카메라 연출과는 무관(그쪽은 클릭시 확대만 유지) */
+    const stageSettle = gsap.fromTo(stage, { scale: 0.62 }, {
+      scale: 1, ease: "none", transformOrigin: "50% 0%",
+      scrollTrigger: { trigger: stage, start: "top 96%", end: "top 22%", scrub: true },
+    });
 
     /* ── 시네마틱 카메라 리그 ──────────────────────────────────
        카메라 = .demo-app 전체(크롬 포함)를 origin(0,0) 기준 scale+translate.
@@ -205,6 +210,17 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
       x: () => { const c = camFor(camSel, z); return app.offsetLeft + c.x + c.z * localCenter(tSel).x + dx - HOT.x; },
       y: () => { const c = camFor(camSel, z); return app.offsetTop + c.y + c.z * localCenter(tSel).y + dy - HOT.y; },
     });
+    /* 상단 고정 카메라 — 앱의 y=0(상단바)을 스테이지 상단 pad에 핀.
+       스테이지 높이(뷰포트)와 무관하게 상단(노트 내보내기)이 절대 잘리지 않음 */
+    const camTopTo = (xSel: string, z: number, pad = 10) => ({
+      scale: z,
+      x: () => camFor(xSel, z).x,
+      y: () => pad - app.offsetTop,
+    });
+    const curTopTo = (tSel: string, xSel: string, z: number, pad = 10, dx = 0, dy = 0) => ({
+      x: () => app.offsetLeft + camFor(xSel, z).x + z * localCenter(tSel).x + dx - HOT.x,
+      y: () => pad + z * localCenter(tSel).y + dy - HOT.y,
+    });
     /* 손 커서 press 제스처(손끝 기준 눌림) + 대상 hit */
     const press = (hitSel?: string) => {
       gsap.timeline()
@@ -261,18 +277,19 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
         .to({}, { duration: 0.35 }, ">")
         .call(() => press(".dlc-ai04"), undefined, ">");
 
-      // ③ 워크스페이스로 전환 — 축소 없이 노트로 팬 + 살짝 확대
+      // ③ 워크스페이스로 전환 — 줌아웃으로 전체 프레임을 한눈에 (내보내기·탭줄·플레이어 모두 노출)
       tl.call(() => setStep(2), undefined, ">+0.25")
-        .to(app, { ...camTo(".dw-note-hot", 1.45), duration: 1.0 }, "<+0.1")
-        .to(cursor, { ...curTo(".dw-note-hot", ".dw-note-hot", 1.45, 40, 30), duration: 1.0 }, "<")
-        .to({}, { duration: 0.45 }, ">");
+        .to(app, { ...camTo(null, 1), duration: 1.0 }, "<+0.1")
+        .to(cursor, { ...curTo(".dw-tab-chat", null, 1, -46, 26), duration: 1.0 }, "<")
+        .to({}, { duration: 0.9 }, ">");
 
-      // ④ 레퍼런스 패널로 팬 — 챗봇 탭 클릭 → 우측 패널 전체가 챗봇 화면으로 전환 (RAG)
-      tl.to(app, { ...camTo(".dw-chat", 1.45), duration: 1.0 }, ">")
-        .to(cursor, { ...curTo(".dw-tab-chat", ".dw-chat", 1.45), duration: 1.0 }, "<")
+      // ④ 챗봇 탭 클릭(전체 뷰에서) → 확대되며 우측 패널이 챗봇 화면으로 전환 (RAG)
+      tl.to(cursor, { ...curTo(".dw-tab-chat", null, 1), duration: 0.45 }, ">")
         .call(() => press(".dw-tab-chat"), undefined, ">")
-        .call(() => { sumTab?.classList.remove("on"); chatTab?.classList.add("on"); }, undefined, ">+0.1");
-      if (chat) tl.to(chat, { autoAlpha: 1, x: 0, duration: 0.45, ease: "power2.out" }, ">+0.05");
+        .call(() => { sumTab?.classList.remove("on"); chatTab?.classList.add("on"); }, undefined, ">+0.1")
+        .to(app, { ...camTopTo(".dw-cam-chat", 1.2), duration: 0.9 }, ">+0.05")
+        .to(cursor, { ...curTopTo(".dw-tab-chat", ".dw-cam-chat", 1.2), duration: 0.9 }, "<");
+      if (chat) tl.to(chat, { autoAlpha: 1, x: 0, duration: 0.45, ease: "power2.out" }, "<+0.25");
       tl.to({}, { duration: 0.9 }, ">");
 
       // ⑤ 줌아웃 + 챗 닫기 → 녹음바 뒷부분 클릭 → 슬라이드/노트/요약 3칼럼이
@@ -308,6 +325,7 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
       window.removeEventListener("resize", onResize); window.clearTimeout(rt);
       st.kill(); tl?.kill();
       leadFade?.scrollTrigger?.kill(); leadFade?.kill();
+      stageSettle.scrollTrigger?.kill(); stageSettle.kill();
       gsap.set([app, cursor, ...(chat ? [chat] : [])], { clearProps: "all" });
     };
   }, [mode]);
@@ -479,7 +497,13 @@ export default function LiveDemo({ mode = "autoplay" }: { mode?: "scrub" | "auto
                     </span>
                     <i className="dw-note-hot" aria-hidden="true" />
                     <i className="dw-tab-chat" aria-hidden="true" />
+                    {/* 챗 비트 카메라 앵커(1px) — 상단바(노트 내보내기)까지 프레임에 들어오는 조준점 */}
+                    <i className="dw-cam-chat" aria-hidden="true" />
                     <div className="dw-chat" aria-hidden="true">
+                      {/* 패널이 우측 칼럼 전체(탭줄 포함)를 덮고 탭줄을 직접 그림 — 이미지와의 정렬 오차 원천 차단 */}
+                      <span className="dw-chat-tabs">
+                        <i>☆ 요약</i><i>⇄ 번역</i><i>🖼 사진</i><i className="on">💬 챗봇</i>
+                      </span>
                       <b className="dw-chat-h">💬 챗봇<i>이 강의 자료에서만 답해요</i></b>
                       <span className="dw-q">견고성과 정확성은 뭐가 다른가요?</span>
                       <span className="dw-a">정확성은 목표 지표에서의 예측 성능이고, 견고성은 데이터가 변하거나 노이즈가 섞여도 일관되게 작동하는 안정성이에요.<i className="dw-cite">S2 · 06:42</i></span>
