@@ -8,10 +8,10 @@ import { useEffect, useRef, useState } from "react";
 const HERO_SCENE_URL = "https://my.spline.design/radialglass-bXeLwUVIhfJGztLAHWeVpwLi/";
 const HERO_ORIGIN = "https://my.spline.design";
 
-const RES = 0.6;                       // 내부 해상도 60% (0.48은 씬 카메라가 확대돼 보여 원복)
+const RES = 0.73;                      // 내부 해상도 — 씬 카메라가 캔버스 크기에 반응: 값을 올리면 프레이밍이 물러나 디스크가 작아 보임(0.48=과확대, 0.6=기존, 0.65=크게 느껴짐). 값이 커질수록 초기 렌더가 무거워 등장이 살짝 느려지는 트레이드오프
 const OVER_X = 0.045, OVER_Y = 0.11;   // 가장자리 오버스캔(외곽 여백 제거)
-const LOAD_DELAY_MS = 120;             // 첫 페인트 직후 바로 로드 시작 (폴백 노출 최소화)
-const FADE_DELAY_MS = 100;             // 씬이 한 프레임 렌더된 뒤 페이드(팝업 방지)
+const LOAD_DELAY_MS = 0;               // 즉시 로드 시작 (폴백 노출 최소화)
+const FADE_DELAY_MS = 60;              // 로드 직후 거의 즉시 페이드 시작(빠릿한 등장 우선). warmup 안 함 — 첫 프레임 약간의 버벅임은 감수하고 속도 우선
 
 type IdleWindow = {
   requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
@@ -65,7 +65,7 @@ export default function Hero3D() {
     loadTimerRef.current = window.setTimeout(() => {
       idleRef.current = requestIdle(() => {
         setSrc(HERO_SCENE_URL);
-      }, 450);
+      }, 120);
     }, LOAD_DELAY_MS);
 
     return () => {
@@ -93,13 +93,16 @@ export default function Hero3D() {
     }, FADE_DELAY_MS);
   };
 
-  /* 3D 씬이 뜨면 폴백 블롭(blur 90px ×3)을 꺼서 매 프레임 합성 비용 제거.
-     (loaded state 기반 effect — 타이머/StrictMode 경합에도 확실히 반영) */
+  /* 3D 씬이 뜨면 폴백 블롭(blur 90px ×3 · soft-light)을 꺼서 매 프레임 합성 비용 제거.
+     빠른 등장 우선이라 페이드(0.3s)에 맞춰 300ms에 조기 제거 — 무거운 합성 구간 최소화. */
   useEffect(() => {
     if (!loaded) return;
     const bg = document.querySelector(".hero-bg");
-    bg?.classList.add("scene-on");
-    return () => bg?.classList.remove("scene-on");
+    const t = window.setTimeout(() => bg?.classList.add("scene-on"), 300);
+    return () => {
+      window.clearTimeout(t);
+      bg?.classList.remove("scene-on");
+    };
   }, [loaded]);
 
   return (
@@ -120,8 +123,10 @@ export default function Hero3D() {
             transformOrigin: "0 0",
             border: 0,
             opacity: loaded ? 1 : 0,
-            transition: "opacity 0.85s cubic-bezier(0.4,0,0.2,1)",
-            willChange: "opacity, transform",
+            /* transform은 정적(1/RES 고정) — 무거운 WebGL 캔버스에 scale 애니메이션 금지.
+               빠르되 갑작스럽지 않게 — 짧은 지연 + 시작이 부드러운 ease-in-out opacity 페이드 */
+            transition: "opacity 0.42s cubic-bezier(0.4,0,0.2,1)",
+            willChange: "opacity",
           }}
         />
       ) : null}
