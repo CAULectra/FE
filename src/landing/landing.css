@@ -126,16 +126,16 @@ html.lenis{height:auto}
 .hero-aside{position:absolute;right:clamp(20px,5vw,80px);bottom:clamp(140px,26vh,260px);color:#fff;max-width:360px;z-index:4}
 .hero-aside .app-badges{margin-top:0;flex-direction:column;align-items:flex-start;gap:12px;display:flex}
 /* taglines phase */
-.taglines{grid-area:1/1;position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(22px,4.4vh,58px);opacity:0;pointer-events:none;color:#fff;will-change:opacity,transform}
+.taglines{grid-area:1/1;position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(18px,3.4vh,44px);opacity:0;pointer-events:none;color:#fff;will-change:opacity,transform}
 .tagline{display:flex;gap:clamp(18px,2.4vw,32px);align-items:center}
-.tagline .icon-card{width:clamp(60px,8vw,116px);height:clamp(60px,8vw,116px);border-radius:26px;display:grid;place-items:center;color:#fff;box-shadow:var(--sh-lg)}
+.tagline .icon-card{width:clamp(48px,6vw,88px);height:clamp(48px,6vw,88px);border-radius:20px;display:grid;place-items:center;color:#fff;box-shadow:var(--sh-lg)}
 .tagline .icon-card svg{width:52%;height:52%}
-.tagline h3{font-family:'SUIT','Pretendard Variable',Pretendard,sans-serif;font-size:clamp(48px,8.6vw,120px);line-height:1;font-weight:500;letter-spacing:.01em}
+.tagline h3{font-family:'SUIT','Pretendard Variable',Pretendard,sans-serif;font-size:clamp(36px,6vw,84px);line-height:1;font-weight:500;letter-spacing:.01em}
 .tagline.tl-slides .icon-card{background:var(--emerald)}
 .tagline.tl-audio .icon-card{background:var(--cobalt)}
 .tagline.tl-images .icon-card{background:var(--coral)}
 /* §1.4 태그라인 아래 큰 TextType 카피 (조금 더 간격) */
-.tagline-copy{margin-top:clamp(72px,12vh,150px);min-height:1.5em;max-width:min(94vw,1080px);font-size:clamp(30px,4.2vw,66px);font-weight:500;line-height:1.3;letter-spacing:.1px;color:#fff;text-align:center;text-shadow:0 2px 30px rgba(0,0,0,.55)}
+.tagline-copy{margin-top:clamp(44px,7vh,96px);min-height:1.5em;max-width:min(94vw,1080px);font-size:clamp(24px,3vw,48px);font-weight:500;line-height:1.3;letter-spacing:.1px;color:#fff;text-align:center;text-shadow:0 2px 30px rgba(0,0,0,.55)}
 @media (max-width:640px){.tagline-copy{font-size:clamp(18px,5.4vw,26px);margin-top:18px}}
 /* scroll indicator */
 .scroll-ind{position:absolute;left:28px;bottom:26px;display:inline-flex;align-items:center;gap:9px;font-size:14px;letter-spacing:.42px;color:#fff;z-index:6;padding:13px 22px;border-radius:9999px;background:rgba(30,22,30,.4);border:1px solid rgba(255,255,255,.25)}
