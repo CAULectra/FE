@@ -11,6 +11,7 @@ import {
 import { useApp } from "./store";
 import { STUDY_ZK } from "./data";
 import AuthModal from "./AuthModal";
+import type { LoginUser } from "../api";
 
 /** 공통 행 스타일 — hover/선택 시 얇은 박스 */
 const row = (active: boolean) =>
@@ -25,7 +26,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export default function AppShell() {
-  const { folders, lectures, authed, login, favorites } = useApp();
+  const { folders, lectures, authed, user, login, favorites } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -69,7 +70,7 @@ export default function AppShell() {
     else navigate("/library?upload=1");
   };
   const closeAuth = () => { searchParams.delete("auth"); setSearchParams(searchParams, { replace: true }); };
-  const onLogin = () => { login(); searchParams.delete("auth"); setSearchParams(searchParams, { replace: true }); };
+  const onLogin = (u?: LoginUser | null) => { login(u); searchParams.delete("auth"); setSearchParams(searchParams, { replace: true }); };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -191,9 +192,13 @@ export default function AppShell() {
           </button>
           {authed ? (
             <div className="mt-1.5 flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#F59E0B] to-primary text-[11px] font-bold text-white">F</div>
+              <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#F59E0B] to-primary text-[11px] font-bold text-white">
+                {user?.profile_image
+                  ? <img src={user.profile_image} alt="" className="h-full w-full object-cover" />
+                  : (user?.name?.[0] ?? user?.email?.[0] ?? "U").toUpperCase()}
+              </div>
               <div className="min-w-0">
-                <div className="truncate text-[12px] font-medium text-white/90">focustation</div>
+                <div className="truncate text-[12px] font-medium text-white/90">{user?.name ?? user?.email ?? "사용자"}</div>
                 <div className="text-[10.5px] text-white/40">Free plan</div>
               </div>
             </div>

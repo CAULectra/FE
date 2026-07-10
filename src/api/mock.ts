@@ -38,7 +38,7 @@ export const mockApi: LectraApi = {
     await delay(400);
     return {
       access_token: "mock-jwt-" + Date.now(),
-      user: { id: 1, name: "김학생", email: "student@univ.ac.kr" },
+      user: { id: "1", name: "김학생", email: "student@univ.ac.kr" },
     };
   },
   async uploadPdf(_title, _pdf) {
