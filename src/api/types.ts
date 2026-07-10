@@ -50,10 +50,10 @@ export interface StartAnalysisResponse {
 }
 
 export interface LoginUser {
-  id?: number;
+  id?: string;            // 백엔드 UserOut.id 는 문자열
   name?: string;
   email?: string;
-  profile_image?: string;
+  profile_image?: string | null;
 }
 
 // POST /auth/login/google — 확정 응답 형태
