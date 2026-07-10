@@ -12,12 +12,23 @@
    ================================================================ */
 import type { Citation, QAMessage, StudyData } from "./types";
 import { getStudyData } from "./data";
+import { USE_MOCK, api as backend } from "../api";
+import { resultDictToStudyData } from "./studyAdapter";
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export async function fetchStudyData(lectureId: string): Promise<StudyData> {
-  await delay(150);
-  return getStudyData(lectureId);
+  // 목업 모드: 로컬 데모 데이터(STUDY_ZK 등)
+  if (USE_MOCK) {
+    await delay(150);
+    return getStudyData(lectureId);
+  }
+  // 실서버: GET /lectures/{id} → result(ResultDict) → StudyData
+  const detail = await backend.getLecture(lectureId);
+  if (!detail.result) {
+    throw new Error(detail.status === "완료" ? "강의 결과가 비어 있습니다." : "아직 처리 중인 강의입니다.");
+  }
+  return resultDictToStudyData(detail.result, lectureId);
 }
 
 /** RAG Q&A — 답변에는 항상 근거 인용(slide, t)이 붙는다 (환각 방지 정책) */
