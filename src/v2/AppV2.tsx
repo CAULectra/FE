@@ -11,10 +11,12 @@ import { AppProvider } from "./store";
 import AppShell from "./AppShell";
 import AuthPage from "./AuthPage";
 import LibraryPage from "./LibraryPage";
+import WorkspacePage from "./WorkspacePage";
 
 /* 무거운 leaf 라우트는 지연 로드 → 초기 번들에서 three.js/katex 분리 */
 const LandingPage = lazy(() => import("../landing/LandingPage"));
 const LecturePage = lazy(() => import("./LecturePage"));
+const NoteMarkdownDemo = lazy(() => import("./NoteMarkdownDemo"));
 
 /* 랜딩 폴백: 히어로 배경 그라데이션과 동일 색이라 청크 로드 중 흰 플래시 없음 */
 const HeroFallback = () => (
@@ -41,8 +43,13 @@ export default function AppV2() {
             element={<Suspense fallback={<HeroFallback />}><LandingPage /></Suspense>}
           />
           <Route path="/auth" element={<AuthPage />} />
+          <Route
+            path="/note"
+            element={<Suspense fallback={<PageFallback />}><NoteMarkdownDemo /></Suspense>}
+          />
           <Route element={<AppShell />}>
             <Route path="/library" element={<LibraryPage />} />
+            <Route path="/workspace" element={<WorkspacePage />} />
             <Route
               path="/lecture/:id"
               element={<Suspense fallback={<PageFallback />}><LecturePage /></Suspense>}

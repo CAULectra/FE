@@ -4,14 +4,15 @@
    모든 행 = 아이콘+라벨, hover·선택 시 얇은 박스(보더)로 표시
    ================================================================ */
 import { useMemo, useState } from "react";
-import { Outlet, useLocation, useNavigate, useParams } from "react-router";
+import { Outlet, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import {
-  ChevronDown, ChevronRight, FileText, Folder as FolderIcon,
+  Activity, ChevronDown, ChevronRight, FileText, Folder as FolderIcon,
   LayoutGrid, Plus, Search, Settings, X,
 } from "lucide-react";
 import { useApp } from "./store";
 import { STUDY_ZK } from "./data";
 import type { Lecture } from "./types";
+import AuthModal from "./AuthModal";
 
 /** 공통 행 스타일 — hover/선택 시 얇은 박스 */
 const row = (active: boolean) =>
@@ -46,11 +47,17 @@ function LectureRow({ lec, active, onClick }: { lec: Lecture; active: boolean; o
 }
 
 export default function AppShell() {
-  const { folders, lectures } = useApp();
+  const { folders, lectures, authed, login } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
   const activeLectureId = params.id;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const authOpen = searchParams.get("auth") === "1";
+  /* 게스트는 사이드바(폴더/최근/검색)도 비어 보인다 */
+  const visFolders = authed ? folders : [];
+  const visLectures = authed ? lectures : [];
+  const processingCount = visLectures.filter((l) => l.status === "processing" || l.status === "queued" || l.status === "uploading").length;
 
   const [open, setOpen] = useState<Record<string, boolean>>({ is: true });
   const [query, setQuery] = useState("");
@@ -59,14 +66,14 @@ export default function AppShell() {
   const onLibraryRoot = location.pathname === "/library" && !currentFolder;
 
   const recent = useMemo(
-    () => [...lectures].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt)).slice(0, 3),
-    [lectures],
+    () => (authed ? [...lectures].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt)).slice(0, 3) : []),
+    [authed, lectures],
   );
 
   /* 검색: 제목 매칭 + 본문(스크립트) 매칭 → S# 위치로 진입 */
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return null;
+    if (!q || !authed) return null;
     const byTitle = lectures.filter((l) => l.title.toLowerCase().includes(q));
     const byBody = STUDY_ZK.script
       .filter((s) => s.text.toLowerCase().includes(q))
@@ -74,12 +81,21 @@ export default function AppShell() {
       .map((s) => ({ sentence: s, lecture: lectures.find((l) => l.id === "w10")! }))
       .filter((r) => r.lecture);
     return { byTitle, byBody };
-  }, [query, lectures]);
+  }, [query, lectures, authed]);
 
   const gotoFolder = (folderId: string | null) => {
     setQuery("");
     navigate(folderId ? `/library?folder=${folderId}` : "/library");
   };
+
+  /* New lecture — 게스트면 로그인/회원가입 창부터 (업로드 인증 게이트) */
+  const onNewLecture = () => {
+    if (!authed) { searchParams.set("auth", "1"); setSearchParams(searchParams); return; }
+    if (location.pathname.startsWith("/library")) { searchParams.set("upload", "1"); setSearchParams(searchParams); }
+    else navigate("/library?upload=1");
+  };
+  const closeAuth = () => { searchParams.delete("auth"); setSearchParams(searchParams, { replace: true }); };
+  const onLogin = () => { login(); searchParams.delete("auth"); setSearchParams(searchParams, { replace: true }); };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -95,7 +111,7 @@ export default function AppShell() {
         {/* 주 액션 */}
         <div className="px-3 pt-1">
           <button
-            onClick={() => navigate(`${location.pathname.startsWith("/library") ? location.pathname + location.search : "/library"}${location.search.includes("upload") ? "" : (location.search ? "&" : "?") + "upload=1"}`)}
+            onClick={onNewLecture}
             className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-[13px] font-semibold text-white transition-colors hover:bg-[#9A3412]"
           >
             <Plus size={15} strokeWidth={2.5} /> New lecture
@@ -163,8 +179,15 @@ export default function AppShell() {
           <SectionLabel>메뉴</SectionLabel>
           <button onClick={() => gotoFolder(null)} className={row(onLibraryRoot)}>
             <LayoutGrid size={14} className="shrink-0" />
-            <span className="flex-1 font-medium">전체 강의</span>
-            <span className="text-[11px] tabular-nums opacity-55">{lectures.length}</span>
+            <span className="flex-1 font-medium">라이브러리</span>
+            <span className="text-[11px] tabular-nums opacity-55">{visLectures.length}</span>
+          </button>
+          <button onClick={() => navigate("/workspace")} className={`${row(location.pathname === "/workspace")} mt-0.5`}>
+            <Activity size={14} className="shrink-0" />
+            <span className="flex-1 font-medium">워크스페이스</span>
+            {processingCount > 0 && (
+              <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">{processingCount}</span>
+            )}
           </button>
 
           {/* 최근 */}
@@ -178,8 +201,8 @@ export default function AppShell() {
           {/* 과목 (폴더 트리) */}
           <SectionLabel>과목</SectionLabel>
           <div className="space-y-0.5">
-            {folders.map((f) => {
-              const inFolder = lectures.filter((l) => l.folderId === f.id);
+            {visFolders.map((f) => {
+              const inFolder = visLectures.filter((l) => l.folderId === f.id);
               const expanded = !!open[f.id];
               const isActive = currentFolder === f.id;
               return (
@@ -216,13 +239,22 @@ export default function AppShell() {
           <button className={row(false)}>
             <Settings size={13} className="shrink-0" /> 설정
           </button>
-          <div className="mt-1.5 flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#F59E0B] to-primary text-[11px] font-bold text-white">F</div>
-            <div className="min-w-0">
-              <div className="truncate text-[12px] font-medium text-white/90">focustation</div>
-              <div className="text-[10.5px] text-white/40">Free plan</div>
+          {authed ? (
+            <div className="mt-1.5 flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#F59E0B] to-primary text-[11px] font-bold text-white">F</div>
+              <div className="min-w-0">
+                <div className="truncate text-[12px] font-medium text-white/90">focustation</div>
+                <div className="text-[10.5px] text-white/40">Free plan</div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <button
+              onClick={() => { searchParams.set("auth", "1"); setSearchParams(searchParams); }}
+              className="mt-1.5 flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-2 text-[12px] font-semibold text-white/90 transition-colors hover:bg-white/[0.1]"
+            >
+              로그인 / 회원가입
+            </button>
+          )}
         </div>
       </aside>
 
@@ -230,6 +262,9 @@ export default function AppShell() {
       <main className="ws-scroll relative flex-1 overflow-y-auto">
         <Outlet />
       </main>
+
+      {/* 인증 필요 액션(업로드)에서 뜨는 로그인/회원가입 창 */}
+      {authOpen && <AuthModal onClose={closeAuth} onLogin={onLogin} />}
     </div>
   );
 }

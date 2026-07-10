@@ -36,6 +36,9 @@ interface AppStore {
   moveLecture: (id: string, folderId: string) => void;
   retryLecture: (id: string) => void;              // failed → 재실행
   cancelJob: (id: string) => void;                 // processing/queued 취소(삭제)
+  /* 게스트/인증 — 게스트는 라이브러리가 비어 보이고, 업로드 시 로그인 유도 */
+  authed: boolean;
+  login: () => void;
 }
 
 const Ctx = createContext<AppStore | null>(null);
@@ -43,6 +46,8 @@ const Ctx = createContext<AppStore | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [folders, setFolders] = useState<Folder[]>(SEED_FOLDERS);
   const [lectures, setLectures] = useState<Lecture[]>(SEED_LECTURES);
+  const [authed, setAuthed] = useState(false);          // 게스트로 시작 (시작하기 → 빈 화면)
+  const login = useCallback(() => setAuthed(true), []); // 목업 로그인 → 데모 자료 노출
 
   /* ---- 처리 파이프라인 ticker ---- */
   useEffect(() => {
@@ -143,10 +148,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AppStore>(() => ({
-    folders, lectures,
+    folders, lectures, authed, login,
     addFolder, renameFolder, removeFolder,
     addLecture, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob,
-  }), [folders, lectures, addFolder, renameFolder, removeFolder, addLecture, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
+  }), [folders, lectures, authed, login, addFolder, renameFolder, removeFolder, addLecture, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
