@@ -8,7 +8,6 @@ import { useNavigate } from "react-router";
 import Hero3D from "./Hero3D";
 import ScrollStack, { ScrollStackItem } from "./ScrollStack";
 import LiveDemo from "./LiveDemo";
-import LandingDock from "./LandingDock";
 import UploadSources from "./UploadSources";
 import AlignMap from "./AlignMap";
 import QuoteLoop from "./QuoteLoop";
@@ -40,11 +39,6 @@ export default function LandingPage() {
 
   return (
     <div ref={rootRef} className="landing-root" onClick={onRootClick}>
-      
-      
-      {/* ================= BOTTOM DOCK NAV =================
-          모양은 기존 그대로, 스프링 magnification만 이식 (LandingDock.tsx) */}
-      <LandingDock />
       <a className="support-pill" href="mailto:focustationcapstone@gmail.com">💬 Support</a>
       
       <main id="top">
@@ -61,18 +55,13 @@ export default function LandingPage() {
             <a className="logo" href="#top">Lectra</a>
             <div className="nav-right">
               <button className="lang-btn">🌐 KO <span style={{fontSize: '9px', opacity: '.7'} as React.CSSProperties}>▼</span></button>
+              <a className="nav-cta" href="/library">시작하기</a>
             </div>
           </div>
           <div className="stage">
             <h1 className="hero-title t-display" id="hero-title">Lectra</h1>
             {/* 히어로 카피 2줄째 — 대형 Lectra 바로 아래 */}
             <p className="hero-sub">All your materials,<br />in one clear workspace.</p>
-            <aside className="hero-aside">
-              <div className="app-badges">
-                <a className="_app-button" href="/auth"><span className="outline"></span><span><small>무료로 시작하기</small><b>Sign up</b></span></a>
-                <a className="_app-button" href="/auth"><span className="outline"></span><span><small>이미 계정이 있어요</small><b>Log in</b></span></a>
-              </div>
-            </aside>
           </div>
           <div className="taglines" id="taglines">
             <div className="tagline tl-slides">
