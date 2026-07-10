@@ -9,8 +9,9 @@ import Lenis from "lenis";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
+export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>, enabled = true) {
   useEffect(() => {
+    if (!enabled) return;
     const root = rootRef.current;
     if (!root) return;
 
@@ -147,5 +148,5 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>) {
       lenis.destroy();
       ctx.revert(); // 모든 트윈/ScrollTrigger 해제
     };
-  }, [rootRef]);
+  }, [rootRef, enabled]);
 }
