@@ -12,6 +12,7 @@ import AppShell from "./AppShell";
 import AuthPage from "./AuthPage";
 import LibraryPage from "./LibraryPage";
 import WorkspacePage from "./WorkspacePage";
+import FavoritesPage from "./FavoritesPage";
 
 /* 무거운 leaf 라우트는 지연 로드 → 초기 번들에서 three.js/katex 분리 */
 const LandingPage = lazy(() => import("../landing/LandingPage"));
@@ -50,6 +51,7 @@ export default function AppV2() {
           <Route element={<AppShell />}>
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/workspace" element={<WorkspacePage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
             <Route
               path="/lecture/:id"
               element={<Suspense fallback={<PageFallback />}><LecturePage /></Suspense>}

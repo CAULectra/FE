@@ -5,7 +5,7 @@
    ================================================================ */
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { ArrowUpDown, ChevronLeft, FolderOpen, MoreHorizontal, Plus, RotateCcw, Upload } from "lucide-react";
+import { ArrowUpDown, ChevronLeft, FolderOpen, MoreHorizontal, Plus, RotateCcw, Star, Upload } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
@@ -71,7 +71,7 @@ function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; le
 }
 
 export default function LibraryPage() {
-  const { folders, lectures, authed, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob } = useApp();
+  const { folders, lectures, authed, favorites, toggleFavorite, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob } = useApp();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const folderId = searchParams.get("folder");
@@ -222,8 +222,8 @@ export default function LibraryPage() {
           {shown.map((lec) => (
             <div
               key={lec.id}
-              onClick={() => navigate(`/lecture/${lec.id}`)}
-              className="card-lift group cursor-pointer overflow-hidden rounded-xl border border-border bg-card"
+              onClick={() => { if (lec.status === "ready") navigate(`/lecture/${lec.id}`); }}
+              className={`card-lift group overflow-hidden rounded-xl border border-border bg-card ${lec.status === "ready" ? "cursor-pointer" : "cursor-default"}`}
             >
               {/* 썸네일: 해당 강의 첫 슬라이드 렌더 (없으면 플레이스홀더) */}
               <div className="relative h-36 overflow-hidden border-b border-border bg-gradient-to-br from-[#FBF7F1] to-[#F3EDE4]">
@@ -232,6 +232,11 @@ export default function LibraryPage() {
                     src={`/slides/${lec.id.startsWith("bt") ? "bt" : lec.id.startsWith("cn") ? "cn" : "zk"}/p1.png`}
                     alt="" className="h-full w-full object-cover object-top opacity-90" loading="lazy"
                   />
+                )}
+                {favorites.includes(lec.id) && (
+                  <span className="absolute right-2 top-2 rounded-full bg-white/90 p-1 text-[var(--ember)] shadow-sm">
+                    <Star size={13} fill="currentColor" />
+                  </span>
                 )}
               </div>
               <div className="p-4">
@@ -245,7 +250,11 @@ export default function LibraryPage() {
                       <MoreHorizontal size={16} />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenuItem onClick={() => navigate(`/lecture/${lec.id}`)}>열기</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/lecture/${lec.id}`)} disabled={lec.status !== "ready"}>열기</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toggleFavorite(lec.id)}>
+                        <Star size={13} className="mr-1" fill={favorites.includes(lec.id) ? "currentColor" : "none"} />
+                        {favorites.includes(lec.id) ? "즐겨찾기 해제" : "즐겨찾기 추가"}
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setRenaming(lec); setRenameValue(lec.title); }}>이름 변경</DropdownMenuItem>
                       <DropdownMenuSub>
                         <DropdownMenuSubTrigger>다른 폴더로 이동</DropdownMenuSubTrigger>
