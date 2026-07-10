@@ -18,6 +18,8 @@ export const SEED_FOLDERS: Folder[] = [
 ];
 
 export const SEED_LECTURES: Lecture[] = [
+  /* 워크스페이스 진행바 확인용 데모 — ticker가 완료시키지 않고 진행을 순환(store.tsx DEMO_LIVE_ID) */
+  { id: "demo-live", title: "실시간 처리 데모 (진행바 확인용)", folderId: "is", uploadedAt: "2026-07-10", updatedLabel: "Jul 10", status: "processing", progress: 12, stepIndex: 1, etaMin: 6, slideCount: 22, audioSec: 3200, photoCount: 0, hasAudio: true },
   /* 정보보호이론 */
   { id: "w10",  title: "06. Zero-Knowledge Proofs", folderId: "is", uploadedAt: "2026-07-04", updatedLabel: "Jul 4",  status: "ready", progress: 100, stepIndex: 5, slideCount: 16, audioSec: 3690, photoCount: 2, hasAudio: true },
   { id: "is05", title: "05. Digital Signature",     folderId: "is", uploadedAt: "2026-06-27", updatedLabel: "Jun 27", status: "ready", progress: 100, stepIndex: 5, slideCount: 21, audioSec: 4230, photoCount: 1, hasAudio: true },

@@ -10,6 +10,7 @@ import { SEED_FOLDERS, SEED_LECTURES } from "./data";
 
 const MAX_CONCURRENT = 2;
 const RATE = 1.4; // %/초 — 데모용 처리 속도
+const DEMO_LIVE_ID = "demo-live"; // 워크스페이스 진행바 확인용 — 완료 안 하고 진행 순환
 
 /** progress → 단계 index. 밴드: [0,8)업로드 [8,34)STT [34,55)추출 [55,78)정렬 [78,100)노트생성 100=완료 */
 export const stepOfProgress = (p: number): number =>
@@ -63,6 +64,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         let processingCount = prev.filter((l) => l.status === "processing").length;
         return prev.map((l) => {
           if (l.status === "processing") {
+            if (l.id === DEMO_LIVE_ID) {
+              // 데모: 완료시키지 않고 진행을 순환(6→95) → 워크스페이스 진행바를 언제든 확인
+              const np = l.progress + RATE * 1.1;
+              const looped = np >= 95 ? 6 : np;
+              return { ...l, progress: looped, stepIndex: stepOfProgress(looped), etaMin: 4 };
+            }
             const progress = Math.min(100, l.progress + RATE * (0.7 + Math.random() * 0.6));
             if (progress >= 100) {
               processingCount -= 1;
