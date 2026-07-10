@@ -1,10 +1,9 @@
 /* ================================================================
    WorkspacePage — /workspace (라이브러리와 분리된 '처리 현황' 뷰)
    업로드한 자료가 실시간으로 처리되는 과정을 과목별 직사각형 칩 + 진행바로 보여준다.
-   상세 단계(6-step 등)는 여기서 생략 — 그건 /lecture/:id ProcessingView 담당.
+   상세 단계(6-step 등)는 사용자에게 노출하지 않음 — 여기선 진행바만.
    처리 중인 게 없으면 "현재 처리중인 과목이 없습니다".
    ================================================================ */
-import { useNavigate } from "react-router";
 import { Folder, Inbox } from "lucide-react";
 import { useApp } from "./store";
 
@@ -12,7 +11,6 @@ const ACTIVE = ["processing", "queued", "uploading"];
 
 export default function WorkspacePage() {
   const { folders, lectures, authed } = useApp();
-  const navigate = useNavigate();
 
   const active = authed ? lectures.filter((l) => ACTIVE.includes(l.status)) : [];
   const groups = folders
@@ -51,10 +49,9 @@ export default function WorkspacePage() {
                 {items.map((l) => {
                   const queued = l.status === "queued";
                   return (
-                    <button
+                    <div
                       key={l.id}
-                      onClick={() => navigate(`/lecture/${l.id}`)}
-                      className="rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40"
+                      className="rounded-xl border border-border bg-card p-4"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-card-foreground">{l.title}</span>
@@ -69,13 +66,9 @@ export default function WorkspacePage() {
                         />
                       </div>
                       <div className="mt-2 text-[11px] text-muted-foreground">
-                        {queued
-                          ? `대기 중 · 큐 ${l.queueOrder ?? 1}번째`
-                          : l.status === "uploading"
-                          ? "업로드 중"
-                          : "분석 중 — 완료되면 워크스페이스가 열립니다"}
+                        {queued ? `대기 중 · 큐 ${l.queueOrder ?? 1}번째` : l.status === "uploading" ? "업로드 중" : "분석 중"}
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
