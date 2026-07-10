@@ -72,6 +72,9 @@ html.lenis{height:auto}
 .nav-right{display:flex;gap:12px;align-items:center}
 .lang-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border-radius:9999px;font-size:14px;letter-spacing:.42px;font-weight:450;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,.45);background:rgba(20,14,20,.35)}
 .lang-btn:hover{border-color:#fff}
+/* 상단 CTA — '시작하기' (로그인/가입 버튼 대체) */
+.nav-cta{display:inline-flex;align-items:center;padding:13px 24px;border-radius:9999px;font-size:14px;font-weight:600;letter-spacing:.3px;color:#fff;background:#f73b20;border:1px solid #f73b20;box-shadow:0 6px 20px rgba(247,59,32,.35);transition:transform .15s ease,box-shadow .15s ease,background .15s ease;cursor:pointer}
+.nav-cta:hover{background:#e0331b;box-shadow:0 8px 26px rgba(247,59,32,.45);transform:translateY(-1px)}
 
 /* ---------- bottom dock nav (오렌지 필) ---------- */
 .dock{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:220;display:flex;align-items:center;background:var(--orange);border-radius:9999px;padding:6px;box-shadow:0 14px 40px rgba(247,59,32,.4);color:#fff}
