@@ -7,7 +7,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Folder, Lecture } from "./types";
 import { SEED_FOLDERS, SEED_LECTURES } from "./data";
-import { getToken, getUser, setUser as persistUser, clearToken, clearUser, type LoginUser } from "../api";
+import { getToken, getUser, setUser as persistUser, clearToken, clearUser, USE_MOCK, api, type LoginUser } from "../api";
+import { lectureFromListItem } from "./adapters";
 
 const MAX_CONCURRENT = 2;
 const RATE = 1.4; // %/초 — 데모용 처리 속도
@@ -52,25 +53,49 @@ const Ctx = createContext<AppStore | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [folders, setFolders] = useState<Folder[]>(SEED_FOLDERS);
-  const [lectures, setLectures] = useState<Lecture[]>(SEED_LECTURES);
+  // 목업 모드: 데모 SEED. 실서버 모드: 로그인 후 GET /lectures 로 채움.
+  const [lectures, setLectures] = useState<Lecture[]>(USE_MOCK ? SEED_LECTURES : []);
   // 저장된 토큰이 있으면 로그인 상태로 복원 → 새로고침해도 유지
   const [authed, setAuthed] = useState<boolean>(() => !!getToken());
   const [user, setUserState] = useState<LoginUser | null>(() => getUser());
-  // 구글 로그인 성공 시: 유저 저장 + authed. (토큰 저장은 호출부에서 setToken)
+
+  // 실서버 모드에서 강의 목록을 BE에서 로드 → 어댑터로 v2 모델 변환.
+  // 실패해도 크래시 없이 빈 목록(호출부에서 report 가능).
+  const refreshLectures = useCallback(async () => {
+    if (USE_MOCK) return; // 목업은 SEED 유지
+    try {
+      const list = await api.getLectures();
+      setLectures(list.map(lectureFromListItem));
+    } catch (e) {
+      console.warn("[store] getLectures 실패:", e);
+      setLectures([]);
+    }
+  }, []);
+
+  // 구글 로그인 성공 시: 유저 저장 + authed + 실데이터 로드. (토큰 저장은 호출부에서 setToken)
   const login = useCallback((u?: LoginUser | null) => {
     if (u !== undefined) { persistUser(u ?? null); setUserState(u ?? null); }
     setAuthed(true);
-  }, []);
+    void refreshLectures();
+  }, [refreshLectures]);
   const logout = useCallback(() => {
     clearToken(); clearUser(); setUserState(null); setAuthed(false);
+    setLectures(USE_MOCK ? SEED_LECTURES : []);
   }, []);
+
+  // 새로고침 복원: 실서버 모드에서 토큰이 있으면 강의 목록 재로드
+  useEffect(() => {
+    if (!USE_MOCK && getToken()) void refreshLectures();
+  }, [refreshLectures]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }, []);
 
-  /* ---- 처리 파이프라인 ticker ---- */
+  /* ---- 처리 파이프라인 ticker (목업 데모 전용) ----
+     실서버 모드에선 가짜 진행을 돌리지 않는다. 실제 진행률은 추후 GET /jobs/{id} 폴링으로. */
   useEffect(() => {
+    if (!USE_MOCK) return;
     const iv = setInterval(() => {
       setLectures((prev) => {
         let processingCount = prev.filter((l) => l.status === "processing").length;
