@@ -25,5 +25,8 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  // 구 앱 화면(미라우팅·미사용, 참고용 보존). 옛 API 시그니처를 써서 빌드에서 제외.
+  // 추후 통합 시 새 계약(src/api)에 맞춰 갱신 후 exclude에서 제거.
+  "exclude": ["src/app/App.tsx", "src/app/LectureResult.tsx"]
 }
