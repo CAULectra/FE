@@ -39,6 +39,9 @@ interface AppStore {
   /* 게스트/인증 — 게스트는 라이브러리가 비어 보이고, 업로드 시 로그인 유도 */
   authed: boolean;
   login: () => void;
+  /* 즐겨찾기 (강의 id 목록) */
+  favorites: string[];
+  toggleFavorite: (id: string) => void;
 }
 
 const Ctx = createContext<AppStore | null>(null);
@@ -48,6 +51,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [lectures, setLectures] = useState<Lecture[]>(SEED_LECTURES);
   const [authed, setAuthed] = useState(false);          // 게스트로 시작 (시작하기 → 빈 화면)
   const login = useCallback(() => setAuthed(true), []); // 목업 로그인 → 데모 자료 노출
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const toggleFavorite = useCallback((id: string) => {
+    setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }, []);
 
   /* ---- 처리 파이프라인 ticker ---- */
   useEffect(() => {
@@ -148,10 +155,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AppStore>(() => ({
-    folders, lectures, authed, login,
+    folders, lectures, authed, login, favorites, toggleFavorite,
     addFolder, renameFolder, removeFolder,
     addLecture, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob,
-  }), [folders, lectures, authed, login, addFolder, renameFolder, removeFolder, addLecture, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
+  }), [folders, lectures, authed, login, favorites, toggleFavorite, addFolder, renameFolder, removeFolder, addLecture, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
