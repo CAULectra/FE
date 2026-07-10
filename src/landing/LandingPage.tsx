@@ -39,7 +39,6 @@ export default function LandingPage() {
 
   return (
     <div ref={rootRef} className="landing-root" onClick={onRootClick}>
-      <a className="support-pill" href="mailto:focustationcapstone@gmail.com">💬 Support</a>
       
       <main id="top">
       
@@ -176,26 +175,6 @@ export default function LandingPage() {
 
       {/* ================= FOOTER ================= */}
       <footer className="landing-footer" id="footer">
-        <div className="foot-links">
-          <div className="fl-group">
-            <div className="hd">PRODUCT</div>
-            <a href="/library">Library</a>
-            <a href="/lecture/w10">Workspace</a>
-            <a href="#walkthrough">How it works</a>
-          </div>
-          <div className="fl-group">
-            <div className="hd">FEATURES</div>
-            <a href="#hero">Slides</a>
-            <a href="#hero">Audio recordings</a>
-            <a href="#hero">Images</a>
-          </div>
-          <div className="fl-group">
-            <div className="hd">COMPANY</div>
-            <a href="mailto:focustationcapstone@gmail.com">Team contact</a>
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-          </div>
-        </div>
         {/* 대형 워드마크 — TextType 무한 타이핑 루프 (type → pause → delete → repeat) */}
         <div className="giant-lectra">
           <TextType
@@ -209,6 +188,9 @@ export default function LandingPage() {
             cursorCharacter="_"
             startOnVisible
           />
+        </div>
+        <div className="foot-contact">
+          <a href="mailto:lectranote@gmail.com">contact lectranote@gmail.com</a>
         </div>
       </footer>
       
