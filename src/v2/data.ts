@@ -9,6 +9,7 @@
    ================================================================ */
 import type { Folder, Lecture, Slide, StudyData } from "./types";
 import { BT_TITLES, CN_TITLES } from "./slides.gen";
+import { ZK_CHAPTER_NOTES } from "./study/notes";
 
 export const SEED_FOLDERS: Folder[] = [
   { id: "is", name: "정보보호이론" },
@@ -197,6 +198,9 @@ export const STUDY_ZK: StudyData = {
   ],
   overallEn: "The lecture is one continuous thread: proof systems → Σ-protocols → the three properties of zero-knowledge → Schnorr's protocol → the Fiat-Shamir transform → Schnorr signatures.",
 };
+
+/* note-v2 마크다운 노트를 ZK 챕터에 연결 (실 API 연동 시 백엔드 summary_note로 대체) */
+STUDY_ZK.chapters.forEach((c, i) => { if (ZK_CHAPTER_NOTES[i]) c.noteMd = ZK_CHAPTER_NOTES[i]; });
 
 /* ================= 알고리즘 — 05. 백트래킹 (38p, 47:30) ================= */
 

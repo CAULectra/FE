@@ -83,6 +83,8 @@ export interface Chapter {
   meta: string;              // "슬라이드 4장 · 판서 1장 · 녹음 12분 반영"
   summary: string[];         // 핵심 요약 불릿
   blocks: NoteBlock[];
+  /** note-v2: 백엔드 chapters[].summary_note(마크다운). 있으면 NotePane이 MarkdownNote로 렌더 */
+  noteMd?: string;
 }
 
 export interface Photo {

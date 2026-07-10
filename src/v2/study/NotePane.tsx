@@ -3,13 +3,14 @@
    사람이 정리한 노트 같은 톤: 조용한 타이포 + LaTeX 수식(KaTeX) +
    프로토콜 다이어그램(SVG). 판서/녹음 앵커는 슬림한 참조 행으로.
    ================================================================ */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Pencil } from "lucide-react";
 import type { Chapter, NoteBlock, StudyData } from "../types";
 import { fmtTime } from "../types";
 import type { Playback } from "./playback";
+import MarkdownNote from "./MarkdownNote";
 
 /* ---- LaTeX 수식 (KaTeX) ---- */
 function MathBlock({ latex, caption }: { latex: string; caption?: string }) {
@@ -183,11 +184,33 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
     }
   };
 
+  /* 노트 편집 — 편집(원문 마크다운) ↔ 미리보기(렌더) 토글. 편집분은 세션 로컬 보관 */
+  const [mode, setMode] = useState<"preview" | "edit">("preview");
+  const [edits, setEdits] = useState<Record<number, string>>({});
+  const source = edits[chapter.idx] ?? chapter.noteMd ?? "";
+
+  /* note-v2 인용 칩 클릭 → 근거 슬라이드 시작 지점으로 점프 */
+  const onCite = (slides: number[]) => {
+    if (docMode || !slides.length) return;
+    const s = data.slides.find((sl) => sl.n === slides[0]);
+    if (s) pb.seek(s.startSec);
+  };
+
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col bg-white">
       {/* 헤더: 노트 + 챕터 페이저 */}
       <div className="flex items-center justify-between border-b border-border px-5 py-2">
-        <span className="text-[12px] font-semibold text-card-foreground">노트</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[12px] font-semibold text-card-foreground">노트</span>
+          {chapter.noteMd && (
+            <button
+              onClick={() => setMode((m) => (m === "edit" ? "preview" : "edit"))}
+              className="flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              {mode === "edit" ? <><Eye size={11} /> 미리보기</> : <><Pencil size={11} /> 편집</>}
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => onSelectChapter(chapter.idx - 1)}
@@ -232,7 +255,21 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
             </div>
           </div>
 
-          {chapter.blocks.map(renderBlock)}
+          {chapter.noteMd ? (
+            mode === "edit" ? (
+              <textarea
+                value={source}
+                onChange={(e) => setEdits((p) => ({ ...p, [chapter.idx]: e.target.value }))}
+                spellCheck={false}
+                aria-label="노트 마크다운 편집"
+                className="mt-4 min-h-[440px] w-full resize-y rounded-lg border border-border bg-[#FBF9F4] p-4 font-mono text-[12.5px] leading-[1.7] text-[#292524] focus:border-primary/40 focus:outline-none focus:ring-[3px] focus:ring-[rgba(194,65,12,0.1)]"
+              />
+            ) : (
+              <MarkdownNote source={source} onCite={onCite} />
+            )
+          ) : (
+            chapter.blocks.map(renderBlock)
+          )}
         </div>
       </div>
 
