@@ -74,7 +74,14 @@ export default function SlideStrip({ slides, chapters, pb, docMode }: Props) {
               >
                 {/* 실제 슬라이드 페이지 렌더 */}
                 <div className="relative">
-                  <img src={s.img} alt={`S${s.n} — ${s.title}`} loading="lazy" className="block w-full" draggable={false} />
+                  {s.img ? (
+                    <img src={s.img} alt={`S${s.n} — ${s.title}`} loading="lazy" className="block w-full" draggable={false} />
+                  ) : (
+                    /* 실모드: BE가 슬라이드 렌더 이미지를 안 줌 → 제목 플레이스홀더 */
+                    <div className="flex aspect-[4/3] w-full items-center justify-center bg-[#FAF8F5] px-3 text-center">
+                      <span className="line-clamp-3 text-[11px] font-medium leading-snug text-muted-foreground">{s.title}</span>
+                    </div>
+                  )}
                   <span className={`absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[9.5px] font-bold ${
                     active ? "bg-primary text-white" : "bg-black/55 text-white"
                   }`}>

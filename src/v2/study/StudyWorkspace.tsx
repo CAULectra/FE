@@ -5,7 +5,7 @@
    ================================================================ */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { CheckCircle2, ChevronLeft, Download, Loader2, Mic } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronLeft, Download, Loader2, Mic } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "../../app/components/ui/dropdown-menu";
@@ -32,7 +32,45 @@ function ResizeHandle() {
 
 export default function StudyWorkspace({ lecture }: { lecture: Lecture }) {
   const [data, setData] = useState<StudyData | null>(null);
-  useEffect(() => { fetchStudyData(lecture.id).then(setData); }, [lecture.id]);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const navigate = useNavigate();
+
+  // 실모드: fetchStudyData가 미완료/네트워크/인증 에러로 throw할 수 있음 → 반드시 catch.
+  useEffect(() => {
+    let cancelled = false;
+    setData(null);
+    setError(null);
+    fetchStudyData(lecture.id)
+      .then((d) => { if (!cancelled) setData(d); })
+      .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "강의를 불러오지 못했습니다."); });
+    return () => { cancelled = true; };
+  }, [lecture.id, reloadKey]);
+
+  if (error) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-3 px-6 text-center">
+        <div className="flex items-center gap-2 text-[14px] font-semibold text-foreground">
+          <AlertTriangle size={16} className="text-destructive" /> 강의를 불러오지 못했어요
+        </div>
+        <p className="max-w-sm text-[12.5px] leading-relaxed text-muted-foreground">{error}</p>
+        <div className="mt-1 flex gap-2">
+          <button
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="h-9 rounded-lg bg-primary px-4 text-[12.5px] font-semibold text-white transition-colors hover:bg-[#9A3412]"
+          >
+            다시 시도
+          </button>
+          <button
+            onClick={() => navigate("/library")}
+            className="h-9 rounded-lg border border-border px-4 text-[12.5px] font-medium text-foreground hover:bg-secondary"
+          >
+            라이브러리로
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!data) {
     return (
