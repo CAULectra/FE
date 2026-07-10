@@ -27,6 +27,38 @@ const STEP_MAP: Record<BackendStatus, number> = {
   대기: 0, 처리중: 1, 추출: 2, 매핑: 3, 챕터: 4, 요약: 4, 인덱싱: 4, 완료: 5, 실패: 0,
 };
 
+// BE가 status에서 유도하는 진행률(%). GET /jobs/{id}가 progress를 안 줄 때의 폴백.
+//   출처: lectra_BE lectures.py _PROGRESS (⚠ BE 임시값 — 나중에 실측 조정 가능)
+export const BE_PROGRESS: Record<BackendStatus, number> = {
+  대기: 0, 처리중: 5, 추출: 15, 매핑: 40, 챕터: 55, 요약: 75, 인덱싱: 90, 완료: 100, 실패: 0,
+};
+
+// 트리클 상한 — 현재 단계에서 "다음 단계 값 -1"까지만 스멀스멀 채운다.
+//   폴링 사이 정지 구간에도 진행바가 살짝 움직이되, 다음 단계에 실제 도달 전엔 넘지 않음.
+export const TRICKLE_CAP: Record<BackendStatus, number> = {
+  대기: 4, 처리중: 14, 추출: 39, 매핑: 54, 챕터: 74, 요약: 89, 인덱싱: 99, 완료: 100, 실패: 0,
+};
+
+export interface JobPatch {
+  status: LectureStatus;
+  progress: number;      // 0~100 (BE 실측 = 이 단계의 바닥값)
+  cap: number;           // 트리클 상한 (다음 단계 직전)
+  stepIndex: number;     // 0~5
+  failedStep?: number;   // status==="failed"일 때 실패 단계
+}
+
+/** GET /jobs/{id} 또는 process()의 status → v2 진행 상태 패치.
+ *  progress가 없으면 status→BE_PROGRESS로 유도(대기0·처리중5·추출15·매핑40·챕터55·요약75·인덱싱90·완료100). */
+export function jobToPatch(job: { status: BackendStatus; progress?: number }): JobPatch {
+  const status: LectureStatus = STATUS_MAP[job.status] ?? "processing";
+  const stepIndex = STEP_MAP[job.status] ?? 0;
+  const progress = typeof job.progress === "number" ? job.progress : BE_PROGRESS[job.status] ?? 0;
+  const cap = Math.max(progress, TRICKLE_CAP[job.status] ?? progress);
+  const patch: JobPatch = { status, progress, cap, stepIndex };
+  if (status === "failed") patch.failedStep = stepIndex;
+  return patch;
+}
+
 function labelOf(iso: string): string {
   if (!iso) return "";
   const d = new Date(iso);

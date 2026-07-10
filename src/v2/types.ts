@@ -34,6 +34,10 @@ export interface Lecture {
   failedStep?: number;       // status==="failed"일 때 실패한 단계 index
   errorCode?: string;        // e.g. "STT_TIMEOUT"
   queueOrder?: number;       // status==="queued"일 때 대기 순번
+  /** 실서버 처리 job — 있으면 store가 GET /jobs/{jobId} 폴링으로 progress 갱신 */
+  jobId?: string;
+  /** 트리클 상한 — 폴링 사이 progress가 이 값 직전까지만 스멀스멀 채워짐 */
+  progressCap?: number;
   /** 메타 */
   slideCount?: number;
   audioSec?: number;         // 녹음 길이(초). 없으면 문서 모드
