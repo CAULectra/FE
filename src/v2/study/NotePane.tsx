@@ -197,7 +197,7 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
   };
 
   return (
-    <div className="flex h-full min-w-0 flex-1 flex-col bg-white">
+    <div className="flex h-full w-full flex-col bg-white">
       {/* 헤더: 노트 + 챕터 페이저 */}
       <div className="flex items-center justify-between border-b border-border px-5 py-2">
         <div className="flex items-center gap-2">

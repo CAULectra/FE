@@ -30,7 +30,7 @@ export default function SlideStrip({ slides, chapters, pb, docMode }: Props) {
   }, [pb.activeSlideN, pb.syncOn, docMode]);
 
   return (
-    <div className="flex h-full w-[360px] shrink-0 flex-col border-r border-border bg-[#FAF8F5]">
+    <div className="flex h-full w-full flex-col bg-[#FAF8F5]">
       {/* 헤더 */}
       <div className="border-b border-border px-3.5 pb-2 pt-2.5">
         <span className="text-[12px] font-semibold text-card-foreground">슬라이드</span>
