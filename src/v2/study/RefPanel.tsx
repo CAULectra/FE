@@ -6,14 +6,14 @@
    밝은 톤: 흰 배경 + 라이트 세그먼트 탭
    ================================================================ */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, Check, Image as ImageIcon, Languages, Loader2, MessageSquare, Send, Sparkles } from "lucide-react";
+import { BookOpen, Check, Image as ImageIcon, Languages, Loader2, MessageSquare, ScrollText, Send, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../app/components/ui/dialog";
 import { ragQuickAction } from "../api";
 import type { Photo, QAMessage, StudyData } from "../types";
 import { fmtTime } from "../types";
 import type { Playback } from "./playback";
 
-export type RefTab = "summary" | "translate" | "photos" | "chat";
+export type RefTab = "summary" | "translate" | "photos" | "chat" | "script";
 
 interface Props {
   data: StudyData;
@@ -35,8 +35,9 @@ interface Props {
 const TABS: { key: RefTab; label: string; icon: React.ReactNode }[] = [
   { key: "summary", label: "요약", icon: <Sparkles size={12} /> },
   { key: "translate", label: "번역", icon: <Languages size={12} /> },
-  { key: "photos", label: "사진", icon: <ImageIcon size={12} /> },
   { key: "chat", label: "챗봇", icon: <MessageSquare size={12} /> },
+  { key: "photos", label: "사진", icon: <ImageIcon size={12} /> },
+  { key: "script", label: "스크립트", icon: <ScrollText size={12} /> },
 ];
 
 function CitationChips({ citations, pb, data }: { citations?: { slide: number; t?: number }[]; pb: Playback; data: StudyData }) {
@@ -65,6 +66,7 @@ export default function RefPanel(props: Props) {
   const [photoOpen, setPhotoOpen] = useState<Photo | null>(null);
   const qaEndRef = useRef<HTMLDivElement>(null);
   const focusRef = useRef<HTMLButtonElement>(null);
+  const scriptActiveRef = useRef<HTMLButtonElement>(null);
 
   /* 노트에서 넘어온 사진 포커스 → 스크롤 */
   useEffect(() => {
@@ -76,6 +78,11 @@ export default function RefPanel(props: Props) {
   useEffect(() => {
     if (tab === "chat") qaEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [qaMessages.length, qaPending, tab]);
+
+  /* 스크립트 탭: 현재 재생 중인 문장으로 자동 스크롤 */
+  useEffect(() => {
+    if (tab === "script") scriptActiveRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [tab, pb.activeSlideN]);
 
   const activeIdx = useMemo(() => activeChapter, [activeChapter]);
 
@@ -89,7 +96,7 @@ export default function RefPanel(props: Props) {
   };
 
   return (
-    <div className="flex h-full w-[380px] shrink-0 flex-col border-l border-border bg-white">
+    <div className="flex h-full w-full flex-col bg-white">
       {/* 라이트 세그먼트 탭 */}
       <div className="border-b border-border px-3 py-2">
         <div className="flex gap-1 rounded-full bg-secondary p-1">
@@ -303,6 +310,46 @@ export default function RefPanel(props: Props) {
           </div>
         </div>
       )}
+      {/* ===== 녹음 스크립트 ===== */}
+      {tab === "script" && (
+        <div className="ws-scroll flex-1 overflow-y-auto px-3.5 py-3">
+          <div className="flex items-center gap-1.5 px-1 text-[12px] font-bold text-card-foreground">
+            <ScrollText size={12} className="text-primary" /> 녹음 스크립트
+            {data.script.length > 0 && (
+              <span className="ml-auto text-[10.5px] font-normal text-muted-foreground">클릭 시 해당 시점 재생</span>
+            )}
+          </div>
+          {data.script.length === 0 ? (
+            <p className="mt-8 text-center text-[12px] text-muted-foreground">녹음이 없어 표시할 스크립트가 없어요.</p>
+          ) : (
+            <div className="mt-2 space-y-1">
+              {data.script.map((s, i) => {
+                const next = data.script[i + 1];
+                const active = pb.currentTime >= s.t && (!next || pb.currentTime < next.t);
+                return (
+                  <button
+                    key={s.id}
+                    ref={active ? scriptActiveRef : undefined}
+                    onClick={() => pb.seek(s.t)}
+                    className={`flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors ${
+                      active ? "bg-accent" : "hover:bg-secondary"
+                    }`}
+                  >
+                    <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${
+                      active ? "bg-primary text-white" : "bg-secondary text-muted-foreground"
+                    }`}>
+                      {fmtTime(s.t)}
+                    </span>
+                    <span className="min-w-0 flex-1 text-[12.5px] leading-relaxed text-foreground/85">{s.text}</span>
+                    <span className="mt-0.5 shrink-0 text-[10px] font-semibold text-muted-foreground">S{s.slide}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 사진 원본 크게 */}
       <Dialog open={!!photoOpen} onOpenChange={(o) => !o && setPhotoOpen(null)}>
         <DialogContent className="max-w-2xl">

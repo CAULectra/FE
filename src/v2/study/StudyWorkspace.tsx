@@ -17,8 +17,18 @@ import SlideStrip from "./SlideStrip";
 import NotePane from "./NotePane";
 import RefPanel, { type RefTab } from "./RefPanel";
 import Timeline from "./Timeline";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 interface Toast { id: number; text: string; done?: boolean }
+
+/* 패널 사이 드래그 핸들 — 경계를 눌러 좌우 크기 조절 */
+function ResizeHandle() {
+  return (
+    <PanelResizeHandle className="group relative w-1.5 shrink-0 cursor-col-resize bg-border transition-colors hover:bg-primary/40 data-[resize-handle-state=drag]:bg-primary">
+      <span className="absolute inset-y-0 -left-1 -right-1" />
+    </PanelResizeHandle>
+  );
+}
 
 export default function StudyWorkspace({ lecture }: { lecture: Lecture }) {
   const [data, setData] = useState<StudyData | null>(null);
@@ -129,21 +139,29 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
         </DropdownMenu>
       </header>
 
-      {/* ===== B·C·D 3-pane ===== */}
-      <div className="flex min-h-0 flex-1">
-        <SlideStrip slides={data.slides} chapters={data.chapters} pb={pb} docMode={docMode} />
-        <NotePane data={data} pb={pb} docMode={docMode} chapter={data.chapters[activeChapter]} onSelectChapter={selectChapter} onPhotoRef={openPhotoTab} />
-        <RefPanel
-          data={data} pb={pb}
-          activeChapter={activeChapter} onSelectChapter={selectChapter}
-          tab={tab} onTab={setTab}
-          qaMessages={qaMessages} qaPending={qaPending}
-          qaDraft={qaDraft} onQaDraft={setQaDraft}
-          onSendQA={sendQA}
-          onPushQA={(m) => setQaMessages((prev) => [...prev, m])}
-          focusPhotoId={photoFocus}
-        />
-      </div>
+      {/* ===== B·C·D 3-pane (경계를 드래그해 크기 조절) ===== */}
+      <PanelGroup direction="horizontal" autoSaveId="lectra-study-panes" className="min-h-0 flex-1">
+        <Panel defaultSize={30} minSize={16} className="min-w-0">
+          <SlideStrip slides={data.slides} chapters={data.chapters} pb={pb} docMode={docMode} />
+        </Panel>
+        <ResizeHandle />
+        <Panel defaultSize={42} minSize={28} className="min-w-0">
+          <NotePane data={data} pb={pb} docMode={docMode} chapter={data.chapters[activeChapter]} onSelectChapter={selectChapter} onPhotoRef={openPhotoTab} />
+        </Panel>
+        <ResizeHandle />
+        <Panel defaultSize={28} minSize={18} className="min-w-0">
+          <RefPanel
+            data={data} pb={pb}
+            activeChapter={activeChapter} onSelectChapter={selectChapter}
+            tab={tab} onTab={setTab}
+            qaMessages={qaMessages} qaPending={qaPending}
+            qaDraft={qaDraft} onQaDraft={setQaDraft}
+            onSendQA={sendQA}
+            onPushQA={(m) => setQaMessages((prev) => [...prev, m])}
+            focusPhotoId={photoFocus}
+          />
+        </Panel>
+      </PanelGroup>
 
       {/* ===== E. 정렬 타임라인 / 문서 모드 바 ===== */}
       {docMode ? (
