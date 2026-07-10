@@ -4,11 +4,11 @@
      슬롯(MAX_CONCURRENT=2)이 비면 queued를 승격한다.
    - 어떤 화면에 있든 진행되므로 "페이지를 떠나도 계속" 이 성립.
    ================================================================ */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Folder, Lecture } from "./types";
 import { SEED_FOLDERS, SEED_LECTURES } from "./data";
-import { getToken, getUser, setUser as persistUser, clearToken, clearUser, USE_MOCK, api, type LoginUser } from "../api";
-import { lectureFromListItem } from "./adapters";
+import { getToken, getUser, setUser as persistUser, clearToken, clearUser, USE_MOCK, api, type LoginUser, type BackendStatus } from "../api";
+import { lectureFromListItem, jobToPatch, type JobPatch } from "./adapters";
 
 const MAX_CONCURRENT = 2;
 const RATE = 1.4; // %/초 — 데모용 처리 속도
@@ -27,6 +27,17 @@ export interface NewLectureInput {
   audioSec: number;
 }
 
+/** 실서버 업로드 완료(process 호출까지) 후 폴링 대상으로 등록할 강의 */
+export interface RegisterJobInput {
+  id: string;                // BE lecture_id (uuid)
+  jobId: string;             // BE job_id → GET /jobs/{jobId} 폴링
+  title: string;
+  folderId: string;
+  hasAudio: boolean;
+  photoCount?: number;
+  status: BackendStatus;     // process() 응답의 초기 status
+}
+
 interface AppStore {
   folders: Folder[];
   lectures: Lecture[];
@@ -34,6 +45,7 @@ interface AppStore {
   renameFolder: (id: string, name: string) => void;
   removeFolder: (id: string) => void;
   addLecture: (input: NewLectureInput) => string;  // 새 lecture id
+  registerJob: (input: RegisterJobInput) => void;  // 실서버 업로드→process 후 폴링 등록
   removeLecture: (id: string) => void;
   renameLecture: (id: string, title: string) => void;
   moveLecture: (id: string, folderId: string) => void;
@@ -100,6 +112,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLectures((prev) => {
         let processingCount = prev.filter((l) => l.status === "processing").length;
         return prev.map((l) => {
+          if (l.jobId) return l; // 실 job 폴링이 담당 — 데모 ticker는 건드리지 않음
           if (l.status === "processing") {
             if (l.id === DEMO_LIVE_ID) {
               // 데모: 완료시키지 않고 진행을 순환(6→95) → 워크스페이스 진행바를 언제든 확인
@@ -122,6 +135,85 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       });
     }, 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  /* ---- 실서버 job 폴링 ticker ----
+     처리중인 강의의 실제 progress/status를 BE에서 가져온다(목·실 공통 — 둘 다 getJob 구현).
+     - jobId 있는 강의(방금 업로드) → GET /jobs/{jobId} (실측 % 제공)
+     - jobId 없는 처리중 강의(새로고침으로 목록에서 복원) → 실모드에서 GET /lectures로 status 갱신
+     progress는 단조 증가(뒤로 안 감), 완료=ready / 실패=failed 로 종료. */
+  const lecturesRef = useRef<Lecture[]>(lectures);
+  useEffect(() => { lecturesRef.current = lectures; }, [lectures]);
+  useEffect(() => {
+    const isActive = (s: Lecture["status"]) => s === "processing" || s === "queued" || s === "uploading";
+    const applyPatch = (l: Lecture, patch: JobPatch): Lecture => {
+      // 완료/실패는 상한을 최종값으로 고정해 트리클을 멈춘다.
+      const cap = patch.status === "ready" ? 100 : patch.status === "failed" ? patch.progress : patch.cap;
+      const progress = Math.min(cap, Math.max(l.progress, patch.progress));
+      return {
+        ...l,
+        status: patch.status,
+        progress,
+        progressCap: cap,
+        stepIndex: patch.stepIndex,
+        failedStep: patch.failedStep,
+        etaMin: patch.status === "ready" ? 0 : Math.max(1, Math.round((100 - progress) / 12)),
+      };
+    };
+    let cancelled = false;
+    const tick = async () => {
+      const cur = lecturesRef.current;
+      const jobLectures = cur.filter((l) => l.jobId && isActive(l.status));
+      const listLectures = cur.filter((l) => !l.jobId && isActive(l.status));
+      if (jobLectures.length === 0 && (USE_MOCK || listLectures.length === 0)) return;
+      const patches = new Map<string, JobPatch>();
+      // 1) 실제 job 폴링 (실측 progress)
+      await Promise.all(jobLectures.map(async (l) => {
+        try { patches.set(l.id, jobToPatch(await api.getJob(l.jobId!))); }
+        catch (e) { console.warn("[store] getJob 실패:", l.jobId, e); }
+      }));
+      // 2) jobId 없이 복원된 처리중 강의 → 목록 status로 보강 (실모드만)
+      if (!USE_MOCK && listLectures.length > 0) {
+        try {
+          const list = await api.getLectures();
+          const byId = new Map(list.map((i) => [i.id, i]));
+          for (const l of listLectures) {
+            const item = byId.get(l.id);
+            if (item?.status) patches.set(l.id, jobToPatch({ status: item.status }));
+          }
+        } catch (e) { console.warn("[store] getLectures(폴링) 실패:", e); }
+      }
+      if (cancelled || patches.size === 0) return;
+      setLectures((prev) => prev.map((l) => {
+        const patch = patches.get(l.id);
+        return patch ? applyPatch(l, patch) : l;
+      }));
+    };
+    const iv = setInterval(() => { void tick(); }, 2000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, []);
+
+  /* ---- 트리클 ----
+     폴링 사이(2초)에 진행바가 멈춰 보이지 않도록, progress를 progressCap 직전까지 아주 천천히 올린다.
+     상한(다음 단계 -1)을 절대 넘지 않으므로 100%를 거짓으로 채우지 않는다. */
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setLectures((prev) => {
+        let changed = false;
+        const next = prev.map((l) => {
+          if (!l.jobId || l.progressCap === undefined) return l;
+          if (l.status !== "processing" && l.status !== "queued") return l;
+          if (l.progress >= l.progressCap) return l;
+          const step = Math.max(0.25, (l.progressCap - l.progress) * 0.05); // 감속 이징
+          const np = Math.min(l.progressCap, l.progress + step);
+          if (np <= l.progress) return l;
+          changed = true;
+          return { ...l, progress: np, etaMin: Math.max(1, Math.round((100 - np) / 12)) };
+        });
+        return changed ? next : prev;
+      });
+    }, 450);
     return () => clearInterval(iv);
   }, []);
 
@@ -174,6 +266,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return id;
   }, []);
 
+  // 실서버 업로드(pdf→audio→board→process) 완료 후, 진짜 job을 폴링 대상으로 등록.
+  const registerJob = useCallback((input: RegisterJobInput) => {
+    const patch = jobToPatch({ status: input.status });
+    const now = new Date();
+    const lec: Lecture = {
+      id: input.id,
+      title: input.title,
+      folderId: input.folderId,
+      uploadedAt: now.toISOString().slice(0, 10),
+      updatedLabel: now.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      status: patch.status,
+      progress: patch.progress,
+      progressCap: patch.cap,
+      stepIndex: patch.stepIndex,
+      etaMin: 7,
+      jobId: input.jobId,
+      hasAudio: input.hasAudio,
+      photoCount: input.photoCount,
+    };
+    setLectures((prev) => [lec, ...prev.filter((l) => l.id !== input.id)]); // 같은 id 중복 방지
+  }, []);
+
   const removeLecture = useCallback((id: string) => {
     setLectures((prev) => prev.filter((l) => l.id !== id));
   }, []);
@@ -201,8 +315,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppStore>(() => ({
     folders, lectures, authed, user, login, logout, favorites, toggleFavorite,
     addFolder, renameFolder, removeFolder,
-    addLecture, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob,
-  }), [folders, lectures, authed, user, login, logout, favorites, toggleFavorite, addFolder, renameFolder, removeFolder, addLecture, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
+    addLecture, registerJob, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob,
+  }), [folders, lectures, authed, user, login, logout, favorites, toggleFavorite, addFolder, renameFolder, removeFolder, addLecture, registerJob, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

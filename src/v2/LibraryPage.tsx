@@ -54,10 +54,12 @@ function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; le
     >
       <div className="relative flex h-[132px] items-end justify-center">
         <FolderIcon color={color} size={1.5} />
+        {/* 처리 중인 강의가 있으면 폴더 좌상단에 빨간 점 */}
         {processing > 0 && (
-          <span className="absolute -top-1 right-3 z-40 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-white shadow-[0_2px_6px_rgba(0,0,0,0.2)]">
-            {processing} 처리중
-          </span>
+          <span
+            title={`${processing}개 처리 중`}
+            className="absolute left-1/2 top-[6px] z-40 h-2.5 w-2.5 -translate-x-[64px] rounded-full bg-red-500 shadow-[0_0_0_2px_#faf6ef]"
+          />
         )}
       </div>
       <div className="mt-6">
