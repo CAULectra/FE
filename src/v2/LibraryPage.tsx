@@ -130,8 +130,9 @@ export default function LibraryPage() {
               <FolderOpen size={26} className="text-muted-foreground" />
             </div>
             <h2 className="mt-5 text-[19px] font-bold text-card-foreground">아직 올린 자료가 없어요</h2>
-            <p className="mt-2 max-w-sm text-[13.5px] leading-relaxed text-muted-foreground">
-              슬라이드 PDF + 녹음 파일(+ 사진)을 올리면 정렬된 노트가 자동으로 만들어져요.
+            <p className="mt-2 max-w-sm text-[13.5px] leading-relaxed text-muted-foreground whitespace-pre-line">
+              슬라이드 PDF와 녹음 파일(+ 사진)을 올리면
+               정렬된 노트가 자동으로 만들어져요.
             </p>
             <button
               onClick={openUpload}
