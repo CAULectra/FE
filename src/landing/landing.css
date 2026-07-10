@@ -271,6 +271,10 @@ html.lenis{height:auto}
 .fl-group .hd{opacity:.55;font-size:13px;letter-spacing:.42px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;width:100%}
 .fl-group a{display:block;padding:6px 0;letter-spacing:.3px;opacity:.88}
 .fl-group a:hover{opacity:1;text-decoration:underline}
+/* 푸터 단일 연락처 — 대형 워드마크 아래, 작게·조화롭게 */
+.foot-contact{text-align:center;margin-top:clamp(10px,1.6vw,22px);padding:0 28px clamp(30px,4vw,52px);font-size:13px}
+.foot-contact a{letter-spacing:.3px;opacity:.5;transition:opacity .15s ease}
+.foot-contact a:hover{opacity:.9;text-decoration:underline}
 .giant-lectra{font-size:clamp(96px,20vw,310px);font-weight:600;line-height:.78;letter-spacing:-.02em;margin:clamp(64px,8vw,120px) auto 0;text-align:center;user-select:none;color:#111}
 
 @media (prefers-reduced-motion:reduce){
