@@ -1,0 +1,103 @@
+/* ================================================================
+   markdown-note.css — note-v2 마크다운 노트 프로토타입 스타일
+   .md-note 스코프 prose + Obsidian callout + [s:N] 인용 칩 + KaTeX 미세조정.
+   팔레트는 NotePane과 동일 계열(스톤/앰버).
+   ================================================================ */
+.md-note {
+  color: #292524;
+  font-size: 14px;
+  line-height: 1.8;
+  font-family: "SUIT", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+  word-break: keep-all;
+}
+.md-note > :first-child { margin-top: 0; }
+.md-note > :last-child { margin-bottom: 0; }
+
+/* 헤딩 */
+.md-note h1, .md-note h2, .md-note h3, .md-note h4 {
+  color: #1c1917; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em;
+}
+.md-note h1 { font-size: 1.6em; margin: 1.4em 0 0.5em; }
+.md-note h2 { font-size: 1.32em; margin: 1.3em 0 0.5em; }
+.md-note h3 { font-size: 1.12em; margin: 1.5em 0 0.45em; padding-bottom: 0.25em; border-bottom: 1px solid #ede7dc; }
+.md-note h4 { font-size: 1em; margin: 1.1em 0 0.35em; color: #57534e; }
+
+/* 본문 */
+.md-note p { margin: 0.7em 0; }
+.md-note strong { font-weight: 700; color: #1c1917; }
+.md-note em { font-style: italic; }
+.md-note a { color: #c2410c; text-decoration: underline; text-underline-offset: 2px; }
+.md-note hr { margin: 1.6em 0; border: 0; border-top: 1px solid #e7e0d5; }
+
+/* 리스트 */
+.md-note ul, .md-note ol { margin: 0.6em 0; }
+.md-note ul { list-style: none; padding-left: 1.1em; }
+.md-note ul > li { position: relative; margin: 0.35em 0; padding-left: 0.9em; }
+.md-note ul > li::before {
+  content: ""; position: absolute; left: 0; top: 0.72em;
+  width: 4px; height: 4px; border-radius: 50%; background: #a8a29e;
+}
+.md-note ol { list-style: decimal; padding-left: 1.4em; }
+.md-note ol > li { margin: 0.4em 0; padding-left: 0.2em; }
+.md-note ol > li::marker { color: #b45309; font-weight: 700; }
+.md-note li > ul, .md-note li > ol { margin: 0.3em 0; }
+
+/* 코드 */
+.md-note code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88em; background: #f3eee4; color: #9a3412;
+  padding: 0.12em 0.4em; border-radius: 5px;
+}
+.md-note pre {
+  margin: 1em 0; background: #fcfaf5; border: 1px solid #eae3d7;
+  border-radius: 10px; padding: 0.9em 1.1em; overflow-x: auto;
+}
+.md-note pre code { background: none; color: #44403c; padding: 0; font-size: 0.86em; line-height: 1.7; }
+
+/* 표 (GFM) */
+.md-note table {
+  width: 100%; border-collapse: collapse; margin: 1em 0;
+  font-size: 0.92em; display: block; overflow-x: auto;
+}
+.md-note thead { background: #faf6ef; }
+.md-note th, .md-note td { border: 1px solid #e7e0d5; padding: 0.5em 0.7em; text-align: left; vertical-align: top; }
+.md-note th { font-weight: 700; color: #57534e; font-size: 0.9em; }
+
+/* 기본 인용구 */
+.md-note blockquote {
+  margin: 1em 0; padding: 0.5em 1em; border-left: 3px solid #e0d8ca;
+  color: #57534e; background: #fbf9f4; border-radius: 0 8px 8px 0;
+}
+
+/* Obsidian callout (remarkCallouts → div.md-callout-*) */
+.md-note .md-callout {
+  margin: 1.1em 0; padding: 0.7em 1em 0.75em 2.5em; border-radius: 12px;
+  position: relative; font-size: 0.96em; line-height: 1.75; border: 1px solid;
+}
+.md-note .md-callout::before { position: absolute; left: 0.85em; top: 0.72em; font-size: 1.05em; line-height: 1; }
+.md-note .md-callout > :first-child { margin-top: 0; }
+.md-note .md-callout > :last-child { margin-bottom: 0; }
+.md-note .md-callout-note { background: #f5f7fb; border-color: #dce4f2; }
+.md-note .md-callout-note::before { content: "📝"; }
+.md-note .md-callout-important { background: #fbf4f4; border-color: #f0dada; }
+.md-note .md-callout-important::before { content: "❗"; }
+.md-note .md-callout-example { background: #fcf7ee; border-color: #f0e3ce; }
+.md-note .md-callout-example::before { content: "💡"; }
+.md-note .md-callout-warning { background: #fef6ec; border-color: #f6e2c6; }
+.md-note .md-callout-warning::before { content: "⚠️"; }
+.md-note .md-callout-tip { background: #f1f9f3; border-color: #d6ecdc; }
+.md-note .md-callout-tip::before { content: "✅"; }
+
+/* [s:N] 인용 칩 (remarkCitations → <cite-chip>) */
+.md-note .s-cite {
+  display: inline-flex; align-items: center; vertical-align: baseline;
+  margin: 0 1px; padding: 1px 7px; font-size: 0.72em; font-weight: 700; line-height: 1.5;
+  color: #92400e; background: #fffbf2; border: 1px solid #f0e3ce; border-radius: 999px;
+  cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s;
+  font-family: "SUIT", sans-serif;
+}
+.md-note .s-cite:hover { background: #c2410c; color: #fff; border-color: #c2410c; }
+
+/* KaTeX 미세조정 */
+.md-note .katex { font-size: 1.02em; }
+.md-note .katex-display { margin: 1em 0; padding: 0.4em 0; overflow-x: auto; overflow-y: hidden; }
