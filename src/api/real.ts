@@ -1,16 +1,20 @@
-// ─── 실제 백엔드 호출 구현 (명세 기준) ────────────────────────────────────────
+// ─── 실제 백엔드 호출 구현 (api.lectranote.com 계약 기준) ──────────────────────
+//   경로·폼 필드·시그니처는 배포된 OpenAPI + 통합 가이드에 맞춤.
 
 import { apiGet, apiPostForm, apiPostJson } from "./client";
 import type {
-  Lecture,
   LectraApi,
   LoginResponse,
-  StartAnalysisResponse,
-  TranslateResponse,
-  UploadAudioResponse,
-  UploadBoardResponse,
   UploadPdfResponse,
+  OkResponse,
+  UploadBoardResponse,
+  ProcessResponse,
   JobProgress,
+  LectureListItem,
+  LectureDetail,
+  TranslateResponse,
+  SlideSummaryResponse,
+  ChapterSummaryExplainResponse,
 } from "./types";
 
 export const realApi: LectraApi = {
@@ -19,32 +23,31 @@ export const realApi: LectraApi = {
     return apiPostJson<LoginResponse>("/auth/login/google", { code });
   },
 
-  // POST /upload-pdf  (multipart: title, pdf)
+  // POST /upload-pdf  (multipart: title, file)  — 폼 필드 "file"
   uploadPdf(title, pdf) {
     const form = new FormData();
     form.append("title", title);
-    form.append("pdf", pdf);
+    form.append("file", pdf);
     return apiPostForm<UploadPdfResponse>("/upload-pdf", form);
   },
 
-  // POST /lectures/{id}/upload-audio  (multipart: audio)
+  // POST /lectures/{id}/upload-audio  (multipart: file)
   uploadAudio(lectureId, audio) {
     const form = new FormData();
-    form.append("audio", audio);
-    return apiPostForm<UploadAudioResponse>(`/lectures/${lectureId}/upload-audio`, form);
+    form.append("file", audio);
+    return apiPostForm<OkResponse>(`/lectures/${lectureId}/upload-audio`, form);
   },
 
-  // POST /lectures/{id}/upload-board  (multipart: image)
-  uploadBoard(lectureId, image) {
+  // POST /lectures/{id}/upload-board  (multipart: files[] — 여러 장 배치)
+  uploadBoard(lectureId, images) {
     const form = new FormData();
-    form.append("image", image);
+    images.forEach((f) => form.append("files", f));
     return apiPostForm<UploadBoardResponse>(`/lectures/${lectureId}/upload-board`, form);
   },
 
-  // ⚠️ job_id 출처 미확정. 업로드 응답엔 job_id가 없어, 분석을 시작하고 job_id를
-  //    반환하는 엔드포인트가 필요합니다. 백엔드 확정 시 아래 경로/방식을 맞춰주세요.
-  startAnalysis(lectureId) {
-    return apiPostJson<StartAnalysisResponse>(`/lectures/${lectureId}/analyze`, {});
+  // POST /lectures/{id}/process  → { job_id, status }
+  process(lectureId) {
+    return apiPostJson<ProcessResponse>(`/lectures/${lectureId}/process`, {});
   },
 
   // GET /jobs/{job_id}
@@ -54,18 +57,33 @@ export const realApi: LectraApi = {
 
   // GET /lectures
   getLectures() {
-    return apiGet<Lecture[]>("/lectures");
+    return apiGet<LectureListItem[]>("/lectures");
   },
 
-  // GET /lectures/{id}/slides
-  getLectureSlides(lectureId) {
-    return apiGet<Lecture>(`/lectures/${lectureId}/slides`);
+  // GET /lectures/{id}  (상세 — result_dict 포함)
+  getLecture(lectureId) {
+    return apiGet<LectureDetail>(`/lectures/${lectureId}`);
   },
 
-  // POST /slides/{id}/translate  (body: { target_language })
-  translateSlide(slideId, targetLanguage) {
-    return apiPostJson<TranslateResponse>(`/slides/${slideId}/translate`, {
-      target_language: targetLanguage,
-    });
+  // POST /lectures/{id}/slides/{n}/translate  (body: { target_language })
+  translateSlide(lectureId, slideNumber, targetLanguage) {
+    return apiPostJson<TranslateResponse>(
+      `/lectures/${lectureId}/slides/${slideNumber}/translate`,
+      { target_language: targetLanguage },
+    );
+  },
+
+  // POST /lectures/{id}/slides/{n}/summary
+  slideSummary(lectureId, slideNumber) {
+    return apiPostJson<SlideSummaryResponse>(
+      `/lectures/${lectureId}/slides/${slideNumber}/summary`, {},
+    );
+  },
+
+  // POST /lectures/{id}/chapters/{n}/summary-explain
+  chapterSummaryExplain(lectureId, chapterNumber) {
+    return apiPostJson<ChapterSummaryExplainResponse>(
+      `/lectures/${lectureId}/chapters/${chapterNumber}/summary-explain`, {},
+    );
   },
 };

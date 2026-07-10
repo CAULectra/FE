@@ -6,8 +6,11 @@
 import { useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate, useSearchParams } from "react-router";
 import {
-  Activity, Folder as FolderIcon, LayoutGrid, Plus, Search, Settings, Star, X,
+  Activity, Folder as FolderIcon, LayoutGrid, Plus, Search, Settings, Star, X, LogOut,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from "../app/components/ui/dropdown-menu";
 import { useApp } from "./store";
 import { STUDY_ZK } from "./data";
 import AuthModal from "./AuthModal";
@@ -26,7 +29,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export default function AppShell() {
-  const { folders, lectures, authed, user, login, favorites } = useApp();
+  const { folders, lectures, authed, user, login, logout, favorites } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -187,9 +190,30 @@ export default function AppShell() {
 
         {/* 하단: 설정 + 프로필 */}
         <div className="border-t border-white/10 p-3">
-          <button className={row(false)}>
-            <Settings size={13} className="shrink-0" /> 설정
-          </button>
+          {authed ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={row(false)}>
+                  <Settings size={13} className="shrink-0" /> 설정
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start" side="top" sideOffset={8}
+                className="w-48 border-white/10 bg-[#1b1611]/95 text-white/90 shadow-2xl shadow-black/50 backdrop-blur-xl"
+              >
+                <DropdownMenuItem
+                  onSelect={() => { logout(); navigate("/"); }}
+                  className="gap-2 text-[13px] text-red-400 focus:bg-white/10 focus:text-red-300"
+                >
+                  <LogOut size={14} /> 로그아웃
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <button className={row(false)}>
+              <Settings size={13} className="shrink-0" /> 설정
+            </button>
+          )}
           {authed ? (
             <div className="mt-1.5 flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-2">
               <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#F59E0B] to-primary text-[11px] font-bold text-white">

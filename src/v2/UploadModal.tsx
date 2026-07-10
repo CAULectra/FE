@@ -4,17 +4,18 @@
    선택: 사진 여러 장 (EXIF 촬영 시각으로 타임라인·노트 자동 배치)
    Start analysis 는 필수 2종 검증 통과 시에만 활성 + 비활성 사유 노출
    ================================================================ */
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { AlertTriangle, FileText, ImagePlus, Mic, Sparkles, X } from "lucide-react";
 import { useApp } from "./store";
+import { api } from "../api";
 
 type ZoneKey = "pdf" | "audio" | "photo";
-interface PickedFile { name: string; sizeMB: number; progress: number }
+interface PickedFile { file: File; name: string; sizeMB: number; progress: number }
 
 const ACCEPT: Record<ZoneKey, { exts: string[]; label: string }> = {
   pdf:   { exts: ["pdf", "ppt", "pptx"], label: ".pdf .ppt .pptx" },
-  audio: { exts: ["mp3", "wav", "m4a"],  label: ".mp3 .wav .m4a — 녹음만 (영상 X)" },
+  audio: { exts: ["mp3", "wav", "m4a"],  label: ".mp3 .wav .m4a" },
   photo: { exts: ["jpg", "jpeg", "png", "heic"], label: ".jpg .png .heic" },
 };
 
@@ -22,7 +23,7 @@ const extOf = (name: string) => name.split(".").pop()?.toLowerCase() ?? "";
 const fmtMB = (mb: number) => (mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.round(mb * 1024)} KB`);
 
 export default function UploadModal({ defaultFolderId, onClose }: { defaultFolderId: string | null; onClose: () => void }) {
-  const { folders, addLecture, addFolder } = useApp();
+  const { folders, registerJob, addFolder } = useApp();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
@@ -31,6 +32,7 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
   const [errors, setErrors] = useState<Partial<Record<ZoneKey, string>>>({});
   const [dragOver, setDragOver] = useState<ZoneKey | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [newFolderMode, setNewFolderMode] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const inputRefs = { pdf: useRef<HTMLInputElement>(null), audio: useRef<HTMLInputElement>(null), photo: useRef<HTMLInputElement>(null) };
@@ -43,50 +45,54 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
       return;
     }
     setErrors((e) => ({ ...e, [zone]: undefined }));
-    const picked = arr.map((f) => ({ name: f.name, sizeMB: f.size / 1024 / 1024, progress: 0 }));
+    const picked = arr.map((f) => ({ file: f, name: f.name, sizeMB: f.size / 1024 / 1024, progress: 0 }));
     setFiles((prev) => ({ ...prev, [zone]: zone === "photo" ? [...prev.photo, ...picked] : picked.slice(0, 1) }));
   };
 
   const pdfOk = files.pdf.length > 0 && !errors.pdf;
-  const audioOk = files.audio.length > 0 && !errors.audio;
-  const canStart = pdfOk && audioOk && !uploading;
+  const canStart = pdfOk && !uploading;         // 슬라이드(PDF/PPT)만 필수 — 녹음·사진은 선택
   const disabledReason = uploading ? null
-    : !pdfOk && !audioOk ? "슬라이드(PDF/PPT)와 녹음 파일이 필요합니다"
     : !pdfOk ? (errors.pdf ? `슬라이드 형식 오류 — ${errors.pdf}` : "슬라이드(PDF/PPT)가 필요합니다")
-    : !audioOk ? (errors.audio ? `오디오 형식 오류 — ${errors.audio}` : "녹음 파일이 없습니다")
     : null;
 
-  /* 업로드 진행 시뮬레이션 → 완료 시 lecture 생성 후 강의 페이지로 */
-  useEffect(() => {
-    if (!uploading) return;
-    const iv = setInterval(() => {
-      setFiles((prev) => {
-        const step = (f: PickedFile, speed: number) => ({ ...f, progress: Math.min(100, f.progress + speed) });
-        const next = {
-          pdf: prev.pdf.map((f) => step(f, 22)),
-          audio: prev.audio.map((f) => step(f, 9)),
-          photo: prev.photo.map((f) => step(f, 30)),
-        };
-        const all = [...next.pdf, ...next.audio, ...next.photo];
-        if (all.every((f) => f.progress >= 100)) {
-          clearInterval(iv);
-          const finalTitle = title.trim() || files.pdf[0]?.name.replace(/\.[^.]+$/, "") || "새 강의";
-          const id = addLecture({
-            title: finalTitle,
-            folderId,
-            hasAudio: true,
-            slideCount: 12 + Math.floor(Math.random() * 12),
-            photoCount: next.photo.length,
-            audioSec: 3200 + Math.floor(Math.random() * 1200),
-          });
-          setTimeout(() => navigate(`/lecture/${id}`), 250);
-        }
-        return next;
+  /* 실제 업로드 파이프라인: PDF → (녹음) → (사진) → process → 폴링 등록 → 워크스페이스.
+     각 단계 완료 시 해당 zone 진행바를 100%로. 실패 시 사유 노출하고 업로드 상태 해제. */
+  const markDone = (zone: ZoneKey) =>
+    setFiles((prev) => ({ ...prev, [zone]: prev[zone].map((f) => ({ ...f, progress: 100 })) }));
+
+  const startUpload = async () => {
+    if (!canStart) return;
+    const finalTitle = title.trim() || files.pdf[0]?.name.replace(/\.[^.]+$/, "") || "새 강의";
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const { lecture_id } = await api.uploadPdf(finalTitle, files.pdf[0].file);
+      markDone("pdf");
+      if (files.audio.length > 0) {
+        await api.uploadAudio(lecture_id, files.audio[0].file);
+        markDone("audio");
+      }
+      if (files.photo.length > 0) {
+        await api.uploadBoard(lecture_id, files.photo.map((f) => f.file));
+        markDone("photo");
+      }
+      const job = await api.process(lecture_id);
+      registerJob({
+        id: lecture_id,
+        jobId: job.job_id,
+        title: finalTitle,
+        folderId,
+        hasAudio: files.audio.length > 0,
+        photoCount: files.photo.length,
+        status: job.status,
       });
-    }, 300);
-    return () => clearInterval(iv);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uploading]);
+      onClose();
+      navigate("/workspace");
+    } catch (e) {
+      setUploading(false);
+      setUploadError(e instanceof Error ? e.message : "업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
 
   const overall = (() => {
     const all = [...files.pdf, ...files.audio, ...files.photo];
@@ -94,10 +100,11 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
     return Math.round(all.reduce((s, f) => s + f.progress, 0) / all.length);
   })();
 
-  const Zone = ({ zone, icon, label, required }: { zone: ZoneKey; icon: React.ReactNode; label: string; required?: boolean }) => (
+  const Zone = ({ zone, icon, label, required, optional }: { zone: ZoneKey; icon: React.ReactNode; label: string; required?: boolean; optional?: boolean }) => (
     <div>
       <div className="mb-1.5 flex items-center gap-1 text-[12.5px] font-semibold text-card-foreground">
         {label} {required && <span className="text-primary">*</span>}
+        {optional && <span className="text-[10.5px] font-normal text-muted-foreground">(선택)</span>}
       </div>
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(zone); }}
@@ -109,7 +116,7 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
         }`}
       >
         <span className="text-muted-foreground">{icon}</span>
-        <span className="mt-1.5 text-[12px] font-medium text-foreground">drop or browse</span>
+        <span className="mt-1.5 text-[12px] font-medium text-foreground">끌어다 놓거나 클릭</span>
         <span className="mt-0.5 text-[10.5px] text-muted-foreground">{ACCEPT[zone].label}</span>
       </div>
       <input
@@ -144,23 +151,23 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-6 backdrop-blur-[2px]" onClick={onClose}>
       <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
-          <h2 className="text-[19px] font-bold text-card-foreground">Upload new lecture</h2>
+          <h2 className="text-[19px] font-bold text-card-foreground">새 강의 업로드</h2>
           <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-secondary"><X size={17} /></button>
         </div>
 
         {/* Title / Folder */}
         <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-[12.5px] font-semibold text-card-foreground">Title</label>
+            <label className="mb-1.5 block text-[12.5px] font-semibold text-card-foreground">제목</label>
             <input
               value={title} onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Week 12 - Graphs"
+              placeholder="예: 12주차 - 그래프"
               className="h-10 w-full rounded-lg border border-border bg-[var(--input-background)] px-3 text-[13.5px] placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-[rgba(194,65,12,0.12)]"
             />
             <p className="mt-1 text-[10.5px] text-muted-foreground">미입력 시 파일명이 제목이 됩니다</p>
           </div>
           <div>
-            <label className="mb-1.5 block text-[12.5px] font-semibold text-card-foreground">Folder</label>
+            <label className="mb-1.5 block text-[12.5px] font-semibold text-card-foreground">폴더</label>
             {newFolderMode ? (
               <div className="flex gap-1.5">
                 <input
@@ -188,53 +195,38 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
           </div>
         </div>
 
-        {/* 필수 드롭존 2종 */}
-        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* 필수: 슬라이드 PDF/PPT */}
+        <div className="mt-5">
           <Zone zone="pdf" icon={<FileText size={19} />} label="슬라이드 PDF / PPT" required />
-          <Zone zone="audio" icon={<Mic size={19} />} label="녹음 파일" required />
         </div>
 
-        {/* 선택: 사진 */}
-        <div className="mt-4">
-          <button
-            onClick={() => inputRefs.photo.current?.click()}
-            className="flex w-full items-center gap-2 rounded-lg border border-dashed border-border bg-[#FBFAF8] px-3.5 py-2.5 text-left transition-colors hover:border-primary/50 hover:bg-accent/50"
-          >
-            <ImagePlus size={15} className="text-muted-foreground" />
-            <div>
-              <div className="text-[12.5px] font-medium text-foreground">+ 사진 추가 <span className="text-muted-foreground">(선택 · 여러 장) — 필기·판서 사진</span></div>
-              <div className="text-[10.5px] text-muted-foreground">촬영 시각(EXIF) 기준으로 타임라인·노트에 자동 배치</div>
-            </div>
-          </button>
-          <input ref={inputRefs.photo} type="file" hidden multiple accept=".jpg,.jpeg,.png,.heic" onChange={(e) => e.target.files && pick("photo", e.target.files)} />
-          {errors.photo && <p className="mt-1.5 text-[11.5px] font-medium text-destructive">{errors.photo}</p>}
-          {files.photo.length > 0 && (
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {files.photo.map((f) => (
-                <span key={f.name} className="rounded-full bg-secondary px-2.5 py-1 text-[11px] text-foreground">
-                  {f.name}{uploading && ` · ${Math.round(f.progress)}%`}
-                </span>
-              ))}
-            </div>
-          )}
+        {/* 선택 자료: 녹음 + 사진 (동등선상) */}
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Zone zone="audio" icon={<Mic size={19} />} label="녹음 파일" optional />
+          <Zone zone="photo" icon={<ImagePlus size={19} />} label="사진 (필기·판서)" optional />
         </div>
 
         {/* 액션 */}
         <div className="mt-6 flex items-center justify-end gap-2.5">
-          <button onClick={onClose} className="h-10 rounded-lg border border-border px-4 text-[13px] font-medium text-foreground hover:bg-secondary">Cancel</button>
+          <button onClick={onClose} className="h-10 rounded-lg border border-border px-4 text-[13px] font-medium text-foreground hover:bg-secondary">취소</button>
           <button
             disabled={!canStart}
-            onClick={() => setUploading(true)}
+            onClick={startUpload}
             className="flex h-10 items-center gap-1.5 rounded-lg bg-primary px-5 text-[13.5px] font-semibold text-white transition-colors hover:bg-[#9A3412] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Sparkles size={14} /> {uploading ? `Uploading ${overall}%` : "Start analysis"}
+            <Sparkles size={14} /> {uploading ? `업로드 중 ${overall}%` : "분석 시작"}
           </button>
         </div>
-        {disabledReason && !canStart && (
+        {uploadError && (
+          <p className="mt-2 flex items-center justify-end gap-1 text-right text-[11.5px] font-medium text-destructive">
+            <AlertTriangle size={11} /> {uploadError}
+          </p>
+        )}
+        {disabledReason && !canStart && !uploadError && (
           <p className="mt-2 text-right text-[11.5px] text-muted-foreground">{disabledReason}</p>
         )}
         {uploading && (
-          <p className="mt-2 text-right text-[11.5px] text-muted-foreground">업로드가 끝나면 자동으로 분석이 시작됩니다 · 남은 시간 ~{Math.max(1, Math.round((100 - overall) / 20))}0초</p>
+          <p className="mt-2 text-right text-[11.5px] text-muted-foreground">업로드 후 자동으로 분석이 시작됩니다 · 워크스페이스에서 진행률을 확인하세요</p>
         )}
       </div>
     </div>
