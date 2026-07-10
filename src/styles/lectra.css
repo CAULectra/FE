@@ -59,9 +59,13 @@
 }
 
 html, body {
-  font-family: 'Pretendard Variable', Pretendard, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: 'SUIT', 'Pretendard Variable', Pretendard, ui-sans-serif, system-ui, -apple-system, sans-serif;
   background: var(--background);
   color: var(--foreground);
+}
+/* 랜딩은 기존 서체 유지 (요청: 랜딩페이지 제외) */
+.landing-root {
+  font-family: 'Pretendard Variable', Pretendard, ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 /* ---- 다크 글래스 셸 ---- */
@@ -71,6 +75,8 @@ html, body {
   -webkit-backdrop-filter: blur(12px);
   color: var(--shell-fg);
   border-color: var(--shell-border);
+  /* 사이드바 글씨체 통일 — SUIT(사이트 표준) */
+  font-family: 'SUIT', 'Pretendard Variable', Pretendard, ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 /* 셸 내부 스크롤바 (얇고 어두운 배경용) */

@@ -4,14 +4,12 @@
    모든 행 = 아이콘+라벨, hover·선택 시 얇은 박스(보더)로 표시
    ================================================================ */
 import { useMemo, useState } from "react";
-import { Outlet, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
+import { Outlet, useLocation, useNavigate, useSearchParams } from "react-router";
 import {
-  Activity, ChevronDown, ChevronRight, FileText, Folder as FolderIcon,
-  LayoutGrid, Plus, Search, Settings, X,
+  Activity, Folder as FolderIcon, LayoutGrid, Plus, Search, Settings, Star, X,
 } from "lucide-react";
 import { useApp } from "./store";
 import { STUDY_ZK } from "./data";
-import type { Lecture } from "./types";
 import AuthModal from "./AuthModal";
 
 /** 공통 행 스타일 — hover/선택 시 얇은 박스 */
@@ -26,49 +24,25 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div className="px-2.5 pb-1.5 pt-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/35">{children}</div>;
 }
 
-function StatusDot({ lec }: { lec: Lecture }) {
-  if (lec.status === "ready") return <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--ember)]" />;
-  if (lec.status === "failed") return <span className="shrink-0 text-[10px] leading-none text-red-400">✕</span>;
-  return <span className="h-1.5 w-1.5 shrink-0 rounded-full border border-white/50" />;
-}
-
-function LectureRow({ lec, active, onClick }: { lec: Lecture; active: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className={row(active)}>
-      <FileText size={13} className="shrink-0 opacity-70" />
-      <span className="flex-1 truncate">{lec.title}</span>
-      <StatusDot lec={lec} />
-      {lec.status === "processing" && (
-        <span className="shrink-0 text-[10.5px] tabular-nums text-white/45">{Math.round(lec.progress)}%</span>
-      )}
-      {lec.status === "queued" && <span className="shrink-0 text-[10.5px] text-white/40">대기</span>}
-    </button>
-  );
-}
-
 export default function AppShell() {
-  const { folders, lectures, authed, login } = useApp();
+  const { folders, lectures, authed, login, favorites } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
-  const params = useParams();
-  const activeLectureId = params.id;
   const [searchParams, setSearchParams] = useSearchParams();
   const authOpen = searchParams.get("auth") === "1";
   /* 게스트는 사이드바(폴더/최근/검색)도 비어 보인다 */
   const visFolders = authed ? folders : [];
   const visLectures = authed ? lectures : [];
   const processingCount = visLectures.filter((l) => l.status === "processing" || l.status === "queued" || l.status === "uploading").length;
+  const favCount = authed ? favorites.length : 0;
+  /* 최근: 과목(폴더)을 최근 활동순으로 — 각 폴더의 최신 강의 업로드일 기준 */
+  const latestOf = (fid: string) => visLectures.filter((l) => l.folderId === fid).reduce((m, l) => (l.uploadedAt > m ? l.uploadedAt : m), "");
+  const recentFolders = [...visFolders].sort((a, b) => latestOf(b.id).localeCompare(latestOf(a.id)));
 
-  const [open, setOpen] = useState<Record<string, boolean>>({ is: true });
   const [query, setQuery] = useState("");
 
   const currentFolder = new URLSearchParams(location.search).get("folder");
   const onLibraryRoot = location.pathname === "/library" && !currentFolder;
-
-  const recent = useMemo(
-    () => (authed ? [...lectures].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt)).slice(0, 3) : []),
-    [authed, lectures],
-  );
 
   /* 검색: 제목 매칭 + 본문(스크립트) 매칭 → S# 위치로 진입 */
   const results = useMemo(() => {
@@ -175,63 +149,39 @@ export default function AppShell() {
 
         {/* ===== 구조화된 내비게이션 ===== */}
         <nav className="shell-scroll flex-1 overflow-y-auto px-3 pb-3">
-          {/* 메뉴 */}
+          {/* 메뉴 — 라이브러리 / 워크스페이스 / 즐겨찾기 (행 스타일·크기 통일) */}
           <SectionLabel>메뉴</SectionLabel>
-          <button onClick={() => gotoFolder(null)} className={row(onLibraryRoot)}>
-            <LayoutGrid size={14} className="shrink-0" />
-            <span className="flex-1 font-medium">라이브러리</span>
-            <span className="text-[11px] tabular-nums opacity-55">{visLectures.length}</span>
-          </button>
-          <button onClick={() => navigate("/workspace")} className={`${row(location.pathname === "/workspace")} mt-0.5`}>
-            <Activity size={14} className="shrink-0" />
-            <span className="flex-1 font-medium">워크스페이스</span>
-            {processingCount > 0 && (
-              <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">{processingCount}</span>
-            )}
-          </button>
+          <div className="space-y-0.5">
+            <button onClick={() => gotoFolder(null)} className={row(onLibraryRoot)}>
+              <LayoutGrid size={14} className="shrink-0" />
+              <span className="flex-1 font-medium">라이브러리</span>
+              <span className="text-[11px] tabular-nums opacity-55">{visLectures.length}</span>
+            </button>
+            <button onClick={() => navigate("/workspace")} className={row(location.pathname === "/workspace")}>
+              <Activity size={14} className="shrink-0" />
+              <span className="flex-1 font-medium">워크스페이스</span>
+              {processingCount > 0 && (
+                <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">{processingCount}</span>
+              )}
+            </button>
+            <button onClick={() => navigate("/favorites")} className={row(location.pathname === "/favorites")}>
+              <Star size={14} className="shrink-0" />
+              <span className="flex-1 font-medium">즐겨찾기</span>
+              {favCount > 0 && <span className="text-[11px] tabular-nums opacity-55">{favCount}</span>}
+            </button>
+          </div>
 
-          {/* 최근 */}
+          {/* 최근 — 과목을 폴더 모양으로 (최근 활동순) */}
           <SectionLabel>최근</SectionLabel>
           <div className="space-y-0.5">
-            {recent.map((l) => (
-              <LectureRow key={l.id} lec={l} active={l.id === activeLectureId} onClick={() => navigate(`/lecture/${l.id}`)} />
+            {recentFolders.map((f) => (
+              <button key={f.id} onClick={() => gotoFolder(f.id)} className={row(currentFolder === f.id)}>
+                <FolderIcon size={14} className="shrink-0 opacity-80" />
+                <span className="flex-1 truncate font-medium">{f.name}</span>
+                <span className="text-[11px] tabular-nums opacity-55">{visLectures.filter((l) => l.folderId === f.id).length}</span>
+              </button>
             ))}
           </div>
-
-          {/* 과목 (폴더 트리) */}
-          <SectionLabel>과목</SectionLabel>
-          <div className="space-y-0.5">
-            {visFolders.map((f) => {
-              const inFolder = visLectures.filter((l) => l.folderId === f.id);
-              const expanded = !!open[f.id];
-              const isActive = currentFolder === f.id;
-              return (
-                <div key={f.id}>
-                  <div className={`${row(isActive)} !p-0`}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setOpen((o) => ({ ...o, [f.id]: !expanded })); }}
-                      className="py-2 pl-2.5 pr-1 text-white/40 hover:text-white/80"
-                    >
-                      {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                    </button>
-                    <button onClick={() => gotoFolder(f.id)} className="flex flex-1 items-center gap-2 py-2 pr-2.5 text-left">
-                      <FolderIcon size={13} className="shrink-0 opacity-80" />
-                      <span className="flex-1 truncate font-medium">{f.name}</span>
-                      <span className="text-[11px] tabular-nums opacity-55">{inFolder.length}</span>
-                    </button>
-                  </div>
-                  {expanded && (
-                    <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2">
-                      {inFolder.map((l) => (
-                        <LectureRow key={l.id} lec={l} active={l.id === activeLectureId} onClick={() => navigate(`/lecture/${l.id}`)} />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-3 px-2.5 text-[10px] leading-relaxed text-white/28">● 완료 · ○ 처리 중 · ✕ 실패</div>
         </nav>
 
         {/* 하단: 설정 + 프로필 */}
