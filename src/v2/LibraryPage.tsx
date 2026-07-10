@@ -71,7 +71,7 @@ function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; le
 }
 
 export default function LibraryPage() {
-  const { folders, lectures, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob } = useApp();
+  const { folders, lectures, authed, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob } = useApp();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const folderId = searchParams.get("folder");
@@ -82,11 +82,14 @@ export default function LibraryPage() {
   const [renaming, setRenaming] = useState<Lecture | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
-  const folder = folders.find((f) => f.id === folderId) ?? null;
+  /* 게스트(!authed)는 라이브러리가 비어 보인다 — '시작하기'로 들어온 빈 화면 */
+  const visFolders = authed ? folders : [];
+  const visLectures = authed ? lectures : [];
+  const folder = visFolders.find((f) => f.id === folderId) ?? null;
 
   const shown = useMemo(() => {
     if (!folder) return [];
-    const list = lectures.filter((l) => l.folderId === folder.id);
+    const list = visLectures.filter((l) => l.folderId === folder.id);
     return [...list].sort((a, b) => {
       switch (sort) {
         case "name":     return a.title.localeCompare(b.title);
@@ -95,10 +98,14 @@ export default function LibraryPage() {
         default:         return b.uploadedAt.localeCompare(a.uploadedAt);
       }
     });
-  }, [lectures, folder, sort]);
+  }, [visLectures, folder, sort]);
 
   const closeUpload = () => { searchParams.delete("upload"); setSearchParams(searchParams, { replace: true }); };
-  const openUpload = () => { searchParams.set("upload", "1"); setSearchParams(searchParams); };
+  /* 업로드는 인증 필요 — 게스트면 로그인/회원가입 창(?auth=1) 먼저 */
+  const openUpload = () => {
+    if (!authed) { searchParams.set("auth", "1"); setSearchParams(searchParams); return; }
+    searchParams.set("upload", "1"); setSearchParams(searchParams);
+  };
 
   /* ===================== 과목 폴더 그리드 ===================== */
   if (!folder) {
@@ -107,7 +114,7 @@ export default function LibraryPage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-[26px] font-bold tracking-tight text-card-foreground">전체 강의</h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">과목 {folders.length}개 · 강의 {lectures.length}개</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">과목 {visFolders.length}개 · 강의 {visLectures.length}개</p>
           </div>
           <button
             onClick={openUpload}
@@ -117,21 +124,40 @@ export default function LibraryPage() {
           </button>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
-          {folders.map((f, i) => (
-            <FolderCard
-              key={f.id}
-              folder={f}
-              colorIdx={i}
-              lectures={lectures.filter((l) => l.folderId === f.id)}
-              onOpen={() => { searchParams.set("folder", f.id); setSearchParams(searchParams); }}
-            />
-          ))}
-        </div>
-
-        <p className="mt-12 text-center text-[11.5px] text-muted-foreground/70">
-          과목 폴더를 열면 업로드한 슬라이드(단원) 단위로 강의가 보입니다.
-        </p>
+        {visFolders.length === 0 ? (
+          <div className="mt-20 flex flex-col items-center text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
+              <FolderOpen size={26} className="text-muted-foreground" />
+            </div>
+            <h2 className="mt-5 text-[19px] font-bold text-card-foreground">아직 올린 자료가 없어요</h2>
+            <p className="mt-2 max-w-sm text-[13.5px] leading-relaxed text-muted-foreground">
+              슬라이드 PDF + 녹음 파일(+ 사진)을 올리면 정렬된 노트가 자동으로 만들어져요.
+            </p>
+            <button
+              onClick={openUpload}
+              className="mt-6 flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-[13.5px] font-semibold text-white hover:bg-[#9A3412]"
+            >
+              <Plus size={15} /> 자료 업로드하기
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
+              {visFolders.map((f, i) => (
+                <FolderCard
+                  key={f.id}
+                  folder={f}
+                  colorIdx={i}
+                  lectures={visLectures.filter((l) => l.folderId === f.id)}
+                  onOpen={() => { searchParams.set("folder", f.id); setSearchParams(searchParams); }}
+                />
+              ))}
+            </div>
+            <p className="mt-12 text-center text-[11.5px] text-muted-foreground/70">
+              과목 폴더를 열면 업로드한 슬라이드(단원) 단위로 강의가 보입니다.
+            </p>
+          </>
+        )}
         {uploadOpen && <UploadModal defaultFolderId={null} onClose={closeUpload} />}
       </div>
     );
@@ -241,6 +267,14 @@ export default function LibraryPage() {
                   {folder.name} · {lec.updatedLabel}{lec.slideCount ? ` · 슬라이드 ${lec.slideCount}장` : ""}
                 </p>
                 <div className="mt-3"><StatusBadge lec={lec} /></div>
+                {(lec.status === "processing" || lec.status === "queued" || lec.status === "uploading") && (
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary" title={`${Math.round(lec.progress)}% 분석 중`}>
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[var(--ember)] to-primary transition-all duration-700"
+                      style={{ width: `${lec.status === "queued" ? 4 : Math.max(4, lec.progress)}%` }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ))}
