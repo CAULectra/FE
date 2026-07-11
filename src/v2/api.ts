@@ -31,6 +31,26 @@ export async function fetchStudyData(lectureId: string): Promise<StudyData> {
   return resultDictToStudyData(detail.result, lectureId);
 }
 
+/* ── on-demand 3종 (backend는 src/api에서 이미 mock/real 게이트됨 → 형태만 변환) ── */
+
+/** 슬라이드 요약 (POST /lectures/{id}/slides/{n}/summary) → 챗 스레드용 QAMessage. 인용 없음. */
+export async function slideSummary(lectureId: string, slideNumber: number): Promise<QAMessage> {
+  const r = await backend.slideSummary(lectureId, slideNumber);
+  return { role: "ai", text: r.summary };
+}
+
+/** 슬라이드 번역 (POST /lectures/{id}/slides/{n}/translate) → 번역문만. 이미지-only 슬라이드는 "" 반환. */
+export async function translateSlideText(lectureId: string, slideNumber: number, targetLang: string): Promise<string> {
+  const r = await backend.translateSlide(lectureId, slideNumber, targetLang);
+  return r.translated_text;
+}
+
+/** 챕터 설명형 요약 (POST /lectures/{id}/chapters/{n}/summary-explain) → 설명 텍스트(마크다운). */
+export async function chapterExplain(lectureId: string, chapterNumber: number): Promise<string> {
+  const r = await backend.chapterSummaryExplain(lectureId, chapterNumber);
+  return r.summary_explain;
+}
+
 /** RAG Q&A — 답변에는 항상 근거 인용(slide, t)이 붙는다 (환각 방지 정책) */
 export async function ragQA(_lectureId: string, question: string, contextSlide: number): Promise<QAMessage> {
   await delay(900);
@@ -53,22 +73,6 @@ export async function ragQA(_lectureId: string, question: string, contextSlide: 
     role: "ai",
     text: `강의 원문을 근거로 답변합니다: "${question}" 관련 내용은 S${contextSlide} 구간에서 다뤄졌어요. 핵심 축은 Σ-프로토콜(커밋→챌린지→응답)이 영지식 3성질을 만족하도록 설계된다는 점입니다.`,
     citations,
-  };
-}
-
-export async function ragQuickAction(_lectureId: string, action: "summary" | "exam", slide: number): Promise<QAMessage> {
-  await delay(1100);
-  if (action === "summary") {
-    return {
-      role: "ai",
-      text: `S${slide} 요약 — 이 슬라이드는 증명자가 비밀 x를 노출하지 않고 y = gˣ의 지식을 증명하는 과정을 다룹니다. 커밋(β) → 챌린지(c) → 응답(s = xc + α)의 3-move가 핵심이며, 검증은 gˢ = yᶜ·β 확인으로 끝납니다.`,
-      citations: [{ slide, t: undefined }, { slide: 9, t: 1394 }],
-    };
-  }
-  return {
-    role: "ai",
-    text: `예상 시험문제 3개:\n1) Schnorr 프로토콜의 검증식 gˢ = yᶜ·β가 성립함을 완전성 관점에서 유도하라.\n2) Fiat-Shamir 변환이 랜덤 오라클 모델에서 안전한 이유를 설명하라.\n3) 영지식 증명의 세 가지 성질을 정의하고, 알리바바 동굴 예시로 건전성을 설명하라.`,
-    citations: [{ slide: 10, t: 1570 }, { slide: 11, t: 1810 }, { slide: 5 }],
   };
 }
 
