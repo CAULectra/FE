@@ -79,6 +79,7 @@ export type NoteBlock =
 /** AI 정리본은 챕터 단위 (초기 프로토타입 구조), 블록은 S#·시점에 앵커 */
 export interface Chapter {
   idx: number;               // 0-base
+  chapterNumber?: number;    // 백엔드 chapter_number (on-demand summary-explain 호출용; mock은 idx+1 폴백)
   title: string;             // "Chapter 1"
   sub: string;               // 챕터 제목
   pages: string;             // "1~4페이지"

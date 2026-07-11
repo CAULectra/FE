@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Check, Image as ImageIcon, Languages, Loader2, MessageSquare, ScrollText, Send, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../app/components/ui/dialog";
-import { ragQuickAction } from "../api";
+import { slideSummary, translateSlideText } from "../api";
 import type { Photo, QAMessage, StudyData } from "../types";
 import { fmtTime } from "../types";
 import type { Playback } from "./playback";
@@ -40,6 +40,14 @@ const TABS: { key: RefTab; label: string; icon: React.ReactNode }[] = [
   { key: "script", label: "스크립트", icon: <ScrollText size={12} /> },
 ];
 
+/** 번역 대상 언어 (라벨 → BE target_language 코드) */
+const LANGS: { label: string; code: string }[] = [
+  { label: "English", code: "en" },
+  { label: "日本語", code: "ja" },
+  { label: "中文", code: "zh" },
+  { label: "Español", code: "es" },
+];
+
 function CitationChips({ citations, pb, data }: { citations?: { slide: number; t?: number }[]; pb: Playback; data: StudyData }) {
   if (!citations?.length) return null;
   return (
@@ -64,6 +72,9 @@ export default function RefPanel(props: Props) {
   const [quickPending, setQuickPending] = useState(false);
   const [targetLang, setTargetLang] = useState("English");
   const [photoOpen, setPhotoOpen] = useState<Photo | null>(null);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translating, setTranslating] = useState(false);
+  const [transErrKey, setTransErrKey] = useState<string | null>(null);
   const qaEndRef = useRef<HTMLDivElement>(null);
   const focusRef = useRef<HTMLButtonElement>(null);
   const scriptActiveRef = useRef<HTMLButtonElement>(null);
@@ -86,13 +97,37 @@ export default function RefPanel(props: Props) {
 
   const activeIdx = useMemo(() => activeChapter, [activeChapter]);
 
-  const quick = async (action: "summary" | "exam") => {
+  const summarizeSlide = async () => {
     if (quickPending) return;
     setQuickPending(true);
-    onPushQA({ role: "user", text: action === "summary" ? `S${pb.activeSlideN} 이 슬라이드 요약해줘` : "예상 시험문제 3개 뽑아줘" });
-    const ans = await ragQuickAction(data.lectureId, action, pb.activeSlideN);
-    onPushQA(ans);
-    setQuickPending(false);
+    onPushQA({ role: "user", text: `S${pb.activeSlideN} 이 슬라이드 요약해줘` });
+    try {
+      onPushQA(await slideSummary(data.lectureId, pb.activeSlideN));
+    } catch {
+      onPushQA({ role: "ai", text: "요약을 불러오지 못했어요. 잠시 후 다시 시도해 주세요." });
+    } finally {
+      setQuickPending(false);
+    }
+  };
+
+  /* 번역 탭 — 현재 슬라이드 온디맨드 번역 (slide×lang 캐시) */
+  const curSlide = pb.activeSlideN;
+  const langCode = LANGS.find((l) => l.label === targetLang)?.code ?? "en";
+  const transKey = `${curSlide}:${langCode}`;
+  const translated = translations[transKey];
+  const transErr = transErrKey === transKey;
+  const translateCurrent = async () => {
+    if (translating) return;
+    if (transErr) setTransErrKey(null);
+    setTranslating(true);
+    try {
+      const text = await translateSlideText(data.lectureId, curSlide, langCode);
+      setTranslations((p) => ({ ...p, [transKey]: text }));
+    } catch {
+      setTransErrKey(transKey);
+    } finally {
+      setTranslating(false);
+    }
   };
 
   return (
@@ -163,11 +198,11 @@ export default function RefPanel(props: Props) {
         </div>
       )}
 
-      {/* ===== 번역 (번역된 내용만) ===== */}
+      {/* ===== 번역 (현재 슬라이드 온디맨드) ===== */}
       {tab === "translate" && (
         <div className="ws-scroll flex-1 overflow-y-auto px-3.5 py-3">
           <div className="flex items-center justify-between px-1">
-            <span className="text-[12px] font-bold text-card-foreground">Chapter Summaries</span>
+            <span className="text-[12px] font-bold text-card-foreground">현재 슬라이드 번역</span>
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <span className="rounded-full bg-secondary px-2 py-0.5 font-medium" title="노트 언어 자동 감지">자동 감지 · 한국어</span>
               <span>→</span>
@@ -176,40 +211,53 @@ export default function RefPanel(props: Props) {
                 onChange={(e) => setTargetLang(e.target.value)}
                 className="rounded-full border border-border bg-white px-2 py-0.5 text-[11px] font-semibold text-primary focus:outline-none"
               >
-                <option>English</option><option>日本語</option><option>中文</option><option>Español</option>
+                {LANGS.map((l) => <option key={l.code}>{l.label}</option>)}
               </select>
             </div>
           </div>
-          <div className="mt-2 space-y-2">
-            {data.chaptersEn.map((ch, i) => (
-              <button
-                key={i}
-                onClick={() => onSelectChapter(i)}
-                className={`block w-full rounded-xl border p-3 text-left transition-all ${
-                  i === activeIdx ? "border-primary/50 bg-accent" : "border-border bg-white hover:border-primary/30"
-                }`}
-              >
-                <div className="text-[12px] font-semibold text-card-foreground">{ch.title}</div>
-                <ul className="mt-1.5 space-y-1">
-                  {ch.summary.map((s, j) => (
-                    <li key={j} className="flex gap-1.5 text-[11.5px] leading-relaxed text-foreground/85">
-                      <span className="mt-[6px] h-[3px] w-[3px] shrink-0 rounded-full bg-muted-foreground/60" />{s}
-                    </li>
-                  ))}
-                </ul>
-              </button>
-            ))}
+
+          <div className="mt-3 flex items-center justify-between rounded-xl border border-border bg-[#FBFAF8] px-3 py-2">
+            <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-card-foreground">
+              S{curSlide}
+              <span className="ml-1.5 font-normal text-muted-foreground">{data.slides.find((s) => s.n === curSlide)?.title ?? ""}</span>
+            </span>
+            <button
+              onClick={translateCurrent}
+              disabled={translating}
+              className="flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-[#9A3412] disabled:opacity-50"
+            >
+              {translating ? <Loader2 size={11} className="animate-spin" /> : <Languages size={11} />}
+              {translated !== undefined ? "다시 번역" : `${targetLang}로 번역`}
+            </button>
           </div>
 
-          <div className="mt-4 flex items-center gap-1.5 px-1 text-[12px] font-bold text-card-foreground">
-            <Sparkles size={12} className="text-[var(--ember)]" /> Overall Summary
+          <div className="mt-3">
+            {translating ? (
+              <div className="flex items-center gap-2 px-1 text-[12px] text-muted-foreground">
+                <Loader2 size={13} className="animate-spin" /> {targetLang} 번역 생성 중…
+              </div>
+            ) : transErr ? (
+              <div className="flex items-center justify-between rounded-xl border border-[#F0D9C0] bg-[#FFF7ED] px-3.5 py-3 text-[12px] text-[#9A3412]">
+                번역을 불러오지 못했어요.
+                <button onClick={translateCurrent} className="ml-2 shrink-0 font-semibold underline underline-offset-2">다시 시도</button>
+              </div>
+            ) : translated === undefined ? (
+              <p className="px-1 text-[12px] leading-relaxed text-muted-foreground/80">
+                버튼을 눌러 <b className="font-semibold text-foreground/80">현재 슬라이드(S{curSlide})</b> 본문을 {targetLang}(으)로 번역해요. 슬라이드를 이동하면 그 슬라이드 기준으로 바뀝니다.
+              </p>
+            ) : translated === "" ? (
+              <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">
+                이 슬라이드는 이미지로만 되어 있어 번역할 본문 텍스트가 없어요.
+              </p>
+            ) : (
+              <div className="whitespace-pre-line rounded-xl border border-border bg-white p-3.5 text-[12.5px] leading-[1.75] text-foreground">
+                {translated}
+              </div>
+            )}
           </div>
-          <div className="mt-2 rounded-xl border border-border bg-white p-3.5 text-[12.5px] leading-[1.75] text-foreground">
-            {data.overallEn}
-          </div>
-          <p className="mt-3 px-1 text-[10px] text-muted-foreground/80">
-            {targetLang !== "English" && <span className="text-[var(--warning)]">데모에서는 English 번역만 제공됩니다 · </span>}
-            언어는 노트에서 자동 감지되며, 번역 결과는 노트 내보내기(Export)에 포함됩니다
+
+          <p className="mt-3 px-1 text-[10px] leading-relaxed text-muted-foreground/80">
+            슬라이드 본문(텍스트)만 번역돼요 · 번역 결과는 서버에 저장되지 않습니다
           </p>
         </div>
       )}
@@ -282,11 +330,8 @@ export default function RefPanel(props: Props) {
             <div ref={qaEndRef} />
           </div>
           <div className="flex gap-1.5 px-3.5 pb-1.5">
-            <button onClick={() => quick("summary")} disabled={quickPending} className="flex items-center gap-1 rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-medium text-foreground hover:border-primary/50 disabled:opacity-40">
+            <button onClick={summarizeSlide} disabled={quickPending} className="flex items-center gap-1 rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-medium text-foreground hover:border-primary/50 disabled:opacity-40">
               <Sparkles size={10} className="text-[var(--ember)]" /> 이 슬라이드 요약
-            </button>
-            <button onClick={() => quick("exam")} disabled={quickPending} className="flex items-center gap-1 rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-medium text-foreground hover:border-primary/50 disabled:opacity-40">
-              <Sparkles size={10} className="text-[var(--ember)]" /> 예상 시험문제 3개
             </button>
           </div>
           <div className="border-t border-border p-3">
