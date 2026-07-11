@@ -75,6 +75,7 @@ function toChapter(c: ResultChapter, i: number, slides: ResultSlide[]): Chapter 
   const meta = [`슬라이드 ${count}장`, hasBoard ? "판서 포함" : null].filter(Boolean).join(" · ");
   return {
     idx: i,                          // 배열 위치 = v2 idx (BE numbering과 무관하게 안전)
+    chapterNumber: c.chapter_number, // on-demand summary-explain 호출용
     title: `Chapter ${c.chapter_number}`,
     sub: c.title,
     pages: `${c.start_slide}~${c.end_slide}페이지`,
