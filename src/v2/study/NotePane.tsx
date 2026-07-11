@@ -6,11 +6,12 @@
 import { useMemo, useState } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import { ChevronLeft, ChevronRight, Eye, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2, Pencil, Sparkles } from "lucide-react";
 import type { Chapter, NoteBlock, StudyData } from "../types";
 import { fmtTime } from "../types";
 import type { Playback } from "./playback";
 import MarkdownNote from "./MarkdownNote";
+import { chapterExplain } from "../api";
 
 /* ---- LaTeX 수식 (KaTeX) ---- */
 function MathBlock({ latex, caption }: { latex: string; caption?: string }) {
@@ -189,6 +190,28 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
   const [edits, setEdits] = useState<Record<number, string>>({});
   const source = edits[chapter.idx] ?? chapter.noteMd ?? "";
 
+  /* 챕터 설명(on-demand summary-explain) — 챕터별 캐시. 버튼 토글로 열고 닫음 */
+  const [explains, setExplains] = useState<Record<number, string>>({});
+  const [explainOpenIdx, setExplainOpenIdx] = useState<number | null>(null);
+  const [explainLoadingIdx, setExplainLoadingIdx] = useState<number | null>(null);
+  const explainOpen = explainOpenIdx === chapter.idx;
+  const explainLoading = explainLoadingIdx === chapter.idx;
+  const toggleExplain = async () => {
+    if (explainOpen) { setExplainOpenIdx(null); return; }
+    if (explains[chapter.idx] !== undefined) { setExplainOpenIdx(chapter.idx); return; }
+    setExplainLoadingIdx(chapter.idx);
+    try {
+      const text = await chapterExplain(data.lectureId, chapter.chapterNumber ?? chapter.idx + 1);
+      setExplains((p) => ({ ...p, [chapter.idx]: text }));
+      setExplainOpenIdx(chapter.idx);
+    } catch {
+      setExplains((p) => ({ ...p, [chapter.idx]: "설명을 불러오지 못했어요. 잠시 후 다시 시도해 주세요." }));
+      setExplainOpenIdx(chapter.idx);
+    } finally {
+      setExplainLoadingIdx(null);
+    }
+  };
+
   /* note-v2 인용 칩 클릭 → 근거 슬라이드 시작 지점으로 점프 */
   const onCite = (slides: number[]) => {
     if (docMode || !slides.length) return;
@@ -210,6 +233,16 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
               {mode === "edit" ? <><Eye size={11} /> 미리보기</> : <><Pencil size={11} /> 편집</>}
             </button>
           )}
+          <button
+            onClick={toggleExplain}
+            disabled={explainLoading}
+            title="이 챕터를 풀어서 설명 (AI)"
+            className={`flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium transition-colors disabled:opacity-50 ${
+              explainOpen ? "border-primary/40 bg-accent text-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
+            }`}
+          >
+            {explainLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} className="text-[var(--ember)]" />} 이 챕터 설명
+          </button>
         </div>
         <div className="flex items-center gap-1.5">
           <button
@@ -254,6 +287,15 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
             </ul>
             </div>
           </div>
+
+          {explainOpen && (
+            <div className="mt-4 rounded-xl border border-[#EBD9BE] bg-[#FFFDF8] px-4 py-3">
+              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#92400E]">
+                <Sparkles size={12} className="text-[var(--ember)]" /> 이 챕터 설명
+              </div>
+              <MarkdownNote source={explains[chapter.idx] ?? ""} onCite={onCite} />
+            </div>
+          )}
 
           {chapter.noteMd ? (
             mode === "edit" ? (
