@@ -17,6 +17,8 @@ describe("resultDictToStudyData", () => {
     expect(sd.chapters[0].noteMd).toContain("[s:1]"); // 렌더러 remarkCitations가 파싱할 마커
     expect(sd.chapters[0].slides).toEqual([1, 2]);
     expect(sd.chapters[0].idx).toBe(0);
+    expect(sd.chapters[0].chapterNumber).toBe(1); // BE chapter_number (on-demand 호출용)
+    expect(sd.chapters[1].chapterNumber).toBe(2);
     expect(sd.chapters[1].pages).toBe("3~3페이지");
   });
 
