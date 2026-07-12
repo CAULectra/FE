@@ -119,6 +119,8 @@ export interface StudyData {
   durationSec: number;
   slides: Slide[];
   script: ScriptSentence[];
+  /** 녹음(transcript) 존재 여부 — 문서 모드 판정용. 목록의 hasAudio(부정확) 대신 실제 result_dict에서 도출 */
+  hasAudio: boolean;
   chapters: Chapter[];
   photos: Photo[];
   overall: string;           // 전체 강의자료 총 요약

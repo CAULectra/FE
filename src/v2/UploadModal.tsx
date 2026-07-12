@@ -9,6 +9,7 @@ import { useNavigate } from "react-router";
 import { AlertTriangle, FileText, ImagePlus, Mic, Sparkles, X } from "lucide-react";
 import { useApp } from "./store";
 import { api } from "../api";
+import { UNCATEGORIZED_FOLDER_ID } from "./adapters";
 
 type ZoneKey = "pdf" | "audio" | "photo";
 interface PickedFile { file: File; name: string; sizeMB: number; progress: number }
@@ -66,7 +67,9 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
     setUploadError(null);
     setUploading(true);
     try {
-      const { lecture_id } = await api.uploadPdf(finalTitle, files.pdf[0].file);
+      // 실 폴더에만 folder_id 전달 (미분류/빈값은 생략 → BE가 폴더 없이 생성) — #9
+      const uploadFolderId = folderId && folderId !== UNCATEGORIZED_FOLDER_ID ? folderId : undefined;
+      const { lecture_id } = await api.uploadPdf(finalTitle, files.pdf[0].file, uploadFolderId);
       markDone("pdf");
       if (files.audio.length > 0) {
         await api.uploadAudio(lecture_id, files.audio[0].file);
@@ -172,9 +175,9 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
               <div className="flex gap-1.5">
                 <input
                   autoFocus value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)}
-                  onKeyDown={(e) => {
+                  onKeyDown={async (e) => {
                     if (e.key === "Enter" && newFolderName.trim()) {
-                      const id = addFolder(newFolderName); if (id) setFolderId(id);
+                      const id = await addFolder(newFolderName); if (id) setFolderId(id);
                       setNewFolderMode(false); setNewFolderName("");
                     }
                     if (e.key === "Escape") setNewFolderMode(false);
