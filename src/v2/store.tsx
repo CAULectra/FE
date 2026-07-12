@@ -250,7 +250,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id,
         title: input.title,
         folderId: input.folderId,
-        uploadedAt: now.toISOString().slice(0, 10),
+        uploadedAt: now.toISOString(), // 전체 타임스탬프 → 방금 올린 강의가 같은 날 목록 최상단(BUG3)
         updatedLabel: now.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         status: startNow ? "processing" : "queued",
         progress: startNow ? 2 : 0,
@@ -275,7 +275,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       id: input.id,
       title: input.title,
       folderId: input.folderId,
-      uploadedAt: now.toISOString().slice(0, 10),
+      uploadedAt: now.toISOString(), // 전체 타임스탬프 → 방금 올린 강의가 같은 날 목록 최상단(BUG3)
       updatedLabel: now.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
       status: patch.status,
       progress: patch.progress,

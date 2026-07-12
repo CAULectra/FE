@@ -48,6 +48,20 @@ describe("lectureFromListItem — 이슈 #10 방어", () => {
   });
 });
 
+describe("lectureFromListItem — 최근순 정렬 (BUG3)", () => {
+  it("uploadedAt은 정렬용 전체 타임스탬프 보존 (날짜만으로 자르지 않음)", () => {
+    expect(lectureFromListItem(item({ created_at: "2026-07-11T09:30:00Z" })).uploadedAt)
+      .toBe("2026-07-11T09:30:00Z");
+  });
+
+  it("같은 날 업로드도 시각 기준 최신순 정렬 가능", () => {
+    const older = lectureFromListItem(item({ id: "a", created_at: "2026-07-11T08:00:00Z" }));
+    const newer = lectureFromListItem(item({ id: "b", created_at: "2026-07-11T10:00:00Z" }));
+    const sorted = [older, newer].sort((x, y) => y.uploadedAt.localeCompare(x.uploadedAt));
+    expect(sorted[0].id).toBe("b"); // 나중에 올린 강의가 위로
+  });
+});
+
 describe("deriveFolders — orphan 없이 모든 강의 노출", () => {
   const known: Folder[] = [{ id: "f_known", name: "알려진 폴더" }];
 
