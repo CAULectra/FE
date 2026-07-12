@@ -36,7 +36,12 @@ export interface LectureListItem {
   created_at: string;             // ISO8601
   folder_id?: string | null;      // §4 — 폴더 (null=미분류)
   folder_name?: string | null;    // §4 — 폴더 이름
-  // (#6에서 progress/step_index/photo_count/slide_count/audio_sec 확장 예정)
+  // §6 — BE list_lectures_for_user가 status에서 유도/집계해 제공
+  progress?: number;              // 0~100 (status 유도)
+  step_index?: number;            // 0~5 (status 유도)
+  photo_count?: number;           // 판서 이미지 수
+  audio_sec?: number | null;      // 녹음 길이(초). >0 이면 오디오 있음
+  slide_count?: number | null;    // total_slides
 }
 
 // GET /jobs/{job_id}

@@ -68,7 +68,7 @@ function labelOf(iso: string): string {
 export function lectureFromListItem(item: LectureListItem): Lecture {
   const be = item.status;
   const status: LectureStatus = be ? STATUS_MAP[be] ?? "processing" : "uploaded";
-  const stepIndex = be ? STEP_MAP[be] ?? 0 : 0;
+  const stepIndex = item.step_index ?? (be ? STEP_MAP[be] ?? 0 : 0);
   const created = item.created_at ?? "";
   return {
     id: item.id,
@@ -78,9 +78,12 @@ export function lectureFromListItem(item: LectureListItem): Lecture {
     uploadedAt: created, // 전체 ISO 타임스탬프 보존 → 같은 날도 시각순 정렬(BUG3). 표시는 updatedLabel
     updatedLabel: labelOf(created),
     status,
-    progress: status === "ready" ? 100 : 0, // 목록엔 progress 없음 → 상세/job에서 보강
+    progress: item.progress ?? (status === "ready" ? 100 : 0), // BE 유도 progress 우선(#6), 없으면 폴백
     stepIndex,
-    hasAudio: false,                          // 목록엔 없음 → 기본 false
+    hasAudio: (item.audio_sec ?? 0) > 0,      // #6: audio_sec로 목록 레벨 오디오 유무 정확화(BUG2 연장)
+    slideCount: item.slide_count ?? undefined,
+    photoCount: item.photo_count ?? undefined,
+    audioSec: item.audio_sec ?? undefined,
   };
 }
 
