@@ -89,6 +89,27 @@ describe("deriveFolders — orphan 없이 모든 강의 노출", () => {
   });
 });
 
+describe("lectureFromListItem — 목록 필드 확장 (#6)", () => {
+  it("BE progress/step_index를 그대로 반영 (없으면 status 유도)", () => {
+    const lec = lectureFromListItem(item({ status: "매핑", progress: 40, step_index: 3 }));
+    expect(lec.progress).toBe(40);
+    expect(lec.stepIndex).toBe(3);
+  });
+
+  it("audio_sec>0 → hasAudio true, 0/누락 → false", () => {
+    expect(lectureFromListItem(item({ audio_sec: 3600 })).hasAudio).toBe(true);
+    expect(lectureFromListItem(item({ audio_sec: 0 })).hasAudio).toBe(false);
+    expect(lectureFromListItem(item({ audio_sec: null })).hasAudio).toBe(false);
+  });
+
+  it("slide_count/photo_count/audio_sec 메타 매핑", () => {
+    const lec = lectureFromListItem(item({ slide_count: 42, photo_count: 3, audio_sec: 1800 }));
+    expect(lec.slideCount).toBe(42);
+    expect(lec.photoCount).toBe(3);
+    expect(lec.audioSec).toBe(1800);
+  });
+});
+
 describe("excludeDeleted — 삭제한 강의 숨김 (BUG4)", () => {
   it("deletedIds에 있는 강의는 목록에서 제외", () => {
     const a: Lecture = { ...baseLec, id: "a" };
