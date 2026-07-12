@@ -1,0 +1,179 @@
+/* =====================================================================
+   mobile-landing.css — 모바일 경량 랜딩 전용
+   딥 차콜(검정 계열) 배경 + 워밍 코랄 글로우로 브랜드 톤 유지.
+   런타임 애니메이션 루프 없이 CSS 페이드인만 사용 → 저사양 기기에서도 매끈.
+   ===================================================================== */
+.mlanding {
+  --ink: #360802;
+  --orange: #f8563a;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #fff;
+  font-family: "Artonex", "SUIT", "Pretendard Variable", Pretendard, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* iOS 주소창 변화로 인한 높이 점프 방지 */
+  height: 100dvh;
+}
+
+.mlanding-bg {
+  position: absolute;
+  inset: 0;
+  background: #0c0a0d;
+  z-index: 0;
+}
+/* 상단 코랄 글로우 + 하단 딥 그라데이션 — 브랜드 온기 유지하며 대비 확보 */
+.mlanding-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(90% 55% at 50% 12%, rgba(248, 86, 58, 0.28), transparent 60%),
+    radial-gradient(70% 40% at 80% 90%, rgba(249, 140, 100, 0.12), transparent 65%),
+    linear-gradient(180deg, #16121a 0%, #0c0a0d 55%, #0a0809 100%);
+}
+
+.mlanding-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(30px, 6.5vh, 56px);
+  padding: 32px 26px;
+  text-align: center;
+}
+
+.mlanding-hero {
+  animation: mlfade 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mlanding-wordmark {
+  font-family: "Cinzel", "SUIT", "Pretendard Variable", Pretendard, serif;
+  font-weight: 600;
+  font-size: clamp(42px, 15vw, 76px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 4px 40px rgba(248, 86, 58, 0.35);
+}
+/* 'note' — 워드마크(LECTRA)와 동일한 Cinzel로 통일.
+   Cinzel은 소문자 글자가 없어 스몰캡스(작은 대문자)로 렌더된다. */
+.mlanding-note {
+  font-family: "Cinzel", "SUIT", "Pretendard Variable", Pretendard, serif;
+  font-weight: 400;
+  font-size: 0.5em;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 캐치프라이즈 — 화면의 주인공. 오렌지 액센트 + 큰 볼드 + 상단 구분선으로 강조 */
+.mlanding-catch {
+  position: relative;
+  margin-top: clamp(24px, 4.5vh, 38px);
+  padding-top: clamp(20px, 3.5vh, 30px);
+  font-family: "SUIT", "Pretendard Variable", Pretendard, sans-serif;
+  font-weight: 700;
+  font-size: clamp(20px, 5.8vw, 27px);
+  line-height: 1.35;
+  color: #fff;
+  letter-spacing: 0.005em;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+}
+.mlanding-catch::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--orange);
+  box-shadow: 0 0 18px rgba(248, 86, 58, 0.7);
+}
+
+.mlanding-pc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: mlfade 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+.mlanding-pc svg {
+  width: 30px;
+  height: 30px;
+  color: var(--orange);
+}
+.mlanding-pc p {
+  font-family: "SUIT", "Pretendard Variable", Pretendard, sans-serif;
+  font-size: clamp(13px, 3.6vw, 15px);
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}
+.mlanding-pc b {
+  font-weight: 700;
+  color: #fff;
+}
+
+.mlanding-cta {
+  font-family: "SUIT", "Pretendard Variable", Pretendard, sans-serif;
+  font-size: clamp(15px, 4vw, 16px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: var(--orange);
+  border: none;
+  border-radius: 9999px;
+  padding: 16px 36px;
+  cursor: pointer;
+  box-shadow: 0 12px 34px rgba(248, 86, 58, 0.4);
+  animation: mlfade 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+  transition: transform 0.15s ease;
+}
+.mlanding-cta:active {
+  transform: scale(0.97);
+}
+
+.mlanding-foot {
+  position: relative;
+  z-index: 1;
+  padding: 0 26px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
+}
+.mlanding-foot a {
+  font-family: "SUIT", "Pretendard Variable", Pretendard, sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+@keyframes mlfade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mlanding-hero,
+  .mlanding-pc,
+  .mlanding-cta {
+    animation: none;
+  }
+}

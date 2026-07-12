@@ -13,12 +13,18 @@ import AlignMap from "./AlignMap";
 import QuoteLoop from "./QuoteLoop";
 import TextType from "./TextType";
 import { useLandingEffects } from "./useLandingEffects";
+import { useIsMobile } from "./useIsMobile";
+import MobileLanding from "./MobileLanding";
 import "./landing.css";
 
 export default function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  useLandingEffects(rootRef);
+  const isMobile = useIsMobile();
+  /* 모바일에선 무거운 3D·스크롤 인터랙션을 mount조차 하지 않아 렉을 없앤다 */
+  useLandingEffects(rootRef, !isMobile);
+
+  if (isMobile) return <MobileLanding />;
 
   /* §2.5 데모 모드: 기본 autoplay(자동재생). ?demo=scrub 로 스크럽(A) 버전 비교 */
   const demoMode: "scrub" | "autoplay" =
