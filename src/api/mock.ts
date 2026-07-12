@@ -29,6 +29,10 @@ export const mockApi: LectraApi = {
       user: { id: "1", name: "김학생", email: "student@univ.ac.kr" },
     };
   },
+  async getMe() {
+    await delay(150);
+    return { id: "1", name: "김학생", email: "student@univ.ac.kr", plan: "beta" as const };
+  },
   async uploadPdf(_title, _pdf) {
     await delay(600);
     return { lecture_id: "mock-lec-" + Date.now() };
