@@ -75,7 +75,7 @@ export function lectureFromListItem(item: LectureListItem): Lecture {
     title: item.title,
     folderId: item.folder_id ?? UNCATEGORIZED_FOLDER_ID,
     folderName: item.folder_name ?? undefined,
-    uploadedAt: created ? created.slice(0, 10) : "",
+    uploadedAt: created, // 전체 ISO 타임스탬프 보존 → 같은 날도 시각순 정렬(BUG3). 표시는 updatedLabel
     updatedLabel: labelOf(created),
     status,
     progress: status === "ready" ? 100 : 0, // 목록엔 progress 없음 → 상세/job에서 보강
