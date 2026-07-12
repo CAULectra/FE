@@ -5,7 +5,7 @@
    ================================================================ */
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { ArrowUpDown, ChevronLeft, FolderOpen, MoreHorizontal, Plus, RotateCcw, Star, Upload } from "lucide-react";
+import { ArrowUpDown, ChevronLeft, FolderOpen, MoreHorizontal, Plus, RotateCcw, Sparkles, Star, Upload } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
@@ -17,6 +17,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../app/components/ui/dialog";
 import { useApp } from "./store";
 import type { Folder, Lecture } from "./types";
+import { deriveFolders } from "./adapters";
 import UploadModal from "./UploadModal";
 import FolderIcon from "./FolderIcon";
 
@@ -24,7 +25,7 @@ type SortKey = "updated" | "name" | "uploaded" | "status";
 const SORT_LABEL: Record<SortKey, string> = {
   updated: "최근 수정순", name: "이름순", uploaded: "업로드일순", status: "상태순 (처리중 우선)",
 };
-const STATUS_ORDER: Record<Lecture["status"], number> = { processing: 0, queued: 1, failed: 2, uploading: 0, ready: 3 };
+const STATUS_ORDER: Record<Lecture["status"], number> = { processing: 0, uploaded: 0, queued: 1, failed: 2, uploading: 0, ready: 3 };
 
 /** 과목 폴더 아이콘 색상 (노랑 · 올리브 · 하늘 순환) */
 const FOLDER_ICON_COLORS = ["#EAB308", "#94A13C", "#7DD3FC"];
@@ -35,6 +36,7 @@ function StatusBadge({ lec }: { lec: Lecture }) {
     case "processing": return <span className="badge-status badge-processing">Processing {Math.round(lec.progress)}%</span>;
     case "queued":     return <span className="badge-status badge-queued">대기 중{lec.queueOrder ? ` · 큐 ${lec.queueOrder}번째` : ""}</span>;
     case "failed":     return <span className="badge-status badge-failed">Failed · Retry</span>;
+    case "uploaded":   return <span className="badge-status badge-queued">처리 전</span>;
     default:           return <span className="badge-status badge-queued">업로드 중</span>;
   }
 }
@@ -73,7 +75,7 @@ function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; le
 }
 
 export default function LibraryPage() {
-  const { folders, lectures, authed, favorites, toggleFavorite, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob } = useApp();
+  const { folders, lectures, authed, favorites, toggleFavorite, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob, startProcessing } = useApp();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const folderId = searchParams.get("folder");
@@ -87,7 +89,9 @@ export default function LibraryPage() {
   /* 게스트(!authed)는 라이브러리가 비어 보인다 — '시작하기'로 들어온 빈 화면 */
   const visFolders = authed ? folders : [];
   const visLectures = authed ? lectures : [];
-  const folder = visFolders.find((f) => f.id === folderId) ?? null;
+  /* 그리드/폴더 조회는 강의가 실제 참조하는 폴더까지 합쳐 orphan(빈 화면, 이슈 #10) 방지 */
+  const allFolders = useMemo(() => deriveFolders(visLectures, visFolders), [visLectures, visFolders]);
+  const folder = allFolders.find((f) => f.id === folderId) ?? null;
 
   const shown = useMemo(() => {
     if (!folder) return [];
@@ -116,7 +120,7 @@ export default function LibraryPage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-[26px] font-bold tracking-tight text-card-foreground">전체 강의</h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">과목 {visFolders.length}개 · 강의 {visLectures.length}개</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">과목 {allFolders.length}개 · 강의 {visLectures.length}개</p>
           </div>
           <button
             onClick={openUpload}
@@ -126,7 +130,7 @@ export default function LibraryPage() {
           </button>
         </div>
 
-        {visFolders.length === 0 ? (
+        {allFolders.length === 0 ? (
           <div className="mt-20 flex flex-col items-center text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
               <FolderOpen size={26} className="text-muted-foreground" />
@@ -146,7 +150,7 @@ export default function LibraryPage() {
         ) : (
           <>
             <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
-              {visFolders.map((f, i) => (
+              {allFolders.map((f, i) => (
                 <FolderCard
                   key={f.id}
                   folder={f}
@@ -286,6 +290,14 @@ export default function LibraryPage() {
                       style={{ width: `${lec.status === "queued" ? 4 : Math.max(4, lec.progress)}%` }}
                     />
                   </div>
+                )}
+                {lec.status === "uploaded" && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); startProcessing(lec.id); }}
+                    className="mt-2.5 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-[12.5px] font-semibold text-white transition-colors hover:bg-[#9A3412]"
+                  >
+                    <Sparkles size={13} /> 분석 시작
+                  </button>
                 )}
               </div>
             </div>
