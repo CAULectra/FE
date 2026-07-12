@@ -176,15 +176,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
     };
     let cancelled = false;
-    let running = false;        // #25: 이전 틱이 아직 진행 중이면 스킵 — 중복/겹침 호출 제거
-    let listPollCount = 0;      // #25: 전체 목록 폴백은 무거우니 3틱(=6초)마다만
+    let runningSince = 0;       // #25: 0=유휴, 진행 중이면 시작 시각(ms)
+    const STALE_MS = 15000;     // 요청이 이보다 오래 무응답이면 가드를 무시하고 다음 틱 진행 — 한 요청이 폴링 전체를 영구 정지시키지 않게(리뷰 반영)
+    let listPollCount = 0;      // #25: 전체 목록 폴백은 무거우니 listLectures 있는 3틱마다(≈6초)만
     const tick = async () => {
-      if (running) return;
+      // 이전 틱 진행 중이면 스킵(중복 제거). 단 STALE_MS 넘게 안 끝났으면(무응답 등) 진행.
+      if (runningSince && Date.now() - runningSince < STALE_MS) return;
       const cur = lecturesRef.current;
       const jobLectures = cur.filter((l) => l.jobId && isActive(l.status));
       const listLectures = cur.filter((l) => !l.jobId && isActive(l.status));
       if (jobLectures.length === 0 && (USE_MOCK || listLectures.length === 0)) return;
-      running = true;
+      runningSince = Date.now();
       try {
         const patches = new Map<string, JobPatch>();
         // 1) 실제 job 폴링 (실측 progress) — 매 틱(2초). 잡 단위라 가볍다.
@@ -210,7 +212,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return patch ? applyPatch(l, patch) : l;
         }));
       } finally {
-        running = false;
+        runningSince = 0;
       }
     };
     const iv = setInterval(() => { void tick(); }, 2000);
