@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 
 /** PDFDocumentProxy의 page(1-based)를 부모 폭에 맞춰 캔버스로 렌더. */
-export default function PdfPage({ pdf, page, className }: { pdf: PDFDocumentProxy; page: number; className?: string }) {
+export default function PdfPage({ pdf, page, className, onError }: { pdf: PDFDocumentProxy; page: number; className?: string; onError?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -27,7 +27,11 @@ export default function PdfPage({ pdf, page, className }: { pdf: PDFDocumentProx
         task = p.render({ canvas, canvasContext: ctx, viewport: vp });
         await task.promise;
       } catch (e) {
-        if (!cancelled) console.warn("[pdf] 페이지 렌더 실패:", page, e);
+        // 페이지 로드/렌더 실패(손상 페이지, slide_number가 numPages 초과 등) → 상위에서 텍스트 폴백하도록 통지
+        if (!cancelled) {
+          console.warn("[pdf] 페이지 렌더 실패:", page, e);
+          onError?.();
+        }
       }
     })();
     return () => {

@@ -51,7 +51,9 @@ export async function chapterExplain(lectureId: string, chapterNumber: number): 
   return r.summary_explain;
 }
 
-/** RAG Q&A — 답변에는 항상 근거 인용(slide, t)이 붙는다 (환각 방지 정책) */
+/** RAG Q&A — 실모드: POST /lectures/{id}/qa → sources[]를 인용 칩(slide)으로 변환.
+ *  근거를 못 찾으면 sources=[]로 오지만, 그 경우 BE answer가 "관련 내용을 찾지 못함" 안내라 인용 없이도 자연스럽다
+ *  (환각 방지는 BE가 근거 기반으로만 답하도록 보장하는 정책 — FE는 그 sources를 그대로 노출). 목모드: 데모 캔 답변. */
 export async function ragQA(lectureId: string, question: string, contextSlide: number): Promise<QAMessage> {
   if (!USE_MOCK) {
     // 실서버: POST /lectures/{id}/qa → sources[]를 인용 칩(slide)으로 변환
