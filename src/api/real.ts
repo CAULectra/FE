@@ -16,6 +16,7 @@ import type {
   TranslateResponse,
   SlideSummaryResponse,
   ChapterSummaryExplainResponse,
+  QAResponse,
 } from "./types";
 
 export const realApi: LectraApi = {
@@ -106,5 +107,8 @@ export const realApi: LectraApi = {
     return apiPostJson<ChapterSummaryExplainResponse>(
       `/lectures/${lectureId}/chapters/${chapterNumber}/summary-explain`, {},
     );
+  },
+  qa(lectureId, question, topK = 5) {
+    return apiPostJson<QAResponse>(`/lectures/${lectureId}/qa`, { question, top_k: topK });
   },
 };

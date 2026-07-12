@@ -112,4 +112,14 @@ export const mockApi: LectraApi = {
     await delay(500);
     return { chapter_number: chapterNumber, summary_explain: `Chapter ${chapterNumber} 해설 (mock)` };
   },
+  async qa(_lectureId, question, _topK) {
+    await delay(600);
+    return {
+      question,
+      answer: `(mock) "${question}"에 대한 답변입니다. 강의 자료 근거로 생성된 예시 응답이에요.`,
+      sources: [
+        { slide_number: 1, title: "슬라이드 1", score: 0.9, chunk_text: "관련 근거 발췌 (mock)" },
+      ],
+    };
+  },
 };

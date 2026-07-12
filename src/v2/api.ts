@@ -6,7 +6,7 @@
    대응 엔드포인트 (lectra_BE / lectra_ai):
    - POST /lectures                      → (UploadModal → store.addLecture)
    - GET  /lectures/:id/study            → fetchStudyData
-   - POST /api/rag/qa                    → ragQA          ★ 인용 칩 필수
+   - POST /lectures/:id/qa               → ragQA          ★ 인용 칩 필수
    - POST /api/rag/quick                 → ragQuickAction
    - POST /lectures/:id/export           → requestExport
    ================================================================ */
@@ -28,7 +28,7 @@ export async function fetchStudyData(lectureId: string): Promise<StudyData> {
   if (!detail.result) {
     throw new Error(detail.status === "완료" ? "강의 결과가 비어 있습니다." : "아직 처리 중인 강의입니다.");
   }
-  return resultDictToStudyData(detail.result, lectureId);
+  return resultDictToStudyData(detail.result, lectureId, detail.pdf_url);
 }
 
 /* ── on-demand 3종 (backend는 src/api에서 이미 mock/real 게이트됨 → 형태만 변환) ── */
@@ -51,8 +51,19 @@ export async function chapterExplain(lectureId: string, chapterNumber: number): 
   return r.summary_explain;
 }
 
-/** RAG Q&A — 답변에는 항상 근거 인용(slide, t)이 붙는다 (환각 방지 정책) */
-export async function ragQA(_lectureId: string, question: string, contextSlide: number): Promise<QAMessage> {
+/** RAG Q&A — 실모드: POST /lectures/{id}/qa → sources[]를 인용 칩(slide)으로 변환.
+ *  근거를 못 찾으면 sources=[]로 오지만, 그 경우 BE answer가 "관련 내용을 찾지 못함" 안내라 인용 없이도 자연스럽다
+ *  (환각 방지는 BE가 근거 기반으로만 답하도록 보장하는 정책 — FE는 그 sources를 그대로 노출). 목모드: 데모 캔 답변. */
+export async function ragQA(lectureId: string, question: string, contextSlide: number): Promise<QAMessage> {
+  if (!USE_MOCK) {
+    // 실서버: POST /lectures/{id}/qa → sources[]를 인용 칩(slide)으로 변환
+    const r = await backend.qa(lectureId, question);
+    return {
+      role: "ai",
+      text: r.answer,
+      citations: r.sources.map((s) => ({ slide: s.slide_number })),
+    };
+  }
   await delay(900);
   if (/fiat|비대화|해시|안전/i.test(question)) {
     return {
