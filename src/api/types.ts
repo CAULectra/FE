@@ -34,6 +34,9 @@ export interface LectureListItem {
   title: string;
   status: BackendStatus | null;
   created_at: string;             // ISO8601
+  folder_id?: string | null;      // §4 — 폴더 (null=미분류)
+  folder_name?: string | null;    // §4 — 폴더 이름
+  // (#6에서 progress/step_index/photo_count/slide_count/audio_sec 확장 예정)
 }
 
 // GET /jobs/{job_id}
