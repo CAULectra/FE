@@ -132,9 +132,18 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
     setQaDraft("");
     setQaMessages((m) => [...m, { role: "user", text: q }]);
     setQaPending(true);
-    const ans = await ragQA(lecture.id, q, pb.activeSlideN);
-    setQaMessages((m) => [...m, ans]);
-    setQaPending(false);
+    try {
+      const ans = await ragQA(lecture.id, q, pb.activeSlideN);
+      setQaMessages((m) => [...m, ans]);
+    } catch (e) {
+      // 실서버 qa는 실패 가능(RAG 인덱스 미생성 400·401·네트워크) → 챗에 안내 + pending 해제
+      const text = e instanceof Error && e.message
+        ? `답변 생성 실패: ${e.message}`
+        : "답변 생성 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.";
+      setQaMessages((m) => [...m, { role: "ai", text }]);
+    } finally {
+      setQaPending(false);
+    }
   };
 
   const doExport = async (formatKey: (typeof EXPORT_FORMATS)[number]["key"], label: string) => {

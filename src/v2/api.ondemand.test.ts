@@ -8,11 +8,12 @@ vi.mock("../api", () => ({
     slideSummary: vi.fn(),
     translateSlide: vi.fn(),
     chapterSummaryExplain: vi.fn(),
+    qa: vi.fn(),
   },
 }));
 
 import * as backend from "../api";
-import { slideSummary, translateSlideText, chapterExplain } from "./api";
+import { slideSummary, translateSlideText, chapterExplain, ragQA } from "./api";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -58,5 +59,21 @@ describe("v2 on-demand 래퍼", () => {
     const out = await chapterExplain("lec-1", 1);
     expect(out).toBe("이 챕터를 풀어서 설명하면…");
     expect(backend.api.chapterSummaryExplain).toHaveBeenCalledWith("lec-1", 1);
+  });
+
+  it("ragQA(실모드): BE {answer,sources} → QAMessage + sources→citations(slide)", async () => {
+    (backend.api.qa as ReturnType<typeof vi.fn>).mockResolvedValue({
+      question: "왜 안전해?",
+      answer: "랜덤 오라클 가정 때문입니다. [s:11]",
+      sources: [
+        { slide_number: 11, title: "Fiat-Shamir", score: 0.91, chunk_text: "..." },
+        { slide_number: 12, title: "Soundness", score: 0.83, chunk_text: "..." },
+      ],
+    });
+    const msg = await ragQA("lec-1", "왜 안전해?", 3);
+    expect(msg.role).toBe("ai");
+    expect(msg.text).toBe("랜덤 오라클 가정 때문입니다. [s:11]");
+    expect(msg.citations).toEqual([{ slide: 11 }, { slide: 12 }]);
+    expect(backend.api.qa).toHaveBeenCalledWith("lec-1", "왜 안전해?");
   });
 });

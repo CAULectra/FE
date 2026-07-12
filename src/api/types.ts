@@ -99,6 +99,21 @@ export interface SlideSummaryResponse { slide_number: number; summary: string; }
 // POST /lectures/{id}/chapters/{n}/summary-explain
 export interface ChapterSummaryExplainResponse { chapter_number: number; summary_explain: string; }
 
+// ── RAG Q&A ───────────────────────────────────────────────────────
+// POST /lectures/{id}/qa 의 sources[] 항목
+export interface QASource {
+  slide_number: number;
+  title: string;
+  score: number;
+  chunk_text: string;
+}
+// POST /lectures/{id}/qa 응답
+export interface QAResponse {
+  question: string;
+  answer: string;
+  sources: QASource[];
+}
+
 // ── 공통 인터페이스 (mock/real 동일 구현) ─────────────────────────
 export interface LectraApi {
   loginGoogle(code: string): Promise<LoginResponse>;
@@ -115,4 +130,6 @@ export interface LectraApi {
   translateSlide(lectureId: string, slideNumber: number, targetLanguage: string): Promise<TranslateResponse>;
   slideSummary(lectureId: string, slideNumber: number): Promise<SlideSummaryResponse>;
   chapterSummaryExplain(lectureId: string, chapterNumber: number): Promise<ChapterSummaryExplainResponse>;
+  // ── RAG Q&A ──
+  qa(lectureId: string, question: string, topK?: number): Promise<QAResponse>;
 }
