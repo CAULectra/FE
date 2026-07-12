@@ -75,7 +75,7 @@ function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; le
 }
 
 export default function LibraryPage() {
-  const { folders, lectures, authed, favorites, toggleFavorite, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob, startProcessing } = useApp();
+  const { folders, lectures, authed, user, favorites, toggleFavorite, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob, startProcessing } = useApp();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const folderId = searchParams.get("folder");
@@ -108,8 +108,10 @@ export default function LibraryPage() {
 
   const closeUpload = () => { searchParams.delete("upload"); setSearchParams(searchParams, { replace: true }); };
   /* 업로드는 인증 필요 — 게스트면 로그인/회원가입 창(?auth=1) 먼저 */
+  const blocked = user?.plan === "blocked"; // #34: 베타 접근 차단 유저
   const openUpload = () => {
     if (!authed) { searchParams.set("auth", "1"); setSearchParams(searchParams); return; }
+    if (blocked) return; // 차단 유저는 업로드 불가 — 배너로 안내
     searchParams.set("upload", "1"); setSearchParams(searchParams);
   };
 
@@ -117,6 +119,12 @@ export default function LibraryPage() {
   if (!folder) {
     return (
       <div className="mx-auto max-w-[1400px] px-8 py-7">
+        {blocked && (
+          <div className="mb-5 rounded-xl border border-[#F5D9B0] bg-[#FEF6EA] px-5 py-4">
+            <div className="text-[14px] font-bold text-[#92400E]">정식 출시 준비 중이에요 — 곧 만나요! 🚀</div>
+            <div className="mt-1 text-[12.5px] text-[#B45309]">지금은 베타 참여자만 업로드할 수 있어요. 곧 모두에게 열립니다.</div>
+          </div>
+        )}
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-[26px] font-bold tracking-tight text-card-foreground">전체 강의</h1>

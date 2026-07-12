@@ -8,7 +8,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { AlertTriangle, FileText, ImagePlus, Mic, Sparkles, X } from "lucide-react";
 import { useApp } from "./store";
-import { api } from "../api";
+import { api, ApiError } from "../api";
 import { UNCATEGORIZED_FOLDER_ID } from "./adapters";
 
 type ZoneKey = "pdf" | "audio" | "photo";
@@ -93,7 +93,12 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
       navigate("/workspace");
     } catch (e) {
       setUploading(false);
-      setUploadError(e instanceof Error ? e.message : "업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      // #34: 베타 게이트 403(BETA_ONLY) → 안내 메시지
+      if (e instanceof ApiError && e.status === 403) {
+        setUploadError("정식 출시 준비 중이에요 — 지금은 베타 참여자만 업로드할 수 있어요.");
+      } else {
+        setUploadError(e instanceof Error ? e.message : "업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      }
     }
   };
 
