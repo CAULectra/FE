@@ -12,6 +12,7 @@ export interface LoginUser {
   name?: string;
   email?: string;
   profile_image?: string | null;
+  plan?: "admin" | "beta" | "blocked";   // 베타 접근 게이트(#34). 미제공(BE 미배포) = 제한 없음 취급
 }
 // POST /auth/login/google → { access_token, token_type: "Bearer", user }
 export interface LoginResponse {
@@ -130,6 +131,7 @@ export interface QAResponse {
 // ── 공통 인터페이스 (mock/real 동일 구현) ─────────────────────────
 export interface LectraApi {
   loginGoogle(code: string): Promise<LoginResponse>;
+  getMe(): Promise<LoginUser>;   // GET /auth/me — plan 등 최신 유저 상태(#34)
   // 업로드 (부록 B 순서: pdf → audio → (board) → process)
   uploadPdf(title: string, pdf: File, folderId?: string | null): Promise<UploadPdfResponse>;
   uploadAudio(lectureId: string, audio: File): Promise<OkResponse>;

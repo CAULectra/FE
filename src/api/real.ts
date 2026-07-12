@@ -5,6 +5,7 @@ import { apiGet, apiPostForm, apiPostJson, apiPatchJson, apiDelete } from "./cli
 import type {
   LectraApi,
   LoginResponse,
+  LoginUser,
   UploadPdfResponse,
   OkResponse,
   UploadBoardResponse,
@@ -23,6 +24,10 @@ export const realApi: LectraApi = {
   // POST /auth/login/google  (body: { code }) → JWT + 사용자 정보
   loginGoogle(code) {
     return apiPostJson<LoginResponse>("/auth/login/google", { code });
+  },
+  // GET /auth/me → plan 포함 최신 유저(#34)
+  getMe() {
+    return apiGet<LoginUser>("/auth/me");
   },
 
   // POST /upload-pdf  (multipart: title, file)  — 폼 필드 "file"

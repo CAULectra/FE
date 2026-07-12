@@ -223,7 +223,7 @@ export default function AppShell() {
               </div>
               <div className="min-w-0">
                 <div className="truncate text-[12px] font-medium text-white/90">{user?.name ?? user?.email ?? "사용자"}</div>
-                <div className="text-[10.5px] text-white/40">Free plan</div>
+                {user?.plan && <div className="text-[10.5px] text-white/40">{user.plan === "admin" ? "Admin" : user.plan === "beta" ? "Beta" : "접근 제한"}</div>}
               </div>
             </div>
           ) : (

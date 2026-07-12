@@ -97,13 +97,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // 실서버: GET /auth/me 로 최신 유저(plan 포함) 갱신(#34). 실패해도 기존 유저 유지.
+  const refreshMe = useCallback(async () => {
+    if (USE_MOCK) return;
+    try {
+      const me = await api.getMe();
+      persistUser(me); setUserState(me);
+    } catch (e) { console.warn("[store] getMe 실패:", e); }
+  }, []);
+
   // 구글 로그인 성공 시: 유저 저장 + authed + 실데이터 로드. (토큰 저장은 호출부에서 setToken)
   const login = useCallback((u?: LoginUser | null) => {
     if (u !== undefined) { persistUser(u ?? null); setUserState(u ?? null); }
     setAuthed(true);
     void refreshLectures();
     void refreshFolders();
-  }, [refreshLectures, refreshFolders]);
+    void refreshMe();
+  }, [refreshLectures, refreshFolders, refreshMe]);
   const logout = useCallback(() => {
     clearToken(); clearUser(); setUserState(null); setAuthed(false);
     setLectures(USE_MOCK ? SEED_LECTURES : []);
@@ -111,8 +121,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // 새로고침 복원: 실서버 모드에서 토큰이 있으면 강의·폴더 목록 재로드
   useEffect(() => {
-    if (!USE_MOCK && getToken()) { void refreshLectures(); void refreshFolders(); }
-  }, [refreshLectures, refreshFolders]);
+    if (!USE_MOCK && getToken()) { void refreshLectures(); void refreshFolders(); void refreshMe(); }
+  }, [refreshLectures, refreshFolders, refreshMe]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
