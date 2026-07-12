@@ -7,8 +7,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Folder, Lecture } from "./types";
 import { SEED_FOLDERS, SEED_LECTURES } from "./data";
-import { getToken, getUser, setUser as persistUser, clearToken, clearUser, USE_MOCK, api, type LoginUser, type BackendStatus } from "../api";
-import { lectureFromListItem, jobToPatch, type JobPatch } from "./adapters";
+import { getToken, getUser, setUser as persistUser, clearToken, clearUser, getDeletedLectureIds, addDeletedLectureId, USE_MOCK, api, type LoginUser, type BackendStatus } from "../api";
+import { lectureFromListItem, excludeDeleted, jobToPatch, type JobPatch } from "./adapters";
 
 const MAX_CONCURRENT = 2;
 const RATE = 1.4; // %/초 — 데모용 처리 속도
@@ -78,7 +78,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (USE_MOCK) return; // 목업은 SEED 유지
     try {
       const list = await api.getLectures();
-      setLectures(list.map(lectureFromListItem));
+      // 클라이언트에서 삭제한 강의는 제외 — BE에 강의 DELETE가 없어 재요청 시 되살아나는 것 방지(BUG4)
+      setLectures(excludeDeleted(list.map(lectureFromListItem), getDeletedLectureIds()));
     } catch (e) {
       console.warn("[store] getLectures 실패:", e);
       setLectures([]);
@@ -305,6 +306,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const removeLecture = useCallback((id: string) => {
+    addDeletedLectureId(id); // tombstone → 새로고침(재요청)해도 다시 안 나타남(BUG4)
     setLectures((prev) => prev.filter((l) => l.id !== id));
   }, []);
 
@@ -325,6 +327,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const cancelJob = useCallback((id: string) => {
+    addDeletedLectureId(id); // 처리중 취소=삭제 → tombstone으로 재요청에도 유지(BUG4)
     setLectures((prev) => prev.filter((l) => l.id !== id));
   }, []);
 

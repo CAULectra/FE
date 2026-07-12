@@ -98,3 +98,11 @@ export function deriveFolders(lectures: Lecture[], known: Folder[]): Folder[] {
   }
   return [...byId.values()];
 }
+
+/** 클라이언트 tombstone — deletedIds에 담긴 강의를 목록에서 제외.
+ *  BE에 강의 DELETE 엔드포인트가 없어, 삭제가 새로고침(재요청) 후에도 유지되도록 FE에서 숨긴다(BUG4).
+ *  실제 DELETE API가 생기면 이 우회를 제거하고 서버 삭제로 대체. */
+export function excludeDeleted(lectures: Lecture[], deletedIds: Iterable<string>): Lecture[] {
+  const set = new Set(deletedIds);
+  return set.size ? lectures.filter((l) => !set.has(l.id)) : lectures;
+}
