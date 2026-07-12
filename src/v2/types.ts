@@ -3,7 +3,7 @@
    백엔드(lectra_BE) 실연동 시 이 타입이 API 응답 스키마의 기준이 된다.
    ================================================================ */
 
-export type LectureStatus = "uploading" | "queued" | "processing" | "failed" | "ready";
+export type LectureStatus = "uploading" | "uploaded" | "queued" | "processing" | "failed" | "ready";
 
 /** 처리 파이프라인 6단계 — 와이어프레임 4.0 기준 (정렬 = core step) */
 export const PIPELINE_STEPS = [
@@ -24,6 +24,7 @@ export interface Lecture {
   id: string;
   title: string;
   folderId: string;
+  folderName?: string;       // GET /lectures folder_name (실서버). 없으면 store 폴더에서 조회
   uploadedAt: string;        // ISO date
   updatedLabel: string;      // "Jun 28" 표시용
   status: LectureStatus;
