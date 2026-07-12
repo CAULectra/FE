@@ -6,7 +6,7 @@
    대응 엔드포인트 (lectra_BE / lectra_ai):
    - POST /lectures                      → (UploadModal → store.addLecture)
    - GET  /lectures/:id/study            → fetchStudyData
-   - POST /api/rag/qa                    → ragQA          ★ 인용 칩 필수
+   - POST /lectures/:id/qa               → ragQA          ★ 인용 칩 필수
    - POST /api/rag/quick                 → ragQuickAction
    - POST /lectures/:id/export           → requestExport
    ================================================================ */
@@ -52,7 +52,16 @@ export async function chapterExplain(lectureId: string, chapterNumber: number): 
 }
 
 /** RAG Q&A — 답변에는 항상 근거 인용(slide, t)이 붙는다 (환각 방지 정책) */
-export async function ragQA(_lectureId: string, question: string, contextSlide: number): Promise<QAMessage> {
+export async function ragQA(lectureId: string, question: string, contextSlide: number): Promise<QAMessage> {
+  if (!USE_MOCK) {
+    // 실서버: POST /lectures/{id}/qa → sources[]를 인용 칩(slide)으로 변환
+    const r = await backend.qa(lectureId, question);
+    return {
+      role: "ai",
+      text: r.answer,
+      citations: r.sources.map((s) => ({ slide: s.slide_number })),
+    };
+  }
   await delay(900);
   if (/fiat|비대화|해시|안전/i.test(question)) {
     return {
