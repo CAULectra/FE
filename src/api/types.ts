@@ -36,7 +36,12 @@ export interface LectureListItem {
   created_at: string;             // ISO8601
   folder_id?: string | null;      // §4 — 폴더 (null=미분류)
   folder_name?: string | null;    // §4 — 폴더 이름
-  // (#6에서 progress/step_index/photo_count/slide_count/audio_sec 확장 예정)
+  // §6 — BE list_lectures_for_user가 status에서 유도/집계해 제공
+  progress?: number;              // 0~100 (status 유도)
+  step_index?: number;            // 0~5 (status 유도)
+  photo_count?: number;           // 판서 이미지 수
+  audio_sec?: number | null;      // 녹음 길이(초). >0 이면 오디오 있음
+  slide_count?: number | null;    // total_slides
 }
 
 // GET /jobs/{job_id}
@@ -87,6 +92,14 @@ export interface ResultDict {
   rag_index_id: string;
 }
 
+// ── 폴더 (§4) ─────────────────────────────────────────────────────
+// GET /folders → FolderResponse[]; POST/PATCH → FolderResponse; DELETE → 204
+export interface FolderResponse {
+  id: string;
+  name: string;
+  created_at?: string;
+}
+
 // ── on-demand 번역/요약 ───────────────────────────────────────────
 // POST /lectures/{id}/slides/{n}/translate
 export interface TranslateResponse {
@@ -118,7 +131,7 @@ export interface QAResponse {
 export interface LectraApi {
   loginGoogle(code: string): Promise<LoginResponse>;
   // 업로드 (부록 B 순서: pdf → audio → (board) → process)
-  uploadPdf(title: string, pdf: File): Promise<UploadPdfResponse>;
+  uploadPdf(title: string, pdf: File, folderId?: string | null): Promise<UploadPdfResponse>;
   uploadAudio(lectureId: string, audio: File): Promise<OkResponse>;
   uploadBoard(lectureId: string, images: File[]): Promise<UploadBoardResponse>; // 배치(복수)
   process(lectureId: string): Promise<ProcessResponse>;
@@ -126,6 +139,13 @@ export interface LectraApi {
   getJob(jobId: string): Promise<JobProgress>;
   getLectures(): Promise<LectureListItem[]>;
   getLecture(lectureId: string): Promise<LectureDetail>;
+  // 폴더 CRUD (§4)
+  listFolders(): Promise<FolderResponse[]>;
+  createFolder(name: string): Promise<FolderResponse>;
+  renameFolder(folderId: string, name: string): Promise<FolderResponse>;
+  deleteFolder(folderId: string): Promise<void>;
+  // 강의 폴더 이동 (PATCH /lectures/{id}) — folderId=null 이면 미분류로
+  updateLectureFolder(lectureId: string, folderId: string | null): Promise<{ lecture_id: string; folder_id: string | null }>;
   // on-demand
   translateSlide(lectureId: string, slideNumber: number, targetLanguage: string): Promise<TranslateResponse>;
   slideSummary(lectureId: string, slideNumber: number): Promise<SlideSummaryResponse>;

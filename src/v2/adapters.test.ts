@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { lectureFromListItem, deriveFolders, UNCATEGORIZED_FOLDER_ID } from "./adapters";
+import { lectureFromListItem, deriveFolders, excludeDeleted, UNCATEGORIZED_FOLDER_ID } from "./adapters";
 import type { LectureListItem } from "../api";
 import type { Folder, Lecture } from "./types";
 
@@ -48,6 +48,20 @@ describe("lectureFromListItem — 이슈 #10 방어", () => {
   });
 });
 
+describe("lectureFromListItem — 최근순 정렬 (BUG3)", () => {
+  it("uploadedAt은 정렬용 전체 타임스탬프 보존 (날짜만으로 자르지 않음)", () => {
+    expect(lectureFromListItem(item({ created_at: "2026-07-11T09:30:00Z" })).uploadedAt)
+      .toBe("2026-07-11T09:30:00Z");
+  });
+
+  it("같은 날 업로드도 시각 기준 최신순 정렬 가능", () => {
+    const older = lectureFromListItem(item({ id: "a", created_at: "2026-07-11T08:00:00Z" }));
+    const newer = lectureFromListItem(item({ id: "b", created_at: "2026-07-11T10:00:00Z" }));
+    const sorted = [older, newer].sort((x, y) => y.uploadedAt.localeCompare(x.uploadedAt));
+    expect(sorted[0].id).toBe("b"); // 나중에 올린 강의가 위로
+  });
+});
+
 describe("deriveFolders — orphan 없이 모든 강의 노출", () => {
   const known: Folder[] = [{ id: "f_known", name: "알려진 폴더" }];
 
@@ -72,5 +86,38 @@ describe("deriveFolders — orphan 없이 모든 강의 노출", () => {
     ];
     const ids = new Set(deriveFolders(lectures, known).map((f) => f.id));
     expect(lectures.every((l) => ids.has(l.folderId))).toBe(true);
+  });
+});
+
+describe("lectureFromListItem — 목록 필드 확장 (#6)", () => {
+  it("BE progress/step_index를 그대로 반영 (없으면 status 유도)", () => {
+    const lec = lectureFromListItem(item({ status: "매핑", progress: 40, step_index: 3 }));
+    expect(lec.progress).toBe(40);
+    expect(lec.stepIndex).toBe(3);
+  });
+
+  it("audio_sec>0 → hasAudio true, 0/누락 → false", () => {
+    expect(lectureFromListItem(item({ audio_sec: 3600 })).hasAudio).toBe(true);
+    expect(lectureFromListItem(item({ audio_sec: 0 })).hasAudio).toBe(false);
+    expect(lectureFromListItem(item({ audio_sec: null })).hasAudio).toBe(false);
+  });
+
+  it("slide_count/photo_count/audio_sec 메타 매핑", () => {
+    const lec = lectureFromListItem(item({ slide_count: 42, photo_count: 3, audio_sec: 1800 }));
+    expect(lec.slideCount).toBe(42);
+    expect(lec.photoCount).toBe(3);
+    expect(lec.audioSec).toBe(1800);
+  });
+});
+
+describe("excludeDeleted — 삭제한 강의 숨김 (BUG4)", () => {
+  it("deletedIds에 있는 강의는 목록에서 제외", () => {
+    const a: Lecture = { ...baseLec, id: "a" };
+    const b: Lecture = { ...baseLec, id: "b" };
+    expect(excludeDeleted([a, b], ["a"]).map((l) => l.id)).toEqual(["b"]);
+  });
+
+  it("빈 deletedIds면 원본 유지", () => {
+    expect(excludeDeleted([{ ...baseLec, id: "a" }], [])).toHaveLength(1);
   });
 });
