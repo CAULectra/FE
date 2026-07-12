@@ -1,7 +1,7 @@
 // ─── 실제 백엔드 호출 구현 (api.lectranote.com 계약 기준) ──────────────────────
 //   경로·폼 필드·시그니처는 배포된 OpenAPI + 통합 가이드에 맞춤.
 
-import { apiGet, apiPostForm, apiPostJson } from "./client";
+import { apiGet, apiPostForm, apiPostJson, apiPatchJson, apiDelete } from "./client";
 import type {
   LectraApi,
   LoginResponse,
@@ -12,6 +12,7 @@ import type {
   JobProgress,
   LectureListItem,
   LectureDetail,
+  FolderResponse,
   TranslateResponse,
   SlideSummaryResponse,
   ChapterSummaryExplainResponse,
@@ -24,10 +25,11 @@ export const realApi: LectraApi = {
   },
 
   // POST /upload-pdf  (multipart: title, file)  — 폼 필드 "file"
-  uploadPdf(title, pdf) {
+  uploadPdf(title, pdf, folderId) {
     const form = new FormData();
     form.append("title", title);
     form.append("file", pdf);
+    if (folderId) form.append("folder_id", folderId); // 실 폴더 id만 (미분류/빈값은 호출부에서 undefined) — #9
     return apiPostForm<UploadPdfResponse>("/upload-pdf", form);
   },
 
@@ -63,6 +65,25 @@ export const realApi: LectraApi = {
   // GET /lectures/{id}  (상세 — result_dict 포함)
   getLecture(lectureId) {
     return apiGet<LectureDetail>(`/lectures/${lectureId}`);
+  },
+
+  // ── 폴더 CRUD (§4) ──
+  listFolders() {
+    return apiGet<FolderResponse[]>("/folders");
+  },
+  createFolder(name) {
+    return apiPostJson<FolderResponse>("/folders", { name });
+  },
+  renameFolder(folderId, name) {
+    return apiPatchJson<FolderResponse>(`/folders/${folderId}`, { name });
+  },
+  deleteFolder(folderId) {
+    return apiDelete(`/folders/${folderId}`);
+  },
+  updateLectureFolder(lectureId, folderId) {
+    return apiPatchJson<{ lecture_id: string; folder_id: string | null }>(
+      `/lectures/${lectureId}`, { folder_id: folderId },
+    );
   },
 
   // POST /lectures/{id}/slides/{n}/translate  (body: { target_language })
