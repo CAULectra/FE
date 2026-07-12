@@ -56,6 +56,7 @@ export const STUDY_ZK: StudyData = {
   courseName: "정보보호이론",
   defaultSlide: 9,
   durationSec: 3690, // 61:30
+  hasAudio: true,
   slides: [
     zkS(1,  "06. Zero-Knowledge Proofs", 0, 150),
     zkS(2,  "Proof Systems", 150, 390),
@@ -211,6 +212,7 @@ export const STUDY_BT: StudyData = {
   courseName: "알고리즘",
   defaultSlide: 17,
   durationSec: 2850,
+  hasAudio: true,
   slides: mkSlides(BT_TITLES, "bt", 2850),
   script: [
     { id: "bt1", slide: 8,  t: 540,  text: "즉 DP와는 다른 Smart Brute-Force예요. 중복 부분문제가 아니라 가지치기가 핵심입니다." },
@@ -321,6 +323,7 @@ export const STUDY_CN: StudyData = {
   courseName: "컴퓨터네트워크",
   defaultSlide: 13,
   durationSec: 3480,
+  hasAudio: true,
   slides: mkSlides(CN_TITLES, "cn", 3480),
   script: [
     { id: "cn1", slide: 12, t: 745,  text: "Link-state routing floods the topology, so every router ends up with the full network map." },

@@ -46,3 +46,15 @@ export function apiPostForm<T>(path: string, form: FormData): Promise<T> {
     body: form,
   }).then(handle<T>);
 }
+
+export function apiPatchJson<T>(path: string, body: unknown): Promise<T> {
+  return fetch(API_BASE_URL + path, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(body),
+  }).then(handle<T>);
+}
+
+export function apiDelete(path: string): Promise<void> {
+  return fetch(API_BASE_URL + path, { method: "DELETE", headers: { ...authHeaders() } }).then(handle<void>);
+}

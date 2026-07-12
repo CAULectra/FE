@@ -12,6 +12,7 @@ import { slideSummary, translateSlideText } from "../api";
 import type { Photo, QAMessage, StudyData } from "../types";
 import { fmtTime } from "../types";
 import type { Playback } from "./playback";
+import MarkdownNote from "./MarkdownNote";
 
 export type RefTab = "summary" | "translate" | "photos" | "chat" | "script";
 
@@ -250,8 +251,9 @@ export default function RefPanel(props: Props) {
                 이 슬라이드는 이미지로만 되어 있어 번역할 본문 텍스트가 없어요.
               </p>
             ) : (
-              <div className="whitespace-pre-line rounded-xl border border-border bg-white p-3.5 text-[12.5px] leading-[1.75] text-foreground">
-                {translated}
+              <div className="rounded-xl border border-border bg-white p-3.5">
+                {/* 번역 결과도 노트와 동일하게 마크다운 렌더 (GFM 표·리스트·수식) — BUG1 */}
+                <MarkdownNote source={translated} />
               </div>
             )}
           </div>

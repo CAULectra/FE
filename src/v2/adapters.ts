@@ -68,19 +68,22 @@ function labelOf(iso: string): string {
 export function lectureFromListItem(item: LectureListItem): Lecture {
   const be = item.status;
   const status: LectureStatus = be ? STATUS_MAP[be] ?? "processing" : "uploaded";
-  const stepIndex = be ? STEP_MAP[be] ?? 0 : 0;
+  const stepIndex = item.step_index ?? (be ? STEP_MAP[be] ?? 0 : 0);
   const created = item.created_at ?? "";
   return {
     id: item.id,
     title: item.title,
     folderId: item.folder_id ?? UNCATEGORIZED_FOLDER_ID,
     folderName: item.folder_name ?? undefined,
-    uploadedAt: created ? created.slice(0, 10) : "",
+    uploadedAt: created, // 전체 ISO 타임스탬프 보존 → 같은 날도 시각순 정렬(BUG3). 표시는 updatedLabel
     updatedLabel: labelOf(created),
     status,
-    progress: status === "ready" ? 100 : 0, // 목록엔 progress 없음 → 상세/job에서 보강
+    progress: item.progress ?? (status === "ready" ? 100 : 0), // BE 유도 progress 우선(#6), 없으면 폴백
     stepIndex,
-    hasAudio: false,                          // 목록엔 없음 → 기본 false
+    hasAudio: (item.audio_sec ?? 0) > 0,      // #6: audio_sec로 목록 레벨 오디오 유무 정확화(BUG2 연장)
+    slideCount: item.slide_count ?? undefined,
+    photoCount: item.photo_count ?? undefined,
+    audioSec: item.audio_sec ?? undefined,
   };
 }
 
@@ -97,4 +100,12 @@ export function deriveFolders(lectures: Lecture[], known: Folder[]): Folder[] {
     byId.set(l.folderId, { id: l.folderId, name });
   }
   return [...byId.values()];
+}
+
+/** 클라이언트 tombstone — deletedIds에 담긴 강의를 목록에서 제외.
+ *  BE에 강의 DELETE 엔드포인트가 없어, 삭제가 새로고침(재요청) 후에도 유지되도록 FE에서 숨긴다(BUG4).
+ *  실제 DELETE API가 생기면 이 우회를 제거하고 서버 삭제로 대체. */
+export function excludeDeleted(lectures: Lecture[], deletedIds: Iterable<string>): Lecture[] {
+  const set = new Set(deletedIds);
+  return set.size ? lectures.filter((l) => !set.has(l.id)) : lectures;
 }

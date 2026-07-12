@@ -6,7 +6,7 @@ import { mockApi } from "./mock";
 import { realApi } from "./real";
 
 export * from "./types";
-export { API_BASE_URL, USE_MOCK, getToken, setToken, clearToken, getUser, setUser, clearUser } from "./config";
+export { API_BASE_URL, USE_MOCK, getToken, setToken, clearToken, getUser, setUser, clearUser, getDeletedLectureIds, addDeletedLectureId } from "./config";
 export { ApiError } from "./client";
 
 // USE_MOCK: 전부 목. 아니면 실제 백엔드를 쓰되, MOCK_LOGIN이면 로그인만 목으로 대체.
