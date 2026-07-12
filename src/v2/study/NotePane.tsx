@@ -194,22 +194,28 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
   const [explains, setExplains] = useState<Record<number, string>>({});
   const [explainOpenIdx, setExplainOpenIdx] = useState<number | null>(null);
   const [explainLoadingIdx, setExplainLoadingIdx] = useState<number | null>(null);
+  const [explainErrIdx, setExplainErrIdx] = useState<number | null>(null);
   const explainOpen = explainOpenIdx === chapter.idx;
   const explainLoading = explainLoadingIdx === chapter.idx;
-  const toggleExplain = async () => {
-    if (explainOpen) { setExplainOpenIdx(null); return; }
-    if (explains[chapter.idx] !== undefined) { setExplainOpenIdx(chapter.idx); return; }
+  const explainErr = explainErrIdx === chapter.idx;
+  /* 실제 요청 — 에러는 성공 캐시(explains)와 분리해 저장해야 재시도가 가능하다 */
+  const loadExplain = async () => {
+    setExplainErrIdx((e) => (e === chapter.idx ? null : e));
+    setExplainOpenIdx(chapter.idx);
     setExplainLoadingIdx(chapter.idx);
     try {
       const text = await chapterExplain(data.lectureId, chapter.chapterNumber ?? chapter.idx + 1);
       setExplains((p) => ({ ...p, [chapter.idx]: text }));
-      setExplainOpenIdx(chapter.idx);
     } catch {
-      setExplains((p) => ({ ...p, [chapter.idx]: "설명을 불러오지 못했어요. 잠시 후 다시 시도해 주세요." }));
-      setExplainOpenIdx(chapter.idx);
+      setExplainErrIdx(chapter.idx);
     } finally {
-      setExplainLoadingIdx(null);
+      setExplainLoadingIdx((l) => (l === chapter.idx ? null : l));
     }
+  };
+  const toggleExplain = () => {
+    if (explainOpen) { setExplainOpenIdx(null); return; }
+    if (explains[chapter.idx] !== undefined) { setExplainOpenIdx(chapter.idx); return; }
+    void loadExplain();
   };
 
   /* note-v2 인용 칩 클릭 → 근거 슬라이드 시작 지점으로 점프 */
@@ -293,7 +299,18 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
               <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#92400E]">
                 <Sparkles size={12} className="text-[var(--ember)]" /> 이 챕터 설명
               </div>
-              <MarkdownNote source={explains[chapter.idx] ?? ""} onCite={onCite} />
+              {explainLoading ? (
+                <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                  <Loader2 size={13} className="animate-spin" /> 설명 생성 중…
+                </div>
+              ) : explainErr ? (
+                <div className="flex items-center justify-between text-[12px] text-[#9A3412]">
+                  설명을 불러오지 못했어요.
+                  <button onClick={loadExplain} className="ml-2 shrink-0 font-semibold underline underline-offset-2">다시 시도</button>
+                </div>
+              ) : (
+                <MarkdownNote source={explains[chapter.idx] ?? ""} onCite={onCite} />
+              )}
             </div>
           )}
 
