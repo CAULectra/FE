@@ -176,33 +176,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
     };
     let cancelled = false;
+    let runningSince = 0;       // #25: 0=유휴, 진행 중이면 시작 시각(ms)
+    const STALE_MS = 15000;     // 요청이 이보다 오래 무응답이면 가드를 무시하고 다음 틱 진행 — 한 요청이 폴링 전체를 영구 정지시키지 않게(리뷰 반영)
+    let listPollCount = 0;      // #25: 전체 목록 폴백은 무거우니 listLectures 있는 3틱마다(≈6초)만
     const tick = async () => {
+      // 이전 틱 진행 중이면 스킵(중복 제거). 단 STALE_MS 넘게 안 끝났으면(무응답 등) 진행.
+      if (runningSince && Date.now() - runningSince < STALE_MS) return;
       const cur = lecturesRef.current;
       const jobLectures = cur.filter((l) => l.jobId && isActive(l.status));
       const listLectures = cur.filter((l) => !l.jobId && isActive(l.status));
       if (jobLectures.length === 0 && (USE_MOCK || listLectures.length === 0)) return;
-      const patches = new Map<string, JobPatch>();
-      // 1) 실제 job 폴링 (실측 progress)
-      await Promise.all(jobLectures.map(async (l) => {
-        try { patches.set(l.id, jobToPatch(await api.getJob(l.jobId!))); }
-        catch (e) { console.warn("[store] getJob 실패:", l.jobId, e); }
-      }));
-      // 2) jobId 없이 복원된 처리중 강의 → 목록 status로 보강 (실모드만)
-      if (!USE_MOCK && listLectures.length > 0) {
-        try {
-          const list = await api.getLectures();
-          const byId = new Map(list.map((i) => [i.id, i]));
-          for (const l of listLectures) {
-            const item = byId.get(l.id);
-            if (item?.status) patches.set(l.id, jobToPatch({ status: item.status }));
-          }
-        } catch (e) { console.warn("[store] getLectures(폴링) 실패:", e); }
+      runningSince = Date.now();
+      try {
+        const patches = new Map<string, JobPatch>();
+        // 1) 실제 job 폴링 (실측 progress) — 매 틱(2초). 잡 단위라 가볍다.
+        await Promise.all(jobLectures.map(async (l) => {
+          try { patches.set(l.id, jobToPatch(await api.getJob(l.jobId!))); }
+          catch (e) { console.warn("[store] getJob 실패:", l.jobId, e); }
+        }));
+        // 2) jobId 없이 복원된 처리중 강의 → 전체 목록 status로 보강 (실모드만).
+        //    GET /lectures 전체 조회는 무거워 매 2초가 아니라 3틱(=6초)마다만 호출한다(#25: 13회+ 중복호출 방지).
+        if (!USE_MOCK && listLectures.length > 0 && listPollCount++ % 3 === 0) {
+          try {
+            const list = await api.getLectures();
+            const byId = new Map(list.map((i) => [i.id, i]));
+            for (const l of listLectures) {
+              const item = byId.get(l.id);
+              if (item?.status) patches.set(l.id, jobToPatch({ status: item.status }));
+            }
+          } catch (e) { console.warn("[store] getLectures(폴링) 실패:", e); }
+        }
+        if (cancelled || patches.size === 0) return;
+        setLectures((prev) => prev.map((l) => {
+          const patch = patches.get(l.id);
+          return patch ? applyPatch(l, patch) : l;
+        }));
+      } finally {
+        runningSince = 0;
       }
-      if (cancelled || patches.size === 0) return;
-      setLectures((prev) => prev.map((l) => {
-        const patch = patches.get(l.id);
-        return patch ? applyPatch(l, patch) : l;
-      }));
     };
     const iv = setInterval(() => { void tick(); }, 2000);
     return () => { cancelled = true; clearInterval(iv); };
