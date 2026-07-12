@@ -28,7 +28,7 @@ export async function fetchStudyData(lectureId: string): Promise<StudyData> {
   if (!detail.result) {
     throw new Error(detail.status === "완료" ? "강의 결과가 비어 있습니다." : "아직 처리 중인 강의입니다.");
   }
-  return resultDictToStudyData(detail.result, lectureId);
+  return resultDictToStudyData(detail.result, lectureId, detail.pdf_url);
 }
 
 /* ── on-demand 3종 (backend는 src/api에서 이미 mock/real 게이트됨 → 형태만 변환) ── */

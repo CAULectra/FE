@@ -122,6 +122,7 @@ export interface StudyData {
   chapters: Chapter[];
   photos: Photo[];
   overall: string;           // 전체 강의자료 총 요약
+  pdfUrl?: string | null;    // 원본 슬라이드 PDF presigned URL (없으면 텍스트 폴백)
   /** 번역 탭 — 번역된 내용만 노출 (원문 병기 없음) */
   chaptersEn: { title: string; summary: string[] }[];
   overallEn: string;
