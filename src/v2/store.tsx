@@ -7,8 +7,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Folder, Lecture } from "./types";
 import { SEED_FOLDERS, SEED_LECTURES } from "./data";
-import { getToken, getUser, setUser as persistUser, clearToken, clearUser, USE_MOCK, api, type LoginUser, type BackendStatus } from "../api";
-import { lectureFromListItem, jobToPatch, type JobPatch } from "./adapters";
+import { getToken, getUser, setUser as persistUser, clearToken, clearUser, getDeletedLectureIds, addDeletedLectureId, USE_MOCK, api, type LoginUser, type BackendStatus } from "../api";
+import { lectureFromListItem, excludeDeleted, jobToPatch, UNCATEGORIZED_FOLDER_ID, type JobPatch } from "./adapters";
 
 const MAX_CONCURRENT = 2;
 const RATE = 1.4; // %/초 — 데모용 처리 속도
@@ -41,15 +41,15 @@ export interface RegisterJobInput {
 interface AppStore {
   folders: Folder[];
   lectures: Lecture[];
-  addFolder: (name: string) => string | null;      // 중복이면 null
-  renameFolder: (id: string, name: string) => void;
-  removeFolder: (id: string) => void;
+  addFolder: (name: string) => Promise<string | null>;  // 중복이면 null (real: POST /folders)
+  renameFolder: (id: string, name: string) => Promise<void>;
+  removeFolder: (id: string) => Promise<void>;           // 소속 강의는 미분류로 이동(BE 동일)
   addLecture: (input: NewLectureInput) => string;  // 새 lecture id
   registerJob: (input: RegisterJobInput) => void;  // 실서버 업로드→process 후 폴링 등록
   startProcessing: (id: string) => void;           // 업로드만 된(status null) 강의 → 분석 시작
   removeLecture: (id: string) => void;
   renameLecture: (id: string, title: string) => void;
-  moveLecture: (id: string, folderId: string) => void;
+  moveLecture: (id: string, folderId: string) => Promise<void>;
   retryLecture: (id: string) => void;              // failed → 재실행
   cancelJob: (id: string) => void;                 // processing/queued 취소(삭제)
   /* 게스트/인증 — 게스트는 라이브러리가 비어 보이고, 업로드 시 로그인 유도 */
@@ -78,10 +78,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (USE_MOCK) return; // 목업은 SEED 유지
     try {
       const list = await api.getLectures();
-      setLectures(list.map(lectureFromListItem));
+      // 클라이언트에서 삭제한 강의는 제외 — BE에 강의 DELETE가 없어 재요청 시 되살아나는 것 방지(BUG4)
+      setLectures(excludeDeleted(list.map(lectureFromListItem), getDeletedLectureIds()));
     } catch (e) {
       console.warn("[store] getLectures 실패:", e);
       setLectures([]);
+    }
+  }, []);
+
+  // 실서버 모드: 폴더 목록도 BE에서 로드(GET /folders). 목업은 SEED 유지.
+  const refreshFolders = useCallback(async () => {
+    if (USE_MOCK) return;
+    try {
+      const list = await api.listFolders();
+      setFolders(list.map((f) => ({ id: f.id, name: f.name })));
+    } catch (e) {
+      console.warn("[store] listFolders 실패:", e);
     }
   }, []);
 
@@ -90,16 +102,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (u !== undefined) { persistUser(u ?? null); setUserState(u ?? null); }
     setAuthed(true);
     void refreshLectures();
-  }, [refreshLectures]);
+    void refreshFolders();
+  }, [refreshLectures, refreshFolders]);
   const logout = useCallback(() => {
     clearToken(); clearUser(); setUserState(null); setAuthed(false);
     setLectures(USE_MOCK ? SEED_LECTURES : []);
   }, []);
 
-  // 새로고침 복원: 실서버 모드에서 토큰이 있으면 강의 목록 재로드
+  // 새로고침 복원: 실서버 모드에서 토큰이 있으면 강의·폴더 목록 재로드
   useEffect(() => {
-    if (!USE_MOCK && getToken()) void refreshLectures();
-  }, [refreshLectures]);
+    if (!USE_MOCK && getToken()) { void refreshLectures(); void refreshFolders(); }
+  }, [refreshLectures, refreshFolders]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -218,9 +231,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(iv);
   }, []);
 
-  const addFolder = useCallback((name: string): string | null => {
+  const addFolder = useCallback(async (name: string): Promise<string | null> => {
     const trimmed = name.trim();
     if (!trimmed) return null;
+    if (!USE_MOCK) {
+      // 실서버: POST /folders → 서버 id로 반영 (get_or_create라 중복명이면 기존 반환)
+      try {
+        const f = await api.createFolder(trimmed);
+        setFolders((prev) => (prev.some((p) => p.id === f.id) ? prev : [...prev, { id: f.id, name: f.name }]));
+        return f.id;
+      } catch (e) {
+        console.warn("[store] createFolder 실패:", e);
+        return null;
+      }
+    }
     let created: string | null = null;
     setFolders((prev) => {
       if (prev.some((f) => f.name === trimmed)) return prev;
@@ -230,13 +254,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return created;
   }, []);
 
-  const renameFolder = useCallback((id: string, name: string) => {
-    setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
+  const renameFolder = useCallback(async (id: string, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (!USE_MOCK) {
+      try { await api.renameFolder(id, trimmed); }
+      catch (e) { console.warn("[store] renameFolder 실패:", e); return; }
+    }
+    setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, name: trimmed } : f)));
   }, []);
 
-  const removeFolder = useCallback((id: string) => {
+  const removeFolder = useCallback(async (id: string) => {
+    if (!USE_MOCK) {
+      try { await api.deleteFolder(id); }
+      catch (e) { console.warn("[store] deleteFolder 실패:", e); return; }
+    }
     setFolders((prev) => prev.filter((f) => f.id !== id));
-    setLectures((prev) => prev.filter((l) => l.folderId !== id));
+    // BE와 동일: 폴더 삭제 시 소속 강의는 지우지 않고 미분류로 이동
+    setLectures((prev) => prev.map((l) => (l.folderId === id ? { ...l, folderId: UNCATEGORIZED_FOLDER_ID } : l)));
   }, []);
 
   const addLecture = useCallback((input: NewLectureInput): string => {
@@ -250,7 +285,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id,
         title: input.title,
         folderId: input.folderId,
-        uploadedAt: now.toISOString().slice(0, 10),
+        uploadedAt: now.toISOString(), // 전체 타임스탬프 → 방금 올린 강의가 같은 날 목록 최상단(BUG3)
         updatedLabel: now.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         status: startNow ? "processing" : "queued",
         progress: startNow ? 2 : 0,
@@ -275,7 +310,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       id: input.id,
       title: input.title,
       folderId: input.folderId,
-      uploadedAt: now.toISOString().slice(0, 10),
+      uploadedAt: now.toISOString(), // 전체 타임스탬프 → 방금 올린 강의가 같은 날 목록 최상단(BUG3)
       updatedLabel: now.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
       status: patch.status,
       progress: patch.progress,
@@ -305,6 +340,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const removeLecture = useCallback((id: string) => {
+    addDeletedLectureId(id); // tombstone → 새로고침(재요청)해도 다시 안 나타남(BUG4)
     setLectures((prev) => prev.filter((l) => l.id !== id));
   }, []);
 
@@ -312,7 +348,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setLectures((prev) => prev.map((l) => (l.id === id ? { ...l, title } : l)));
   }, []);
 
-  const moveLecture = useCallback((id: string, folderId: string) => {
+  const moveLecture = useCallback(async (id: string, folderId: string) => {
+    if (!USE_MOCK) {
+      // 미분류(UNCAT)는 BE folder_id=null 로 변환해서 전송
+      const beFolderId = folderId === UNCATEGORIZED_FOLDER_ID ? null : folderId;
+      try { await api.updateLectureFolder(id, beFolderId); }
+      catch (e) { console.warn("[store] moveLecture 실패:", e); return; }
+    }
     setLectures((prev) => prev.map((l) => (l.id === id ? { ...l, folderId } : l)));
   }, []);
 
@@ -325,6 +367,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const cancelJob = useCallback((id: string) => {
+    addDeletedLectureId(id); // 처리중 취소=삭제 → tombstone으로 재요청에도 유지(BUG4)
     setLectures((prev) => prev.filter((l) => l.id !== id));
   }, []);
 

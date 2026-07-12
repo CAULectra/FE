@@ -10,6 +10,12 @@ const MOCK_LECTURES: LectureListItem[] = [
   { id: "mock-lec-2", title: "자료구조",       status: "처리중", created_at: "2026-06-28T09:00:00Z" },
 ];
 
+// 폴더 목 — mock 모드 store는 SEED_FOLDERS를 쓰므로 실제로는 안 불리지만, 인터페이스 충족용.
+let MOCK_FOLDERS: { id: string; name: string }[] = [
+  { id: "mf-1", name: "정보보호이론" },
+  { id: "mf-2", name: "알고리즘" },
+];
+
 // job_id별 시작 시각·대상 강의를 기억해 progress를 시간에 따라 증가시킴
 const jobStart = new Map<string, { start: number; lectureId: string }>();
 const MOCK_STEPS: BackendStatus[] = ["추출", "매핑", "챕터", "요약", "인덱싱"];
@@ -61,6 +67,34 @@ export const mockApi: LectraApi = {
   async getLecture(_lectureId) {
     await delay(300);
     return { status: "대기", error: null, result: null };
+  },
+  async listFolders() {
+    await delay(150);
+    return MOCK_FOLDERS.map((f) => ({ ...f }));
+  },
+  async createFolder(name) {
+    await delay(150);
+    const trimmed = name.trim();
+    const existing = MOCK_FOLDERS.find((f) => f.name === trimmed);
+    if (existing) return { ...existing };
+    const f = { id: "mf-" + Date.now(), name: trimmed };
+    MOCK_FOLDERS.push(f);
+    return { ...f };
+  },
+  async renameFolder(folderId, name) {
+    await delay(150);
+    const trimmed = name.trim();
+    const f = MOCK_FOLDERS.find((x) => x.id === folderId);
+    if (f) f.name = trimmed;
+    return { id: folderId, name: trimmed };
+  },
+  async deleteFolder(folderId) {
+    await delay(150);
+    MOCK_FOLDERS = MOCK_FOLDERS.filter((f) => f.id !== folderId);
+  },
+  async updateLectureFolder(lectureId, folderId) {
+    await delay(150);
+    return { lecture_id: lectureId, folder_id: folderId };
   },
   async translateSlide(_lectureId, slideNumber, targetLanguage) {
     await delay(500);
