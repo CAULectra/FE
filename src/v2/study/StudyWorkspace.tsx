@@ -86,7 +86,9 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
   const { folders } = useApp();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const docMode = !lecture.hasAudio;
+  // 문서 모드 = 녹음 없음. 목록 강의의 hasAudio(어댑터가 false 하드코딩)가 아니라
+  // 실제 로드된 result_dict(StudyData.hasAudio = transcript 유무)로 판정 — BUG2.
+  const docMode = !data.hasAudio;
 
   /* 검색 등에서 ?t= / ?s= 로 진입 시 해당 위치에서 시작 */
   const initialT = (() => {

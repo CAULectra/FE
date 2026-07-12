@@ -100,13 +100,17 @@ export function resultDictToStudyData(result: ResultDict, lectureId: string): St
   const slides = result.slides ?? [];
   const defaultSlide =
     slides.find((s) => (s.transcript_segments?.length ?? 0) > 0)?.slide_number ?? slides[0]?.slide_number ?? 1;
+  const script = toScript(slides);
+  const durationSec = totalDuration(slides);
   return {
     lectureId,
     courseName: result.lecture_title || "강의",
     defaultSlide,
-    durationSec: totalDuration(slides),
+    durationSec,
     slides: slides.map(toSlide),
-    script: toScript(slides),
+    script,
+    // 녹음 존재 = 정렬된 스크립트가 있거나 전체 길이 > 0 (transcript_segments 유무). 목록의 hasAudio 하드코딩(false)을 대체.
+    hasAudio: script.length > 0 || durationSec > 0,
     chapters: (result.chapters ?? []).map((c, i) => toChapter(c, i, slides)),
     photos: toPhotos(slides),
     overall: result.lecture_summary ?? "",

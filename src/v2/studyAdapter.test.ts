@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { resultDictToStudyData } from "./studyAdapter";
 import { SAMPLE_RESULT } from "./__fixtures__/resultDict.sample";
+import type { ResultDict } from "../api";
 
 describe("resultDictToStudyData", () => {
   const sd = resultDictToStudyData(SAMPLE_RESULT, "lec-1");
@@ -44,5 +45,17 @@ describe("resultDictToStudyData", () => {
   it("번역 탭은 on-demand라 비어 있음", () => {
     expect(sd.chaptersEn).toEqual([]);
     expect(sd.overallEn).toBe("");
+  });
+
+  it("오디오 유무: transcript_segments 있으면 hasAudio true (BUG2)", () => {
+    expect(sd.hasAudio).toBe(true);
+  });
+
+  it("오디오 유무: segment 전무면 hasAudio false → 문서 모드 (BUG2)", () => {
+    const noAudio: ResultDict = {
+      ...SAMPLE_RESULT,
+      slides: SAMPLE_RESULT.slides.map((s) => ({ ...s, transcript_segments: [] })),
+    };
+    expect(resultDictToStudyData(noAudio, "x").hasAudio).toBe(false);
   });
 });
