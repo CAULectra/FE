@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { lectureFromListItem, deriveFolders, UNCATEGORIZED_FOLDER_ID } from "./adapters";
+import { lectureFromListItem, deriveFolders, excludeDeleted, UNCATEGORIZED_FOLDER_ID } from "./adapters";
 import type { LectureListItem } from "../api";
 import type { Folder, Lecture } from "./types";
 
@@ -86,5 +86,17 @@ describe("deriveFolders — orphan 없이 모든 강의 노출", () => {
     ];
     const ids = new Set(deriveFolders(lectures, known).map((f) => f.id));
     expect(lectures.every((l) => ids.has(l.folderId))).toBe(true);
+  });
+});
+
+describe("excludeDeleted — 삭제한 강의 숨김 (BUG4)", () => {
+  it("deletedIds에 있는 강의는 목록에서 제외", () => {
+    const a: Lecture = { ...baseLec, id: "a" };
+    const b: Lecture = { ...baseLec, id: "b" };
+    expect(excludeDeleted([a, b], ["a"]).map((l) => l.id)).toEqual(["b"]);
+  });
+
+  it("빈 deletedIds면 원본 유지", () => {
+    expect(excludeDeleted([{ ...baseLec, id: "a" }], [])).toHaveLength(1);
   });
 });
