@@ -18,6 +18,7 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: "https://github.com/anthropics/claude-code.git"
-          plugins: "code-review@claude-code-plugins"
-          prompt: "/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+          prompt: |
+            이 PR의 변경 diff를 코드리뷰해줘. 버그 / 정확성 / 보안 / 엣지케이스 위주로,
+            문제 있는 라인에 인라인 리뷰 코멘트를 남겨줘. 심각한 것부터 / 한국어로.
+            사소한 스타일 지적은 최소화하고, 문제 없으면 "이상 없음"만 간단히 남겨줘.
