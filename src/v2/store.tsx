@@ -46,6 +46,7 @@ interface AppStore {
   removeFolder: (id: string) => void;
   addLecture: (input: NewLectureInput) => string;  // 새 lecture id
   registerJob: (input: RegisterJobInput) => void;  // 실서버 업로드→process 후 폴링 등록
+  startProcessing: (id: string) => void;           // 업로드만 된(status null) 강의 → 분석 시작
   removeLecture: (id: string) => void;
   renameLecture: (id: string, title: string) => void;
   moveLecture: (id: string, folderId: string) => void;
@@ -64,7 +65,7 @@ interface AppStore {
 const Ctx = createContext<AppStore | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [folders, setFolders] = useState<Folder[]>(SEED_FOLDERS);
+  const [folders, setFolders] = useState<Folder[]>(USE_MOCK ? SEED_FOLDERS : []);
   // 목업 모드: 데모 SEED. 실서버 모드: 로그인 후 GET /lectures 로 채움.
   const [lectures, setLectures] = useState<Lecture[]>(USE_MOCK ? SEED_LECTURES : []);
   // 저장된 토큰이 있으면 로그인 상태로 복원 → 새로고침해도 유지
@@ -288,6 +289,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setLectures((prev) => [lec, ...prev.filter((l) => l.id !== input.id)]); // 같은 id 중복 방지
   }, []);
 
+  // 업로드만 된(status null='uploaded') 강의를 분석 시작 — POST /process 후 job 폴링 등록.
+  const startProcessing = useCallback(async (id: string) => {
+    try {
+      const job = await api.process(id);
+      const patch = jobToPatch({ status: job.status });
+      setLectures((prev) => prev.map((l) =>
+        l.id === id
+          ? { ...l, status: patch.status, progress: patch.progress, progressCap: patch.cap, stepIndex: patch.stepIndex, jobId: job.job_id, failedStep: undefined, errorCode: undefined }
+          : l,
+      ));
+    } catch (e) {
+      console.warn("[store] 분석 시작 실패:", e);
+    }
+  }, []);
+
   const removeLecture = useCallback((id: string) => {
     setLectures((prev) => prev.filter((l) => l.id !== id));
   }, []);
@@ -315,8 +331,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppStore>(() => ({
     folders, lectures, authed, user, login, logout, favorites, toggleFavorite,
     addFolder, renameFolder, removeFolder,
-    addLecture, registerJob, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob,
-  }), [folders, lectures, authed, user, login, logout, favorites, toggleFavorite, addFolder, renameFolder, removeFolder, addLecture, registerJob, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
+    addLecture, registerJob, startProcessing, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob,
+  }), [folders, lectures, authed, user, login, logout, favorites, toggleFavorite, addFolder, renameFolder, removeFolder, addLecture, registerJob, startProcessing, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

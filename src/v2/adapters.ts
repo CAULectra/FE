@@ -5,10 +5,7 @@
    - 목록 응답엔 progress·slideCount·hasAudio 등이 없음 → 기본값/status 유도
    ================================================================ */
 import type { BackendStatus, LectureListItem } from "../api";
-import type { Lecture, LectureStatus } from "./types";
-
-/** 폴더 미정 동안 모든 강의가 속하는 단일 기본 폴더 */
-export const DEFAULT_FOLDER_ID = "all";
+import type { Folder, Lecture, LectureStatus } from "./types";
 
 const STATUS_MAP: Record<BackendStatus, LectureStatus> = {
   대기: "queued",
@@ -66,16 +63,18 @@ function labelOf(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-/** GET /lectures 항목 → v2 Lecture. status null(업로드만 됨) → queued 취급. */
+/** GET /lectures 항목 → v2 Lecture. status null(업로드만 됨) → uploaded(처리 전) 취급.
+ *  미지의 status 문자열은 processing으로 폴백해 목록 렌더가 죽지 않게 방어(이슈 #10). */
 export function lectureFromListItem(item: LectureListItem): Lecture {
   const be = item.status;
-  const status: LectureStatus = be ? STATUS_MAP[be] ?? "processing" : "queued";
+  const status: LectureStatus = be ? STATUS_MAP[be] ?? "processing" : "uploaded";
   const stepIndex = be ? STEP_MAP[be] ?? 0 : 0;
   const created = item.created_at ?? "";
   return {
     id: item.id,
     title: item.title,
-    folderId: DEFAULT_FOLDER_ID,
+    folderId: item.folder_id ?? UNCATEGORIZED_FOLDER_ID,
+    folderName: item.folder_name ?? undefined,
     uploadedAt: created ? created.slice(0, 10) : "",
     updatedLabel: labelOf(created),
     status,
@@ -83,4 +82,19 @@ export function lectureFromListItem(item: LectureListItem): Lecture {
     stepIndex,
     hasAudio: false,                          // 목록엔 없음 → 기본 false
   };
+}
+
+/** 폴더 미지정(folder_id=null) 강의가 담기는 '미분류' 버킷 id */
+export const UNCATEGORIZED_FOLDER_ID = "__uncat__";
+
+/** 라이브러리 폴더 그리드용 — known 폴더 + 강의가 실제 참조하는 폴더(미분류 포함)를 합쳐
+ *  어떤 강의도 어느 폴더 카드에도 안 걸리는 orphan(=빈 화면, 이슈 #10)이 없게 한다. */
+export function deriveFolders(lectures: Lecture[], known: Folder[]): Folder[] {
+  const byId = new Map<string, Folder>(known.map((f) => [f.id, f]));
+  for (const l of lectures) {
+    if (byId.has(l.folderId)) continue;
+    const name = l.folderId === UNCATEGORIZED_FOLDER_ID ? "미분류" : (l.folderName ?? "폴더");
+    byId.set(l.folderId, { id: l.folderId, name });
+  }
+  return [...byId.values()];
 }
