@@ -7,15 +7,19 @@ import { Fragment, useEffect, useRef } from "react";
 import type { Chapter, Slide } from "../types";
 import { fmtTime } from "../types";
 import type { Playback } from "./playback";
+import { usePdfDocument } from "./usePdfDocument";
+import PdfSlideThumb from "./PdfSlideThumb";
 
 interface Props {
   slides: Slide[];
   chapters: Chapter[];
   pb: Playback;
   docMode: boolean;
+  pdfUrl?: string | null;
 }
 
-export default function SlideStrip({ slides, chapters, pb, docMode }: Props) {
+export default function SlideStrip({ slides, chapters, pb, docMode, pdfUrl }: Props) {
+  const { pdf } = usePdfDocument(pdfUrl);
   const activeRef = useRef<HTMLButtonElement>(null);
   const maxSeg = Math.max(...slides.map((sl) => sl.endSec - sl.startSec), 1);
   const suppressScrollEvent = useRef(false);
@@ -74,10 +78,12 @@ export default function SlideStrip({ slides, chapters, pb, docMode }: Props) {
               >
                 {/* 실제 슬라이드 페이지 렌더 */}
                 <div className="relative">
-                  {s.img ? (
+                  {pdf ? (
+                    <PdfSlideThumb pdf={pdf} page={s.n} title={s.title} />
+                  ) : s.img ? (
                     <img src={s.img} alt={`S${s.n} — ${s.title}`} loading="lazy" className="block w-full" draggable={false} />
                   ) : (
-                    /* 실모드: BE가 슬라이드 렌더 이미지를 안 줌 → 제목 플레이스홀더 */
+                    /* pdf_url 없음 & 렌더 이미지 없음 → 제목 플레이스홀더(텍스트 폴백) */
                     <div className="flex aspect-[4/3] w-full items-center justify-center bg-[#FAF8F5] px-3 text-center">
                       <span className="line-clamp-3 text-[11px] font-medium leading-snug text-muted-foreground">{s.title}</span>
                     </div>

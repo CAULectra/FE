@@ -180,7 +180,7 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
       {/* ===== B·C·D 3-pane (경계를 드래그해 크기 조절) ===== */}
       <PanelGroup direction="horizontal" autoSaveId="lectra-study-panes" className="min-h-0 flex-1">
         <Panel defaultSize={30} minSize={16} className="min-w-0">
-          <SlideStrip slides={data.slides} chapters={data.chapters} pb={pb} docMode={docMode} />
+          <SlideStrip slides={data.slides} chapters={data.chapters} pb={pb} docMode={docMode} pdfUrl={data.pdfUrl} />
         </Panel>
         <ResizeHandle />
         <Panel defaultSize={42} minSize={28} className="min-w-0">
