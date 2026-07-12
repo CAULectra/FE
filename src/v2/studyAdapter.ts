@@ -96,7 +96,7 @@ function totalDuration(slides: ResultSlide[]): number {
 }
 
 /** BE result_dict → v2 StudyData. lectureId는 라우팅용 강의 id. */
-export function resultDictToStudyData(result: ResultDict, lectureId: string): StudyData {
+export function resultDictToStudyData(result: ResultDict, lectureId: string, pdfUrl?: string | null): StudyData {
   const slides = result.slides ?? [];
   const defaultSlide =
     slides.find((s) => (s.transcript_segments?.length ?? 0) > 0)?.slide_number ?? slides[0]?.slide_number ?? 1;
@@ -110,6 +110,7 @@ export function resultDictToStudyData(result: ResultDict, lectureId: string): St
     chapters: (result.chapters ?? []).map((c, i) => toChapter(c, i, slides)),
     photos: toPhotos(slides),
     overall: result.lecture_summary ?? "",
+    pdfUrl,
     chaptersEn: [],   // 번역은 on-demand(translateSlide) — 여기선 빈 값
     overallEn: "",
   };

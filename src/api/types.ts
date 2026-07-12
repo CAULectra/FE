@@ -52,6 +52,7 @@ export interface LectureDetail {
   status: BackendStatus | null;
   error: string | null;
   result: ResultDict | null;      // status==="완료"일 때만 채워짐
+  pdf_url?: string | null;        // 원본 PDF presigned(1h). null=없음
 }
 
 // result_dict (부록 A) — 노트/스터디 화면이 소비

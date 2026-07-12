@@ -45,4 +45,12 @@ describe("resultDictToStudyData", () => {
     expect(sd.chaptersEn).toEqual([]);
     expect(sd.overallEn).toBe("");
   });
+
+  it("pdfUrl을 그대로 통과시킨다", () => {
+    const out = resultDictToStudyData(SAMPLE_RESULT, "lec-1", "https://x/y.pdf?sig");
+    expect(out.pdfUrl).toBe("https://x/y.pdf?sig");
+  });
+  it("pdfUrl 미지정이면 undefined", () => {
+    expect(resultDictToStudyData(SAMPLE_RESULT, "lec-1").pdfUrl).toBeUndefined();
+  });
 });
