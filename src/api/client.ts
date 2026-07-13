@@ -44,7 +44,13 @@ function doRefresh(): Promise<boolean> {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: rt }),
       });
-      if (!res.ok) { clearToken(); clearRefreshToken(); return false; }
+      if (res.status === 401) {
+        // 401 = refresh 토큰 만료/폐기(확정 실패) → 토큰 정리 + 만료 이벤트로 로그아웃 동기화.
+        clearToken(); clearRefreshToken();
+        if (typeof window !== "undefined") window.dispatchEvent(new Event("auth:expired"));
+        return false;
+      }
+      if (!res.ok) return false; // 5xx 등 일시적 서버 오류 — 토큰 유지(다음 요청에서 재시도 여지)
       const data = (await res.json()) as { access_token: string; refresh_token: string };
       setToken(data.access_token);
       setRefreshToken(data.refresh_token);
