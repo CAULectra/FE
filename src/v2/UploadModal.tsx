@@ -55,9 +55,11 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
   };
 
   const pdfOk = files.pdf.length > 0 && !errors.pdf;
-  const canStart = pdfOk && !uploading;         // 슬라이드(PDF/PPT)만 필수 — 녹음·사진은 선택
+  const audioOk = files.audio.length > 0 && !errors.audio;
+  const canStart = pdfOk && audioOk && !uploading;  // 슬라이드+녹음 필수(BE 처리 요구) — 사진만 선택
   const disabledReason = uploading ? null
     : !pdfOk ? (errors.pdf ? `슬라이드 형식 오류 — ${errors.pdf}` : "슬라이드(PDF/PPT)가 필요합니다")
+    : !audioOk ? (errors.audio ? `녹음 형식 오류 — ${errors.audio}` : "녹음 파일이 필요합니다")
     : null;
 
   /* 실제 업로드 파이프라인: PDF → (녹음) → (사진) → process → 폴링 등록 → 워크스페이스.
@@ -218,7 +220,7 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
 
         {/* 선택 자료: 녹음 + 사진 (동등선상) */}
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Zone zone="audio" icon={<Mic size={19} />} label="녹음 파일" optional />
+          <Zone zone="audio" icon={<Mic size={19} />} label="녹음 파일" required />
           <Zone zone="photo" icon={<ImagePlus size={19} />} label="사진 (필기·판서)" optional />
         </div>
 
