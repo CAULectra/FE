@@ -27,6 +27,10 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
   const { folders, registerJob, addFolder } = useApp();
   const navigate = useNavigate();
 
+  // 폴더 안에서 열렸으면(=defaultFolderId 지정) 폴더 선택 없이 그 폴더에 바로 추가
+  const inFolder = defaultFolderId != null;
+  const targetFolderName = inFolder ? folders.find((f) => f.id === defaultFolderId)?.name : undefined;
+
   const [title, setTitle] = useState("");
   const [folderId, setFolderId] = useState(defaultFolderId ?? folders[0]?.id ?? "");
   const [files, setFiles] = useState<Record<ZoneKey, PickedFile[]>>({ pdf: [], audio: [], photo: [] });
@@ -163,8 +167,8 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
           <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-secondary"><X size={17} /></button>
         </div>
 
-        {/* Title / Folder */}
-        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* Title (/ Folder) — 폴더 안에서 열면 폴더 선택 없이 제목만 전체 폭 */}
+        <div className={`mt-5 grid grid-cols-1 gap-4 ${inFolder ? "" : "sm:grid-cols-2"}`}>
           <div>
             <label className="mb-1.5 block text-[12.5px] font-semibold text-card-foreground">제목</label>
             <input
@@ -172,35 +176,39 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
               placeholder="예: 12주차 - 그래프"
               className="h-10 w-full rounded-lg border border-border bg-[var(--input-background)] px-3 text-[13.5px] placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-[rgba(194,65,12,0.12)]"
             />
-            <p className="mt-1 text-[10.5px] text-muted-foreground">미입력 시 파일명이 제목이 됩니다</p>
+            <p className="mt-1 text-[10.5px] text-muted-foreground">
+              미입력 시 파일명이 제목이 됩니다{inFolder && targetFolderName ? ` · '${targetFolderName}' 폴더에 추가됩니다` : ""}
+            </p>
           </div>
-          <div>
-            <label className="mb-1.5 block text-[12.5px] font-semibold text-card-foreground">폴더</label>
-            {newFolderMode ? (
-              <div className="flex gap-1.5">
-                <input
-                  autoFocus value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)}
-                  onKeyDown={async (e) => {
-                    if (e.key === "Enter" && newFolderName.trim()) {
-                      const id = await addFolder(newFolderName); if (id) setFolderId(id);
-                      setNewFolderMode(false); setNewFolderName("");
-                    }
-                    if (e.key === "Escape") setNewFolderMode(false);
-                  }}
-                  placeholder="예: 확률및통계"
+          {!inFolder && (
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-card-foreground">폴더</label>
+              {newFolderMode ? (
+                <div className="flex gap-1.5">
+                  <input
+                    autoFocus value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter" && newFolderName.trim()) {
+                        const id = await addFolder(newFolderName); if (id) setFolderId(id);
+                        setNewFolderMode(false); setNewFolderName("");
+                      }
+                      if (e.key === "Escape") setNewFolderMode(false);
+                    }}
+                    placeholder="예: 확률및통계"
+                    className="h-10 w-full rounded-lg border border-border bg-[var(--input-background)] px-3 text-[13.5px] focus:border-primary focus:outline-none"
+                  />
+                </div>
+              ) : (
+                <select
+                  value={folderId} onChange={(e) => e.target.value === "__new__" ? setNewFolderMode(true) : setFolderId(e.target.value)}
                   className="h-10 w-full rounded-lg border border-border bg-[var(--input-background)] px-3 text-[13.5px] focus:border-primary focus:outline-none"
-                />
-              </div>
-            ) : (
-              <select
-                value={folderId} onChange={(e) => e.target.value === "__new__" ? setNewFolderMode(true) : setFolderId(e.target.value)}
-                className="h-10 w-full rounded-lg border border-border bg-[var(--input-background)] px-3 text-[13.5px] focus:border-primary focus:outline-none"
-              >
-                {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-                <option value="__new__">+ 새 폴더…</option>
-              </select>
-            )}
-          </div>
+                >
+                  {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  <option value="__new__">+ 새 폴더…</option>
+                </select>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 필수: 슬라이드 PDF/PPT */}

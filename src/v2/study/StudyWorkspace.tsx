@@ -9,7 +9,8 @@ import { AlertTriangle, CheckCircle2, ChevronLeft, Download, Loader2, Mic } from
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "../../app/components/ui/dropdown-menu";
-import { EXPORT_FORMATS, fetchStudyData, ragQA, requestExport } from "../api";
+import { EXPORT_FORMATS, fetchStudyData, ragQA } from "../api";
+import { exportNote } from "./exporters";
 import { useApp } from "../store";
 import { chapterOfSlide, type Lecture, type QAMessage, type StudyData } from "../types";
 import { usePlayback } from "./playback";
@@ -113,7 +114,7 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
 
   const [tab, setTab] = useState<RefTab>("summary");
   const [qaMessages, setQaMessages] = useState<QAMessage[]>([
-    { role: "ai", text: '안녕하세요! 이 강의 내용에 대해 무엇이든 물어보세요. 예: "Fiat-Shamir 변환이 왜 안전해?"' },
+    { role: "ai", text: '안녕하세요! 이 강의 내용에 대해 무엇이든 물어보세요. 예: "이 강의 핵심 개념을 정리해줘"' },
   ]);
   const [qaPending, setQaPending] = useState(false);
   const [qaDraft, setQaDraft] = useState("");
@@ -148,10 +149,14 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
     }
   };
 
-  const doExport = async (formatKey: (typeof EXPORT_FORMATS)[number]["key"], label: string) => {
-    pushToast(`${label} 내보내기 — 백그라운드 생성 중… (작업 계속 가능)`);
-    const filename = await requestExport(lecture.title, formatKey);
-    pushToast(`${filename} 다운로드 준비 완료`, true);
+  const doExport = (formatKey: (typeof EXPORT_FORMATS)[number]["key"], label: string) => {
+    // 프론트에서 즉시 생성 → 바로 다운로드. 만들 데이터가 없으면(예: 자막에 녹음 없음) 안내.
+    try {
+      exportNote(formatKey, lecture.title, data);
+      pushToast(`${label} 다운로드를 시작했어요`, true);
+    } catch (e) {
+      pushToast(e instanceof Error ? e.message : "내보내기에 실패했어요");
+    }
   };
 
   const folderName = useMemo(() => folders.find((f) => f.id === lecture.folderId)?.name, [folders, lecture.folderId]);
@@ -174,7 +179,7 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
             <Download size={13} /> 노트 내보내기
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <div className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">이 강의의 노트 — 형광펜·사진 포함</div>
+            <div className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">이 강의의 노트 내보내기</div>
             {EXPORT_FORMATS.map((f) => (
               <DropdownMenuItem key={f.key} onClick={() => doExport(f.key, f.label)}>
                 <span className="font-medium">{f.label}</span>
@@ -182,7 +187,7 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
               </DropdownMenuItem>
             ))}
             <div className="border-t border-border px-2 py-1.5 text-[10px] text-muted-foreground">
-              Export는 백그라운드 생성 → 완료 토스트에서 다운로드
+              선택하면 바로 다운로드됩니다
             </div>
           </DropdownMenuContent>
         </DropdownMenu>

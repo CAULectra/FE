@@ -25,9 +25,21 @@ export const mockApi: LectraApi = {
     await delay(400);
     return {
       access_token: "mock-jwt-" + Date.now(),
+      refresh_token: "mock-refresh-" + Date.now(),
       token_type: "Bearer",
       user: { id: "1", name: "김학생", email: "student@univ.ac.kr" },
     };
+  },
+  async refresh(_refreshToken) {
+    await delay(200);
+    return {
+      access_token: "mock-jwt-" + Date.now(),
+      refresh_token: "mock-refresh-" + Date.now(),
+      token_type: "Bearer",
+    };
+  },
+  async logout(_refreshToken) {
+    await delay(100);
   },
   async getMe() {
     await delay(150);

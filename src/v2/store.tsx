@@ -7,12 +7,22 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Folder, Lecture } from "./types";
 import { SEED_FOLDERS, SEED_LECTURES } from "./data";
-import { getToken, getUser, setUser as persistUser, clearToken, clearUser, getDeletedLectureIds, addDeletedLectureId, USE_MOCK, api, type LoginUser, type BackendStatus } from "../api";
+import { getToken, getUser, setUser as persistUser, clearToken, clearUser, getRefreshToken, clearRefreshToken, getDeletedLectureIds, addDeletedLectureId, USE_MOCK, api, type LoginUser, type BackendStatus } from "../api";
 import { lectureFromListItem, excludeDeleted, jobToPatch, UNCATEGORIZED_FOLDER_ID, type JobPatch } from "./adapters";
 
 const MAX_CONCURRENT = 2;
 const RATE = 1.4; // %/초 — 데모용 처리 속도
 const DEMO_LIVE_ID = "demo-live"; // 워크스페이스 진행바 확인용 — 완료 안 하고 진행 순환
+
+/* 최근 열람 강의 — 새로고침해도 유지되도록 localStorage 보관 */
+const RECENT_KEY = "lectra_recent_v2";
+const RECENT_MAX = 12;
+function loadRecent(): string[] {
+  try { const r = localStorage.getItem(RECENT_KEY); return r ? (JSON.parse(r) as string[]) : []; } catch { return []; }
+}
+function saveRecent(ids: string[]): void {
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
+}
 
 /** progress → 단계 index. 밴드: [0,8)업로드 [8,34)STT [34,55)추출 [55,78)정렬 [78,100)노트생성 100=완료 */
 export const stepOfProgress = (p: number): number =>
@@ -60,6 +70,9 @@ interface AppStore {
   /* 즐겨찾기 (강의 id 목록) */
   favorites: string[];
   toggleFavorite: (id: string) => void;
+  /* 최근 열람/편집한 강의 id (최근순) — 사이드바 '최근' */
+  recentIds: string[];
+  markRecent: (id: string) => void;
 }
 
 const Ctx = createContext<AppStore | null>(null);
@@ -115,8 +128,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void refreshMe();
   }, [refreshLectures, refreshFolders, refreshMe]);
   const logout = useCallback(() => {
-    clearToken(); clearUser(); setUserState(null); setAuthed(false);
+    // 로컬 상태 즉시 정리(즉각 로그아웃 UX), 서버 refresh 폐기는 백그라운드로.
+    const rt = getRefreshToken();
+    clearToken(); clearRefreshToken(); clearUser(); setUserState(null); setAuthed(false);
     setLectures(USE_MOCK ? SEED_LECTURES : []);
+    if (rt && !USE_MOCK) void api.logout(rt).catch(() => { /* 폐기 실패는 무시 — 로컬은 이미 로그아웃 */ });
   }, []);
 
   // 새로고침 복원: 실서버 모드에서 토큰이 있으면 강의·폴더 목록 재로드
@@ -126,6 +142,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>([]);
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }, []);
+
+  // 최근 열람/편집: id를 맨 앞으로 이동(중복 제거·상한), localStorage 동기화
+  const [recentIds, setRecentIds] = useState<string[]>(() => loadRecent());
+  const markRecent = useCallback((id: string) => {
+    if (!id) return;
+    setRecentIds((prev) => {
+      if (prev[0] === id) return prev; // 이미 최상단이면 그대로
+      const next = [id, ...prev.filter((x) => x !== id)].slice(0, RECENT_MAX);
+      saveRecent(next);
+      return next;
+    });
   }, []);
 
   /* ---- 처리 파이프라인 ticker (목업 데모 전용) ----
@@ -393,10 +421,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AppStore>(() => ({
-    folders, lectures, authed, user, login, logout, favorites, toggleFavorite,
+    folders, lectures, authed, user, login, logout, favorites, toggleFavorite, recentIds, markRecent,
     addFolder, renameFolder, removeFolder,
     addLecture, registerJob, startProcessing, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob,
-  }), [folders, lectures, authed, user, login, logout, favorites, toggleFavorite, addFolder, renameFolder, removeFolder, addLecture, registerJob, startProcessing, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
+  }), [folders, lectures, authed, user, login, logout, favorites, toggleFavorite, recentIds, markRecent, addFolder, renameFolder, removeFolder, addLecture, registerJob, startProcessing, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

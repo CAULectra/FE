@@ -25,6 +25,19 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+// Refresh 토큰 (PR#77) — access가 짧은 수명이라 만료 시 /auth/refresh 로 갱신.
+const REFRESH_KEY = "lectra_refresh";
+
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_KEY);
+}
+export function setRefreshToken(token: string): void {
+  localStorage.setItem(REFRESH_KEY, token);
+}
+export function clearRefreshToken(): void {
+  localStorage.removeItem(REFRESH_KEY);
+}
+
 // 로그인 사용자 정보 (이름·이메일·프로필). 새로고침해도 유지되도록 localStorage에 보관.
 const USER_KEY = "lectra_user";
 
