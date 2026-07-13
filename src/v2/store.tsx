@@ -135,6 +135,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (rt && !USE_MOCK) void api.logout(rt).catch(() => { /* 폐기 실패는 무시 — 로컬은 이미 로그아웃 */ });
   }, []);
 
+  // refresh 확정 실패(client.ts) → 좀비 로그인 방지: React 상태도 로그아웃으로 동기화
+  useEffect(() => {
+    const onExpired = () => logout();
+    window.addEventListener("auth:expired", onExpired);
+    return () => window.removeEventListener("auth:expired", onExpired);
+  }, [logout]);
+
   // 새로고침 복원: 실서버 모드에서 토큰이 있으면 강의·폴더 목록 재로드
   useEffect(() => {
     if (!USE_MOCK && getToken()) { void refreshLectures(); void refreshFolders(); void refreshMe(); }
