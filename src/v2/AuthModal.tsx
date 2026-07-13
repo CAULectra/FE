@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../app/components/ui/dialog";
-import { api, setToken, type LoginUser } from "../api";
+import { api, setToken, setRefreshToken, type LoginUser } from "../api";
 
 export default function AuthModal({ onClose, onLogin }: { onClose: () => void; onLogin: (user?: LoginUser | null) => void }) {
   const [loading, setLoading] = useState(false);
@@ -19,8 +19,9 @@ export default function AuthModal({ onClose, onLogin }: { onClose: () => void; o
       setLoading(true);
       setError(null);
       try {
-        const { access_token, user } = await api.loginGoogle(code);
+        const { access_token, refresh_token, user } = await api.loginGoogle(code);
         setToken(access_token);
+        setRefreshToken(refresh_token);   // refresh 토큰 저장 (자동 갱신·로그아웃 폐기용)
         onLogin(user ?? null);   // AppShell이 login(user) + 모달 닫기 처리
       } catch (e) {
         setError(e instanceof Error ? e.message : "로그인에 실패했습니다.");

@@ -5,7 +5,7 @@
    ================================================================ */
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { ArrowUpDown, ChevronLeft, FolderOpen, MoreHorizontal, Plus, RotateCcw, Sparkles, Star, Upload } from "lucide-react";
+import { ArrowUpDown, ChevronLeft, FileText, FolderOpen, FolderPlus, MoreHorizontal, Plus, RotateCcw, Sparkles, Star, Upload } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
@@ -44,7 +44,6 @@ function StatusBadge({ lec }: { lec: Lecture }) {
 /** 과목 폴더 아이콘 카드 (노랑·올리브·하늘) */
 function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; lectures: Lecture[]; colorIdx: number; onOpen: () => void }) {
   const color = FOLDER_ICON_COLORS[colorIdx % FOLDER_ICON_COLORS.length];
-  const processing = lectures.filter((l) => l.status === "processing" || l.status === "queued").length;
   const latest = [...lectures].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0];
   return (
     <div
@@ -54,15 +53,8 @@ function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; le
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); } }}
       className="group/card flex cursor-pointer flex-col items-center rounded-2xl px-4 py-6 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
     >
-      <div className="relative flex h-[132px] items-end justify-center">
+      <div className="flex h-[132px] items-end justify-center">
         <FolderIcon color={color} size={1.5} />
-        {/* 처리 중인 강의가 있으면 폴더 좌상단에 빨간 점 */}
-        {processing > 0 && (
-          <span
-            title={`${processing}개 처리 중`}
-            className="absolute left-1/2 top-[6px] z-40 h-2.5 w-2.5 -translate-x-[64px] rounded-full bg-red-500 shadow-[0_0_0_2px_#faf6ef]"
-          />
-        )}
       </div>
       <div className="mt-6">
         <div className="text-[15px] font-bold text-card-foreground transition-colors group-hover/card:text-primary">{folder.name}</div>
@@ -74,8 +66,39 @@ function FolderCard({ folder, lectures, colorIdx, onOpen }: { folder: Folder; le
   );
 }
 
+/** "새로 만들기" 선택 메뉴 — 자료 업로드(프로젝트) vs 폴더 생성.
+ *  최상위 컴포넌트로 두어 부모 리렌더(폴링·트리클)에도 열린 메뉴가 유지되게 한다. */
+function CreateMenu({ onProject, onFolder, children }: { onProject: () => void; onFolder: () => void; children: React.ReactNode }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={6} className="w-60 rounded-xl p-1.5">
+        <div className="px-2 pb-1.5 pt-1">
+          <div className="text-[13px] font-bold text-card-foreground">새로 만들기</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">프로젝트 · 폴더</div>
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={onProject} className="gap-2.5 rounded-lg px-2 py-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><FileText size={16} /></span>
+          <span className="flex flex-col">
+            <span className="text-[13px] font-semibold text-card-foreground">새 프로젝트</span>
+            <span className="text-[11px] text-muted-foreground">PDF·녹음·판서 업로드</span>
+          </span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onFolder} className="gap-2.5 rounded-lg px-2 py-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EAB308]/15 text-[#B78908]"><FolderPlus size={16} /></span>
+          <span className="flex flex-col">
+            <span className="text-[13px] font-semibold text-card-foreground">새 폴더</span>
+            <span className="text-[11px] text-muted-foreground">노트를 정리할 폴더</span>
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function LibraryPage() {
-  const { folders, lectures, authed, user, favorites, toggleFavorite, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob, startProcessing } = useApp();
+  const { folders, lectures, authed, user, favorites, toggleFavorite, removeLecture, renameLecture, moveLecture, retryLecture, cancelJob, startProcessing, addFolder } = useApp();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const folderId = searchParams.get("folder");
@@ -85,6 +108,11 @@ export default function LibraryPage() {
   const [deleting, setDeleting] = useState<Lecture | null>(null);
   const [renaming, setRenaming] = useState<Lecture | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  /* 새 폴더 생성 다이얼로그 */
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [folderErr, setFolderErr] = useState<string | null>(null);
+  const [folderBusy, setFolderBusy] = useState(false);
 
   /* 게스트(!authed)는 라이브러리가 비어 보인다 — '시작하기'로 들어온 빈 화면 */
   const visFolders = authed ? folders : [];
@@ -120,6 +148,52 @@ export default function LibraryPage() {
     if (blocked) return; // 차단 유저는 업로드 불가 — 배너로 안내
     searchParams.set("upload", "1"); setSearchParams(searchParams);
   };
+  /* 새 폴더 만들기 — 업로드와 동일 게이트(로그인·베타) */
+  const openFolderCreate = () => {
+    if (!authed) { searchParams.set("auth", "1"); setSearchParams(searchParams); return; }
+    if (blocked) return;
+    setNewFolderName(""); setFolderErr(null); setCreatingFolder(true);
+  };
+  const submitFolder = async () => {
+    const name = newFolderName.trim();
+    if (!name || folderBusy) return;
+    setFolderBusy(true); setFolderErr(null);
+    const id = await addFolder(name);
+    setFolderBusy(false);
+    if (!id) { setFolderErr("폴더를 만들지 못했어요. 잠시 후 다시 시도해주세요."); return; }
+    setCreatingFolder(false); setNewFolderName("");
+    // 생성 후 폴더 안으로 들어가지 않고 전체 과목 그리드로 → 새 폴더 카드가 보이게
+    searchParams.delete("folder"); searchParams.delete("upload"); setSearchParams(searchParams);
+  };
+
+  /* 새 폴더 다이얼로그 — 그리드/폴더 두 화면에서 공용으로 렌더 */
+  const folderDialog = (
+    <Dialog open={creatingFolder} onOpenChange={(o) => { if (!o) { setCreatingFolder(false); setNewFolderName(""); setFolderErr(null); } }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>새 폴더</DialogTitle></DialogHeader>
+        <p className="-mt-1 text-[12.5px] text-muted-foreground">노트를 정리할 폴더를 만들어요. 만든 뒤 그 폴더에 자료를 올릴 수 있어요.</p>
+        <input
+          autoFocus
+          value={newFolderName}
+          onChange={(e) => { setNewFolderName(e.target.value); setFolderErr(null); }}
+          onKeyDown={(e) => { if (e.key === "Enter") void submitFolder(); }}
+          placeholder="예: 확률및통계"
+          className="h-10 w-full rounded-lg border border-border bg-[var(--input-background)] px-3 text-[14px] focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-[rgba(194,65,12,0.12)]"
+        />
+        {folderErr && <p className="text-[12px] font-medium text-destructive">{folderErr}</p>}
+        <div className="flex justify-end gap-2 pt-1">
+          <button onClick={() => setCreatingFolder(false)} className="h-9 rounded-lg border border-border px-4 text-[13px] font-medium hover:bg-secondary">취소</button>
+          <button
+            disabled={!newFolderName.trim() || folderBusy}
+            onClick={() => void submitFolder()}
+            className="h-9 rounded-lg bg-primary px-4 text-[13px] font-semibold text-white hover:bg-[#9A3412] disabled:opacity-40"
+          >
+            {folderBusy ? "만드는 중…" : "만들기"}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   /* ===================== 과목 폴더 그리드 ===================== */
   if (!folder) {
@@ -131,12 +205,13 @@ export default function LibraryPage() {
             <h1 className="text-[26px] font-bold tracking-tight text-card-foreground">전체 강의</h1>
             <p className="mt-1 text-[13px] text-muted-foreground">과목 {allFolders.length}개 · 강의 {visLectures.length}개</p>
           </div>
-          <button
-            onClick={openUpload}
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(194,65,12,0.22)] transition-colors hover:bg-[#9A3412]"
-          >
-            <Upload size={14} /> Upload
-          </button>
+          <CreateMenu onProject={openUpload} onFolder={openFolderCreate}>
+            <button
+              className="flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(194,65,12,0.22)] transition-colors hover:bg-[#9A3412]"
+            >
+              <Upload size={14} /> 새로 만들기
+            </button>
+          </CreateMenu>
         </div>
 
         {allFolders.length === 0 ? (
@@ -149,12 +224,11 @@ export default function LibraryPage() {
               슬라이드 PDF와 녹음 파일(+ 사진)을 올리면
                정렬된 노트가 자동으로 만들어져요.
             </p>
-            <button
-              onClick={openUpload}
-              className="mt-6 flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-[13.5px] font-semibold text-white hover:bg-[#9A3412]"
-            >
-              <Plus size={15} /> 자료 업로드하기
-            </button>
+            <CreateMenu onProject={openUpload} onFolder={openFolderCreate}>
+              <button className="mt-6 flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-[13.5px] font-semibold text-white hover:bg-[#9A3412]">
+                <Plus size={15} /> 새로 만들기
+              </button>
+            </CreateMenu>
           </div>
         ) : (
           <>
@@ -175,6 +249,7 @@ export default function LibraryPage() {
           </>
         )}
         {uploadOpen && <UploadModal defaultFolderId={null} onClose={closeUpload} />}
+        {folderDialog}
       </div>
     );
   }
@@ -213,7 +288,7 @@ export default function LibraryPage() {
             onClick={openUpload}
             className="flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-white shadow-[0_4px_12px_rgba(194,65,12,0.22)] transition-colors hover:bg-[#9A3412]"
           >
-            <Upload size={14} /> Upload
+            <Upload size={14} /> 새 프로젝트
           </button>
         </div>
       </div>
@@ -231,7 +306,7 @@ export default function LibraryPage() {
             onClick={openUpload}
             className="mt-6 flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-[13.5px] font-semibold text-white hover:bg-[#9A3412]"
           >
-            <Plus size={15} /> Upload your first lecture
+            <Plus size={15} /> 새 프로젝트
           </button>
         </div>
       ) : (
@@ -374,6 +449,7 @@ export default function LibraryPage() {
       </Dialog>
 
       {uploadOpen && <UploadModal defaultFolderId={folder.id} onClose={closeUpload} />}
+      {folderDialog}
     </div>
   );
 }

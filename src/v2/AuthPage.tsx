@@ -9,7 +9,7 @@ import { ChevronLeft, Loader2 } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import DotField from "../landing/DotField";
 import FloatingLines from "../landing/FloatingLines";
-import { api, setToken } from "../api";
+import { api, setToken, setRefreshToken } from "../api";
 import { useApp } from "./store";
 
 export default function AuthPage() {
@@ -25,9 +25,10 @@ export default function AuthPage() {
       setLoading(true);
       setError(null);
       try {
-        const { access_token, user } = await api.loginGoogle(code);
-        setToken(access_token);        // JWT 저장 (이후 API에 Bearer로 자동 첨부)
-        login(user ?? null);           // authed=true + 유저 저장
+        const { access_token, refresh_token, user } = await api.loginGoogle(code);
+        setToken(access_token);          // access JWT (이후 API에 Bearer로 자동 첨부)
+        setRefreshToken(refresh_token);  // refresh 토큰 저장 (만료 시 자동 갱신·로그아웃 폐기용)
+        login(user ?? null);             // authed=true + 유저 저장
         navigate("/library");
       } catch (e) {
         setError(e instanceof Error ? e.message : "로그인에 실패했습니다.");

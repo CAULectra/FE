@@ -319,7 +319,10 @@ export default function RefPanel(props: Props) {
                 <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[12.5px] leading-relaxed ${
                   m.role === "user" ? "rounded-br-sm bg-primary text-white" : "rounded-bl-sm border border-border bg-[#FBFAF8] text-foreground"
                 }`}>
-                  <span className="whitespace-pre-line">{m.text}</span>
+                  {/* AI 답변은 번역 탭과 동일하게 마크다운 렌더 (표·리스트·수식·인용) */}
+                  {m.role === "ai"
+                    ? <MarkdownNote source={m.text} />
+                    : <span className="whitespace-pre-line">{m.text}</span>}
                   {m.role === "ai" && <CitationChips citations={m.citations} pb={pb} data={data} />}
                 </div>
               </div>
