@@ -220,7 +220,7 @@ export default function UploadModal({ defaultFolderId, onClose }: { defaultFolde
 
         {/* 선택 자료: 녹음 + 사진 (동등선상) */}
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Zone zone="audio" icon={<Mic size={19} />} label="녹음 파일" required />
+        {/* 필수 자료: 슬라이드(위) + 녹음(아래 좌) · 사진(아래 우)만 선택 */}
           <Zone zone="photo" icon={<ImagePlus size={19} />} label="사진 (필기·판서)" optional />
         </div>
 
