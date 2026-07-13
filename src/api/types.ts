@@ -14,11 +14,18 @@ export interface LoginUser {
   profile_image?: string | null;
   plan?: "admin" | "beta" | "blocked";   // 베타 접근 게이트(#34). 미제공(BE 미배포) = 제한 없음 취급
 }
-// POST /auth/login/google → { access_token, token_type: "Bearer", user }
+// POST /auth/login/google → { access_token, refresh_token, token_type: "Bearer", user }
 export interface LoginResponse {
   access_token: string;
+  refresh_token: string;          // PR#77 — refresh 토큰 회전용
   token_type?: string;
   user?: LoginUser;
+}
+// POST /auth/refresh → 새 access+refresh 쌍(로테이션). 기존 refresh는 무효화됨.
+export interface TokenPairResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type?: string;
 }
 
 // ── 업로드 ────────────────────────────────────────────────────────
@@ -131,6 +138,8 @@ export interface QAResponse {
 // ── 공통 인터페이스 (mock/real 동일 구현) ─────────────────────────
 export interface LectraApi {
   loginGoogle(code: string): Promise<LoginResponse>;
+  refresh(refreshToken: string): Promise<TokenPairResponse>;  // POST /auth/refresh (PR#77)
+  logout(refreshToken: string): Promise<void>;                // POST /auth/logout — 서버 폐기(204)
   getMe(): Promise<LoginUser>;   // GET /auth/me — plan 등 최신 유저 상태(#34)
   // 업로드 (부록 B 순서: pdf → audio → (board) → process)
   uploadPdf(title: string, pdf: File, folderId?: string | null): Promise<UploadPdfResponse>;

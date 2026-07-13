@@ -6,6 +6,7 @@
    ================================================================ */
 import { Folder, Inbox } from "lucide-react";
 import { useApp } from "./store";
+import { deriveFolders } from "./adapters";
 
 const ACTIVE = ["processing", "queued", "uploading"];
 
@@ -13,7 +14,9 @@ export default function WorkspacePage() {
   const { folders, lectures, authed } = useApp();
 
   const active = authed ? lectures.filter((l) => ACTIVE.includes(l.status)) : [];
-  const groups = folders
+  // 알려진 폴더 + 처리중 강의가 실제 참조하는 폴더(미분류·신규 포함)를 합쳐야
+  // folderId가 목록에 없는 강의가 그룹에서 누락(=카드 안 뜸)되지 않는다.
+  const groups = deriveFolders(active, folders)
     .map((f) => ({ folder: f, items: active.filter((l) => l.folderId === f.id) }))
     .filter((g) => g.items.length > 0);
 

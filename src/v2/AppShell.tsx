@@ -6,7 +6,7 @@
 import { useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate, useSearchParams } from "react-router";
 import {
-  Activity, Folder as FolderIcon, LayoutGrid, Plus, Search, Settings, Star, X, LogOut,
+  Activity, FileText, LayoutGrid, Plus, Search, Settings, Star, X, LogOut,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -15,6 +15,7 @@ import { useApp } from "./store";
 import { STUDY_ZK } from "./data";
 import AuthModal from "./AuthModal";
 import type { LoginUser } from "../api";
+import type { Lecture } from "./types";
 
 /** 공통 행 스타일 — hover/선택 시 얇은 박스 */
 const row = (active: boolean) =>
@@ -29,19 +30,20 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export default function AppShell() {
-  const { folders, lectures, authed, user, login, logout, favorites } = useApp();
+  const { folders, lectures, authed, user, login, logout, favorites, recentIds } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const authOpen = searchParams.get("auth") === "1";
   /* 게스트는 사이드바(폴더/최근/검색)도 비어 보인다 */
-  const visFolders = authed ? folders : [];
   const visLectures = authed ? lectures : [];
   const processingCount = visLectures.filter((l) => l.status === "processing" || l.status === "queued" || l.status === "uploading").length;
   const favCount = authed ? favorites.length : 0;
-  /* 최근: 과목(폴더)을 최근 활동순으로 — 각 폴더의 최신 강의 업로드일 기준 */
-  const latestOf = (fid: string) => visLectures.filter((l) => l.folderId === fid).reduce((m, l) => (l.uploadedAt > m ? l.uploadedAt : m), "");
-  const recentFolders = [...visFolders].sort((a, b) => latestOf(b.id).localeCompare(latestOf(a.id)));
+  /* 최근: 최근 열람/편집한 강의 (recentIds 순서, 존재하는 강의만) */
+  const recentLectures = recentIds
+    .map((id) => visLectures.find((l) => l.id === id))
+    .filter((l): l is Lecture => !!l)
+    .slice(0, 8);
 
   const [query, setQuery] = useState("");
 
@@ -175,16 +177,25 @@ export default function AppShell() {
             </button>
           </div>
 
-          {/* 최근 — 과목을 폴더 모양으로 (최근 활동순) */}
+          {/* 최근 — 최근 열람/편집한 강의 (클릭 → 강의 열기) */}
           <SectionLabel>최근</SectionLabel>
           <div className="space-y-0.5">
-            {recentFolders.map((f) => (
-              <button key={f.id} onClick={() => gotoFolder(f.id)} className={row(currentFolder === f.id)}>
-                <FolderIcon size={14} className="shrink-0 opacity-80" />
-                <span className="flex-1 truncate font-medium">{f.name}</span>
-                <span className="text-[11px] tabular-nums opacity-55">{visLectures.filter((l) => l.folderId === f.id).length}</span>
-              </button>
-            ))}
+            {recentLectures.length === 0 ? (
+              <div className="px-2.5 py-1.5 text-[11px] leading-relaxed text-white/30">
+                {authed ? "최근 연 강의가 없어요" : "로그인하면 최근 강의가 표시돼요"}
+              </div>
+            ) : (
+              recentLectures.map((l) => (
+                <button
+                  key={l.id}
+                  onClick={() => { setQuery(""); navigate(`/lecture/${l.id}`); }}
+                  className={row(location.pathname === `/lecture/${l.id}`)}
+                >
+                  <FileText size={14} className="shrink-0 opacity-80" />
+                  <span className="flex-1 truncate font-medium">{l.title}</span>
+                </button>
+              ))
+            )}
           </div>
         </nav>
 

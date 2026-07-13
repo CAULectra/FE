@@ -87,17 +87,12 @@ export async function ragQA(lectureId: string, question: string, contextSlide: n
   };
 }
 
-export type ExportFormat = "pdf" | "md" | "docx" | "srt" | "anki";
+// 노트 내보내기 — 프론트에서 즉시 생성 가능한 포맷만 (구현: study/exporters.ts).
+//   PDF(슬라이드 병합)·Word(.docx)는 FE로 부적합 → 메뉴에서 제외(BE 지원 시 재추가).
+export type { ExportFormat } from "./study/exporters";
+import type { ExportFormat } from "./study/exporters";
 export const EXPORT_FORMATS: { key: ExportFormat; label: string; desc: string }[] = [
-  { key: "pdf",  label: "PDF",            desc: "노트+슬라이드 병합" },
-  { key: "md",   label: "Markdown (.md)", desc: "플레인 텍스트 노트" },
-  { key: "docx", label: "Word (.docx)",   desc: "편집 가능한 문서" },
-  { key: "srt",  label: "자막 (.srt)",     desc: "타임스탬프 스크립트" },
+  { key: "md",   label: "Markdown (.md)",  desc: "플레인 텍스트 노트" },
+  { key: "srt",  label: "자막 (.srt)",      desc: "타임스탬프 스크립트" },
   { key: "anki", label: "Anki 카드 (.csv)", desc: "핵심 개념 플래시카드" },
 ];
-
-export async function requestExport(lectureTitle: string, format: ExportFormat): Promise<string> {
-  await delay(1400); // 백그라운드 생성 시뮬레이션
-  const ext = format === "anki" ? "csv" : format;
-  return `${lectureTitle.replace(/\s+/g, "_")}.${ext}`;
-}

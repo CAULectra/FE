@@ -5,6 +5,7 @@ import { apiGet, apiPostForm, apiPostJson, apiPatchJson, apiDelete } from "./cli
 import type {
   LectraApi,
   LoginResponse,
+  TokenPairResponse,
   LoginUser,
   UploadPdfResponse,
   OkResponse,
@@ -21,9 +22,17 @@ import type {
 } from "./types";
 
 export const realApi: LectraApi = {
-  // POST /auth/login/google  (body: { code }) → JWT + 사용자 정보
+  // POST /auth/login/google  (body: { code }) → access+refresh+user. 로그인 401은 자동갱신 대상 아님.
   loginGoogle(code) {
-    return apiPostJson<LoginResponse>("/auth/login/google", { code });
+    return apiPostJson<LoginResponse>("/auth/login/google", { code }, { skipRefresh: true });
+  },
+  // POST /auth/refresh → 새 access+refresh (로테이션). 자동갱신 대상 아님(무한루프 방지).
+  refresh(refreshToken) {
+    return apiPostJson<TokenPairResponse>("/auth/refresh", { refresh_token: refreshToken }, { skipRefresh: true });
+  },
+  // POST /auth/logout → refresh 토큰 서버 폐기(204).
+  logout(refreshToken) {
+    return apiPostJson<void>("/auth/logout", { refresh_token: refreshToken }, { skipRefresh: true });
   },
   // GET /auth/me → plan 포함 최신 유저(#34)
   getMe() {
