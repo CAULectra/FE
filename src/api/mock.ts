@@ -112,6 +112,9 @@ export const mockApi: LectraApi = {
     await delay(150);
     return { lecture_id: lectureId, folder_id: folderId };
   },
+  async deleteLecture(_lectureId) {
+    await delay(150); // 목: 목록 제거는 store가 처리 — 서버 왕복 흉내만
+  },
   async translateSlide(_lectureId, slideNumber, targetLanguage) {
     await delay(500);
     return {

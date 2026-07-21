@@ -157,6 +157,8 @@ export interface LectraApi {
   deleteFolder(folderId: string): Promise<void>;
   // 강의 폴더 이동 (PATCH /lectures/{id}) — folderId=null 이면 미분류로
   updateLectureFolder(lectureId: string, folderId: string | null): Promise<{ lecture_id: string; folder_id: string | null }>;
+  // 강의 삭제 — DELETE /lectures/{id} (소프트 삭제 → 휴지통 14일 보관 후 워커가 완전삭제)
+  deleteLecture(lectureId: string): Promise<void>;
   // on-demand
   translateSlide(lectureId: string, slideNumber: number, targetLanguage: string): Promise<TranslateResponse>;
   slideSummary(lectureId: string, slideNumber: number): Promise<SlideSummaryResponse>;

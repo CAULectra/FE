@@ -100,6 +100,10 @@ export const realApi: LectraApi = {
       `/lectures/${lectureId}`, { folder_id: folderId },
     );
   },
+  // DELETE /lectures/{id} — 소프트 삭제(휴지통 이동, 204). 복구는 POST .../restore(후속 UI).
+  deleteLecture(lectureId) {
+    return apiDelete(`/lectures/${lectureId}`);
+  },
 
   // POST /lectures/{id}/slides/{n}/translate  (body: { target_language })
   translateSlide(lectureId, slideNumber, targetLanguage) {
