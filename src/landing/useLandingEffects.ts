@@ -142,7 +142,18 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>, ena
     window.addEventListener("load", refresh);
     if (document.fonts?.ready) document.fonts.ready.then(refresh);
 
+    /* SPA 재진입(브라우저 뒤로가기 등): load/fonts.ready가 다시 fire되지 않아
+       ScrollTrigger가 stale 상태로 남아 reveal 요소가 숨은 채 멈춤(→ "뒤로가기가 안 먹는"
+       것처럼 보임). + 브라우저 스크롤 복원과 Lenis(0에서 시작)의 desync.
+       → 마운트 시 스크롤을 톱으로 리셋하고 즉시 refresh. */
+    const prevScrollRestoration = history.scrollRestoration;
+    history.scrollRestoration = "manual";
+    lenis.scrollTo(0, { immediate: true });
+    const refreshRaf = requestAnimationFrame(() => ScrollTrigger.refresh());
+
     return () => {
+      cancelAnimationFrame(refreshRaf);
+      history.scrollRestoration = prevScrollRestoration;
       window.removeEventListener("load", refresh);
       gsap.ticker.remove(rafTick);
       lenis.destroy();
