@@ -45,3 +45,6 @@ temp/
 .bkit/
 src/**/.omc/
 .vercel/
+
+# 데모 슬라이드 정적 에셋 — 로컬 전용 (저장소 미포함, 히스토리 정리 2026-07-22)
+public/slides/
