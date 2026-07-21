@@ -85,6 +85,10 @@ function toChapter(c: ResultChapter, i: number, slides: ResultSlide[]): Chapter 
     summary: [],                     // noteMd 있으면 NotePane이 마크다운 경로로 렌더
     blocks: [],
     noteMd: c.summary_note ?? "",    // ★ 핵심: 백엔드 마크다운 노트
+    // 인용칩 정밀 점프 — 발화 시점 있는 인용만 (없으면 슬라이드 시작으로 폴백)
+    noteCites: (c.summary_note_citations ?? [])
+      .filter((x) => x.time_start != null)
+      .map((x) => ({ slide: x.slide_number, t: x.time_start as number })),
   };
 }
 

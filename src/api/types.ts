@@ -81,6 +81,13 @@ export interface ResultSlide {
   transcript_segments: ResultTranscriptSegment[];
   summary: string | null;                // on-demand 미생성=null
 }
+/** 노트 문장 단위 인용(발화 시점 포함) — summarize.py extract_inline_citations 산출 */
+export interface NoteCitation {
+  block_index: number;
+  char_offset: number;
+  slide_number: number;
+  time_start: number | null;             // 해당 근거 발화의 시작 초(없으면 null)
+}
 export interface ResultChapter {
   chapter_number: number;
   title: string;
@@ -88,6 +95,8 @@ export interface ResultChapter {
   end_slide: number;
   summary_note: string;
   summary_explain: string | null;        // on-demand 미생성=null
+  summary_note_citations?: NoteCitation[] | null;      // NOTE_V2 — 인용칩 정밀 점프용
+  summary_note_blocks?: { markdown: string }[] | null; // NOTE_V2 — 블록 단위 마크다운(=summary_note의 원천)
 }
 export interface ResultDict {
   job_id: string;

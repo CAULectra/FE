@@ -19,6 +19,11 @@ describe("resultDictToStudyData", () => {
     expect(sd.chapters[0].slides).toEqual([1, 2]);
     expect(sd.chapters[0].idx).toBe(0);
     expect(sd.chapters[0].chapterNumber).toBe(1); // BE chapter_number (on-demand 호출용)
+  });
+
+  it("챕터: summary_note_citations → noteCites(발화 시점) — time 없는 항목 제외", () => {
+    expect(sd.chapters[0].noteCites).toEqual([{ slide: 1, t: 12 }]);
+    expect(sd.chapters[1].noteCites).toEqual([]); // 인용 미제공 챕터는 빈 배열(슬라이드 시작 폴백)
     expect(sd.chapters[1].chapterNumber).toBe(2);
     expect(sd.chapters[1].pages).toBe("3~3페이지");
   });

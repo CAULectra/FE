@@ -218,10 +218,14 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
     void loadExplain();
   };
 
-  /* note-v2 인용 칩 클릭 → 근거 슬라이드 시작 지점으로 점프 */
+  /* note-v2 인용 칩 클릭 → 근거 발화 시점(있으면 정밀) 또는 슬라이드 시작으로 점프 */
   const onCite = (slides: number[]) => {
     if (docMode || !slides.length) return;
-    const s = data.slides.find((sl) => sl.n === slides[0]);
+    const n = slides[0];
+    // BE summary_note_citations 유래 — 이 챕터에서 해당 슬라이드를 인용한 발화의 시작 초
+    const t = chapter.noteCites?.find((c) => c.slide === n)?.t;
+    if (t != null) { pb.seek(t); return; }
+    const s = data.slides.find((sl) => sl.n === n);
     if (s) pb.seek(s.startSec);
   };
 

@@ -91,6 +91,8 @@ export interface Chapter {
   blocks: NoteBlock[];
   /** note-v2: 백엔드 chapters[].summary_note(마크다운). 있으면 NotePane이 MarkdownNote로 렌더 */
   noteMd?: string;
+  /** note-v2: 인용칩 정밀 점프 — 슬라이드별 근거 발화 시작 초 (BE summary_note_citations에서 유도) */
+  noteCites?: { slide: number; t: number }[];
 }
 
 export interface Photo {
