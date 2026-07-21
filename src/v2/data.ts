@@ -3,7 +3,8 @@
    - 정보보호이론: 06. Zero-Knowledge Proofs (16p)
    - 알고리즘:     05. 백트래킹 (38p)
    - 컴퓨터네트워크: Ch5. Network Layer — Control Plane (52p)
-   페이지 렌더: public/slides/{zk,bt,cn}/p{n}.png
+   슬라이드 이미지: 실제 강의자료 PNG는 저장소·배포에서 제거(원본 유출 방지).
+   목모드 썸네일은 텍스트 폴백으로 렌더 — 이미지 데모는 demo 브랜치에서만.
    주의: script.t 는 반드시 해당 slide 의 [startSec, endSec) 안에 있어야
    동기화(시간→슬라이드 매핑)가 성립한다.
    ================================================================ */
@@ -42,14 +43,14 @@ const mkSlides = (titles: string[], key: string, duration: number): Slide[] => {
     title,
     startSec: Math.round(i * seg),
     endSec: Math.round((i + 1) * seg),
-    img: `/slides/${key}/p${i + 1}.png`,
+    // img 없음 — 데모 슬라이드 PNG는 저장소에서 제거됨(텍스트 폴백 렌더)
   }));
 };
 
 /* ================= 정보보호이론 — 06. Zero-Knowledge Proofs ================= */
 
 const zkS = (n: number, title: string, startSec: number, endSec: number) =>
-  ({ n, title, startSec, endSec, img: `/slides/zk/p${n}.png` });
+  ({ n, title, startSec, endSec }); // img 없음 — 데모 PNG 제거(텍스트 폴백)
 
 export const STUDY_ZK: StudyData = {
   lectureId: "w10",
