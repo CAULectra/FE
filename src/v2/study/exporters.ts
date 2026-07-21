@@ -12,8 +12,8 @@ function safeName(title: string): string {
   return (title || "lecture").trim().replace(/\s+/g, "_").replace(/[^\w가-힣._-]/g, "") || "lecture";
 }
 
-function download(filename: string, content: string, mime: string): void {
-  const blob = new Blob([content], { type: mime });
+/** Blob → 브라우저 다운로드 트리거 (BE 병합 PDF 등 바이너리도 이 경로로) */
+export function downloadBlob(filename: string, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -22,6 +22,10 @@ function download(filename: string, content: string, mime: string): void {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function download(filename: string, content: string, mime: string): void {
+  downloadBlob(filename, new Blob([content], { type: mime }));
 }
 
 /* ── Markdown ── 노트가 이미 마크다운(noteMd)이면 그대로, 없으면 요약으로 구성 */

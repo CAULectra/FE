@@ -87,12 +87,21 @@ export async function ragQA(lectureId: string, question: string, contextSlide: n
   };
 }
 
-// 노트 내보내기 — 프론트에서 즉시 생성 가능한 포맷만 (구현: study/exporters.ts).
-//   PDF(슬라이드 병합)·Word(.docx)는 FE로 부적합 → 메뉴에서 제외(BE 지원 시 재추가).
+// 노트 내보내기 — md/srt/anki는 프론트 즉시 생성(study/exporters.ts),
+//   PDF는 BE 병합 다운로드(GET /lectures/{id}/export/pdf) — 실모드 전용(메뉴에서 be 플래그로 게이트).
 export type { ExportFormat } from "./study/exporters";
 import type { ExportFormat } from "./study/exporters";
-export const EXPORT_FORMATS: { key: ExportFormat; label: string; desc: string }[] = [
+import { downloadBlob } from "./study/exporters";
+export type ExportKey = ExportFormat | "pdf";
+export const EXPORT_FORMATS: { key: ExportKey; label: string; desc: string; be?: boolean }[] = [
   { key: "md",   label: "Markdown (.md)",  desc: "플레인 텍스트 노트" },
   { key: "srt",  label: "자막 (.srt)",      desc: "타임스탬프 스크립트" },
   { key: "anki", label: "Anki 카드 (.csv)", desc: "핵심 개념 플래시카드" },
+  { key: "pdf",  label: "PDF (.pdf)",       desc: "노트+원본 슬라이드 병합", be: true },
 ];
+
+/** BE 병합 PDF 다운로드 — 서버가 노트+원본 슬라이드를 합쳐 스트리밍(완료 강의만). */
+export async function downloadLecturePdf(lectureId: string, fallbackTitle: string): Promise<void> {
+  const { blob, filename } = await backend.exportPdf(lectureId);
+  downloadBlob(filename ?? `${(fallbackTitle || "lecture").trim() || "lecture"}.pdf`, blob);
+}

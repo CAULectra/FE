@@ -101,3 +101,24 @@ export function apiPatchJson<T>(path: string, body: unknown, opts?: ReqOpts): Pr
 export function apiDelete(path: string, opts?: ReqOpts): Promise<void> {
   return request<void>(path, () => ({ method: "DELETE", headers: { ...authHeaders() } }), opts);
 }
+
+/** 바이너리 다운로드(GET) — JSON 대신 Blob 반환. 401 자동 refresh는 request()와 동일 흐름.
+ *  filename은 Content-Disposition의 RFC 5987 filename*=UTF-8'' 값을 디코드(없으면 null). */
+export async function apiGetBlob(path: string, opts?: ReqOpts): Promise<{ blob: Blob; filename: string | null }> {
+  const init = (): RequestInit => ({ headers: { ...authHeaders() } });
+  let res = await fetch(API_BASE_URL + path, init());
+  if (res.status === 401 && !opts?.skipRefresh && getRefreshToken()) {
+    const ok = await doRefresh();
+    if (ok) res = await fetch(API_BASE_URL + path, init());
+  }
+  if (!res.ok) {
+    let detail = "";
+    try { detail = await res.text(); } catch { /* ignore */ }
+    throw new ApiError(res.status, `${res.status} ${res.statusText} ${detail}`.trim());
+  }
+  const cd = res.headers.get("content-disposition") ?? "";
+  const m = /filename\*=UTF-8''([^;]+)/i.exec(cd);
+  let filename: string | null = null;
+  if (m) { try { filename = decodeURIComponent(m[1].trim()); } catch { filename = null; } }
+  return { blob: await res.blob(), filename };
+}
