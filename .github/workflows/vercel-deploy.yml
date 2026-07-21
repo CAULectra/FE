@@ -1,0 +1,60 @@
+# Vercel 배포 (CLI 프리빌트 업로드 방식)
+#
+# 배경: Vercel Hobby 플랜은 GitHub "조직 private 저장소"의 Git 연동 배포를 지원하지 않아
+#   PR/커밋 배포가 간헐적으로 차단된다. 이 워크플로는 Git 연동 대신 CI에서 빌드해
+#   결과물만 업로드하므로 플랜·저장소 공개 여부와 무관하게 동작한다.
+#
+# 필요 시크릿 (repo Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN — vercel.com/account/tokens 에서 발급
+# 참고: ORG/PROJECT ID는 시크릿이 아님(Vercel 공식 문서 기준) — 워크플로에 명시.
+#   빌드 env(VITE_*)는 Vercel 프로젝트 설정에서 `vercel pull`로 가져오므로 여기 중복 불필요.
+
+name: vercel-deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  VERCEL_ORG_ID: team_INVYZbvxAagMEmV2oMjfwpsI
+  VERCEL_PROJECT_ID: prj_m0piNwd96nFMRYCTUXbuWLiWAN7s
+
+jobs:
+  # ── PR 프리뷰 배포 — 리뷰용 미리보기 URL 생성 ──────────────────────────────
+  preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Pull Vercel project settings (preview env)
+        run: npx vercel@latest pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build
+        run: npx vercel@latest build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy preview (prebuilt)
+        run: |
+          URL=$(npx vercel@latest deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$URL" >> "$GITHUB_OUTPUT"
+          echo "### Vercel Preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL" >> "$GITHUB_STEP_SUMMARY"
+
+  # ── 프로덕션 배포 — main 머지 시 lectranote.com 갱신 ─────────────────────────
+  production:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Pull Vercel project settings (production env)
+        run: npx vercel@latest pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build
+        run: npx vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy production (prebuilt)
+        run: npx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
