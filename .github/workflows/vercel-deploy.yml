@@ -18,9 +18,16 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# 같은 ref에서 연속 push 시 이전 실행 취소 — 중복 배포 방지 (리뷰 #45)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   VERCEL_ORG_ID: team_INVYZbvxAagMEmV2oMjfwpsI
   VERCEL_PROJECT_ID: prj_m0piNwd96nFMRYCTUXbuWLiWAN7s
+  # CLI 버전 — 재현성 위해 첫 성공 배포에서 확인된 버전으로 고정 권장(예: "44.2.0"). 리뷰 #45
+  VERCEL_CLI_VERSION: latest
 
 jobs:
   # ── PR 프리뷰 배포 — 리뷰용 미리보기 URL 생성 ──────────────────────────────
@@ -33,19 +40,19 @@ jobs:
         with:
           node-version: 20
       - name: Pull Vercel project settings (preview env)
-        run: npx vercel@latest pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@${{ env.VERCEL_CLI_VERSION }} pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
       - name: Build
-        run: npx vercel@latest build --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@${{ env.VERCEL_CLI_VERSION }} build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy preview (prebuilt)
         run: |
-          URL=$(npx vercel@latest deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "preview-url=$URL" >> "$GITHUB_OUTPUT"
+          URL=$(npx vercel@${{ env.VERCEL_CLI_VERSION }} deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "### Vercel Preview" >> "$GITHUB_STEP_SUMMARY"
           echo "$URL" >> "$GITHUB_STEP_SUMMARY"
 
   # ── 프로덕션 배포 — main 머지 시 lectranote.com 갱신 ─────────────────────────
   production:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    # workflow_dispatch는 main에서만 프로덕션 허용 — 피처 브랜치 수동 실행 사고 방지 (리뷰 #45)
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,8 +60,8 @@ jobs:
         with:
           node-version: 20
       - name: Pull Vercel project settings (production env)
-        run: npx vercel@latest pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@${{ env.VERCEL_CLI_VERSION }} pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
       - name: Build
-        run: npx vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@${{ env.VERCEL_CLI_VERSION }} build --prod --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy production (prebuilt)
-        run: npx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@${{ env.VERCEL_CLI_VERSION }} deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
