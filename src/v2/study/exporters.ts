@@ -7,8 +7,8 @@ import type { StudyData } from "../types";
 
 export type ExportFormat = "md" | "srt" | "anki";
 
-/** 파일명 안전화 — 공백→_, 위험문자 제거(한글 허용) */
-function safeName(title: string): string {
+/** 파일명 안전화 — 공백→_, 위험문자 제거(한글 허용). PDF fallback 파일명에서도 재사용(리뷰 #42) */
+export function safeName(title: string): string {
   return (title || "lecture").trim().replace(/\s+/g, "_").replace(/[^\w가-힣._-]/g, "") || "lecture";
 }
 

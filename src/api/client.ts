@@ -18,11 +18,22 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+/** 에러 본문 → 사람용 메시지 — BE JSON {"detail": "..."} 우선 추출, 아니면 원문 (리뷰 #42) */
+function errDetail(raw: string): string {
+  try {
+    const j = JSON.parse(raw) as { detail?: unknown };
+    if (typeof j.detail === "string" && j.detail) return j.detail;
+  } catch { /* JSON 아니면 원문 유지 */ }
+  return raw;
+}
+
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
-    let detail = "";
-    try { detail = await res.text(); } catch { /* ignore */ }
-    throw new ApiError(res.status, `${res.status} ${res.statusText} ${detail}`.trim());
+    let raw = "";
+    try { raw = await res.text(); } catch { /* ignore */ }
+    const detail = errDetail(raw);
+    // detail(한국어 안내)이 있으면 그대로 토스트에 노출, 없으면 status 라인 폴백
+    throw new ApiError(res.status, detail || `${res.status} ${res.statusText}`.trim());
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
@@ -63,14 +74,19 @@ function doRefresh(): Promise<boolean> {
   return refreshInFlight;
 }
 
-/** 요청 실행 — 401이면 1회 refresh 후 재시도. init은 함수(재시도 시 갱신된 토큰 반영). */
-async function request<T>(path: string, init: () => RequestInit, opts?: ReqOpts): Promise<T> {
+/** fetch + 401 자동 refresh 1회 재시도 — JSON(request)·Blob(apiGetBlob) 공용 (리뷰 #42 중복 제거) */
+async function fetchWithRefresh(path: string, init: () => RequestInit, opts?: ReqOpts): Promise<Response> {
   let res = await fetch(API_BASE_URL + path, init());
   if (res.status === 401 && !opts?.skipRefresh && getRefreshToken()) {
     const ok = await doRefresh();
     if (ok) res = await fetch(API_BASE_URL + path, init());
   }
-  return handle<T>(res);
+  return res;
+}
+
+/** 요청 실행 — 401이면 1회 refresh 후 재시도. init은 함수(재시도 시 갱신된 토큰 반영). */
+async function request<T>(path: string, init: () => RequestInit, opts?: ReqOpts): Promise<T> {
+  return handle<T>(await fetchWithRefresh(path, init, opts));
 }
 
 export function apiGet<T>(path: string, opts?: ReqOpts): Promise<T> {
@@ -105,16 +121,12 @@ export function apiDelete(path: string, opts?: ReqOpts): Promise<void> {
 /** 바이너리 다운로드(GET) — JSON 대신 Blob 반환. 401 자동 refresh는 request()와 동일 흐름.
  *  filename은 Content-Disposition의 RFC 5987 filename*=UTF-8'' 값을 디코드(없으면 null). */
 export async function apiGetBlob(path: string, opts?: ReqOpts): Promise<{ blob: Blob; filename: string | null }> {
-  const init = (): RequestInit => ({ headers: { ...authHeaders() } });
-  let res = await fetch(API_BASE_URL + path, init());
-  if (res.status === 401 && !opts?.skipRefresh && getRefreshToken()) {
-    const ok = await doRefresh();
-    if (ok) res = await fetch(API_BASE_URL + path, init());
-  }
+  const res = await fetchWithRefresh(path, () => ({ headers: { ...authHeaders() } }), opts);
   if (!res.ok) {
-    let detail = "";
-    try { detail = await res.text(); } catch { /* ignore */ }
-    throw new ApiError(res.status, `${res.status} ${res.statusText} ${detail}`.trim());
+    let raw = "";
+    try { raw = await res.text(); } catch { /* ignore */ }
+    const detail = errDetail(raw);
+    throw new ApiError(res.status, detail || `${res.status} ${res.statusText}`.trim());
   }
   const cd = res.headers.get("content-disposition") ?? "";
   const m = /filename\*=UTF-8''([^;]+)/i.exec(cd);

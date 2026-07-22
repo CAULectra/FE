@@ -91,7 +91,7 @@ export async function ragQA(lectureId: string, question: string, contextSlide: n
 //   PDF는 BE 병합 다운로드(GET /lectures/{id}/export/pdf) — 실모드 전용(메뉴에서 be 플래그로 게이트).
 export type { ExportFormat } from "./study/exporters";
 import type { ExportFormat } from "./study/exporters";
-import { downloadBlob } from "./study/exporters";
+import { downloadBlob, safeName } from "./study/exporters";
 export type ExportKey = ExportFormat | "pdf";
 export const EXPORT_FORMATS: { key: ExportKey; label: string; desc: string; be?: boolean }[] = [
   { key: "md",   label: "Markdown (.md)",  desc: "플레인 텍스트 노트" },
@@ -103,5 +103,5 @@ export const EXPORT_FORMATS: { key: ExportKey; label: string; desc: string; be?:
 /** BE 병합 PDF 다운로드 — 서버가 노트+원본 슬라이드를 합쳐 스트리밍(완료 강의만). */
 export async function downloadLecturePdf(lectureId: string, fallbackTitle: string): Promise<void> {
   const { blob, filename } = await backend.exportPdf(lectureId);
-  downloadBlob(filename ?? `${(fallbackTitle || "lecture").trim() || "lecture"}.pdf`, blob);
+  downloadBlob(filename ?? `${safeName(fallbackTitle)}.pdf`, blob); // 특수문자 정제 (리뷰 #42)
 }
