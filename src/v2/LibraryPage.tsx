@@ -317,14 +317,8 @@ export default function LibraryPage() {
               onClick={() => { if (lec.status === "ready") navigate(`/lecture/${lec.id}`); }}
               className={`card-lift group overflow-hidden rounded-xl border border-border bg-card ${lec.status === "ready" ? "cursor-pointer" : "cursor-default"}`}
             >
-              {/* 썸네일: 해당 강의 첫 슬라이드 렌더 (없으면 플레이스홀더) */}
+              {/* 썸네일: 그라데이션 플레이스홀더 (데모 슬라이드 PNG는 저장소에서 제거됨 — 리뷰 #40 반영) */}
               <div className="relative h-36 overflow-hidden border-b border-border bg-gradient-to-br from-[#FBF7F1] to-[#F3EDE4]">
-                {(lec.id.startsWith("bt") || lec.id.startsWith("cn") || ["w10", "is05", "cnref"].includes(lec.id)) && (
-                  <img
-                    src={`/slides/${lec.id.startsWith("bt") ? "bt" : lec.id.startsWith("cn") ? "cn" : "zk"}/p1.png`}
-                    alt="" className="h-full w-full object-cover object-top opacity-90" loading="lazy"
-                  />
-                )}
                 {favorites.includes(lec.id) && (
                   <span className="absolute right-2 top-2 rounded-full bg-white/90 p-1 text-[var(--ember)] shadow-sm">
                     <Star size={13} fill="currentColor" />
