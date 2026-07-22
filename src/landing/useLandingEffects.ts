@@ -2,7 +2,7 @@
    useLandingEffects — landing page interactions
    GSAP + ScrollTrigger + Lenis. gsap.context로 마운트/언마운트 관리.
    ================================================================ */
-import { useEffect, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
@@ -10,6 +10,9 @@ import Lenis from "lenis";
 gsap.registerPlugin(ScrollTrigger);
 
 export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>, enabled = true) {
+  // enabled(=뷰포트 크기) 토글로 인한 effect 재실행과 최초 마운트를 구분 —
+  // 데스크톱에서 스크롤 중 리사이즈/회전 시 맨 위로 튀는 부작용 방지 (리뷰 #41 반영)
+  const didResetRef = useRef(false);
   useEffect(() => {
     if (!enabled) return;
     const root = rootRef.current;
@@ -148,7 +151,11 @@ export function useLandingEffects(rootRef: RefObject<HTMLDivElement | null>, ena
        → 마운트 시 스크롤을 톱으로 리셋하고 즉시 refresh. */
     const prevScrollRestoration = history.scrollRestoration;
     history.scrollRestoration = "manual";
-    lenis.scrollTo(0, { immediate: true });
+    // 스크롤 톱 리셋은 컴포넌트 마운트(=SPA 재진입) 시 1회만 — enabled 토글 재실행에선 유지
+    if (!didResetRef.current) {
+      didResetRef.current = true;
+      lenis.scrollTo(0, { immediate: true });
+    }
     const refreshRaf = requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
