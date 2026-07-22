@@ -222,7 +222,9 @@ export default function NotePane({ data, pb, docMode, chapter, onSelectChapter, 
   const onCite = (slides: number[]) => {
     if (docMode || !slides.length) return;
     const n = slides[0];
-    // BE summary_note_citations 유래 — 이 챕터에서 해당 슬라이드를 인용한 발화의 시작 초
+    // BE summary_note_citations 유래 — 이 챕터에서 해당 슬라이드를 인용한 발화의 시작 초.
+    // 제약(리뷰 #44): 칩은 슬라이드 번호만 전달하므로 같은 슬라이드를 여러 문장이 인용하면
+    // 첫(=노트 상 가장 이른) 인용 시점으로 이동한다. 문장 단위 구분은 char_offset 배선이 필요한 후속 과제.
     const t = chapter.noteCites?.find((c) => c.slide === n)?.t;
     if (t != null) { pb.seek(t); return; }
     const s = data.slides.find((sl) => sl.n === n);
