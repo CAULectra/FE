@@ -2,6 +2,7 @@
 // VITE_USE_MOCK !== "false" 이면 이 구현이 사용됩니다. 반환 형식은 BE 계약과 동일.
 
 import type { BackendStatus, LectraApi, LectureListItem } from "./types";
+import { ApiError } from "./client";
 
 const delay = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
 
@@ -137,5 +138,10 @@ export const mockApi: LectraApi = {
         { slide_number: 1, title: "슬라이드 1", score: 0.9, chunk_text: "관련 근거 발췌 (mock)" },
       ],
     };
+  },
+  async exportPdf(_lectureId) {
+    await delay(200);
+    // PDF 병합은 BE 전용(원본 슬라이드 접근 필요) — 목모드 메뉴에서는 숨겨지므로 방어적 에러만.
+    throw new ApiError(400, "목모드에서는 PDF 내보내기가 지원되지 않아요");
   },
 };

@@ -9,7 +9,8 @@ import { AlertTriangle, CheckCircle2, ChevronLeft, Download, Loader2, Mic } from
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "../../app/components/ui/dropdown-menu";
-import { EXPORT_FORMATS, fetchStudyData, ragQA } from "../api";
+import { EXPORT_FORMATS, downloadLecturePdf, fetchStudyData, ragQA } from "../api";
+import { USE_MOCK } from "../../api";
 import { exportNote } from "./exporters";
 import { useApp } from "../store";
 import { chapterOfSlide, type Lecture, type QAMessage, type StudyData } from "../types";
@@ -149,8 +150,18 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
     }
   };
 
-  const doExport = (formatKey: (typeof EXPORT_FORMATS)[number]["key"], label: string) => {
-    // 프론트에서 즉시 생성 → 바로 다운로드. 만들 데이터가 없으면(예: 자막에 녹음 없음) 안내.
+  const doExport = async (formatKey: (typeof EXPORT_FORMATS)[number]["key"], label: string) => {
+    // pdf: BE가 노트+원본 슬라이드를 병합해 스트리밍(실모드 전용) · 나머지: 프론트 즉시 생성.
+    if (formatKey === "pdf") {
+      pushToast("PDF 생성 중이에요 — 슬라이드 병합에 잠시 걸릴 수 있어요", true);
+      try {
+        await downloadLecturePdf(lecture.id, lecture.title);
+        pushToast(`${label} 다운로드를 시작했어요`, true);
+      } catch (e) {
+        pushToast(e instanceof Error && e.message ? `PDF 내보내기 실패: ${e.message}` : "PDF 내보내기에 실패했어요");
+      }
+      return;
+    }
     try {
       exportNote(formatKey, lecture.title, data);
       pushToast(`${label} 다운로드를 시작했어요`, true);
@@ -180,7 +191,7 @@ function StudyInner({ lecture, data }: { lecture: Lecture; data: StudyData }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">이 강의의 노트 내보내기</div>
-            {EXPORT_FORMATS.map((f) => (
+            {EXPORT_FORMATS.filter((f) => !f.be || !USE_MOCK).map((f) => (
               <DropdownMenuItem key={f.key} onClick={() => doExport(f.key, f.label)}>
                 <span className="font-medium">{f.label}</span>
                 <span className="ml-auto text-[10.5px] text-muted-foreground">{f.desc}</span>

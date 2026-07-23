@@ -1,7 +1,7 @@
 // ─── 실제 백엔드 호출 구현 (api.lectranote.com 계약 기준) ──────────────────────
 //   경로·폼 필드·시그니처는 배포된 OpenAPI + 통합 가이드에 맞춤.
 
-import { apiGet, apiPostForm, apiPostJson, apiPatchJson, apiDelete } from "./client";
+import { apiGet, apiPostForm, apiPostJson, apiPatchJson, apiDelete, apiGetBlob } from "./client";
 import type {
   LectraApi,
   LoginResponse,
@@ -124,5 +124,10 @@ export const realApi: LectraApi = {
   },
   qa(lectureId, question, topK = 5) {
     return apiPostJson<QAResponse>(`/lectures/${lectureId}/qa`, { question, top_k: topK });
+  },
+
+  // GET /lectures/{id}/export/pdf — 노트+원본 슬라이드 병합 PDF (완료 강의만, 서버 스트리밍)
+  exportPdf(lectureId) {
+    return apiGetBlob(`/lectures/${lectureId}/export/pdf`);
   },
 };

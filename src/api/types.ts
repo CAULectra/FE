@@ -135,6 +135,10 @@ export interface QAResponse {
   sources: QASource[];
 }
 
+// ── 노트 내보내기 (BE 병합 PDF) ───────────────────────────────────
+// GET /lectures/{id}/export/pdf — filename은 Content-Disposition에서 파싱(없으면 null)
+export interface ExportPdfResult { blob: Blob; filename: string | null }
+
 // ── 공통 인터페이스 (mock/real 동일 구현) ─────────────────────────
 export interface LectraApi {
   loginGoogle(code: string): Promise<LoginResponse>;
@@ -163,4 +167,6 @@ export interface LectraApi {
   chapterSummaryExplain(lectureId: string, chapterNumber: number): Promise<ChapterSummaryExplainResponse>;
   // ── RAG Q&A ──
   qa(lectureId: string, question: string, topK?: number): Promise<QAResponse>;
+  // ── 노트 내보내기 — GET /lectures/{id}/export/pdf (노트+원본 슬라이드 병합, 완료 강의만)
+  exportPdf(lectureId: string): Promise<ExportPdfResult>;
 }
