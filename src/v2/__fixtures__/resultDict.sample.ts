@@ -20,6 +20,11 @@ export const SAMPLE_RESULT: ResultDict = {
         "- Σ-프로토콜은 announcement → challenge → response 3-move다 [s:2].\n\n" +
         "> [!note] 핵심\n> 세 화살표(a→c→r)는 이후 모든 프로토콜의 뼈대다 [s:1,2].",
       summary_explain: null,
+      // NOTE_V2 문장 단위 인용 — time_start 있는 항목만 noteCites로 매핑됨
+      summary_note_citations: [
+        { block_index: 0, char_offset: 10, slide_number: 1, time_start: 12 },
+        { block_index: 1, char_offset: 5, slide_number: 2, time_start: null },
+      ],
     },
     {
       chapter_number: 2,
