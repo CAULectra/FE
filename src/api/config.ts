@@ -53,24 +53,3 @@ export function setUser(user: LoginUser | null): void {
 export function clearUser(): void {
   localStorage.removeItem(USER_KEY);
 }
-
-// ── 삭제한 강의 tombstone (클라이언트) ──────────────────────────────────────────
-//   BE에 강의 DELETE 엔드포인트가 없어, 삭제한 강의를 새로고침(GET /lectures 재요청) 후에도
-//   숨기려면 id를 로컬에 보관한다. 실제 삭제 API가 생기면 제거하고 서버 DELETE로 대체.
-const DELETED_KEY = "lectra_deleted_lectures";
-
-export function getDeletedLectureIds(): string[] {
-  const raw = localStorage.getItem(DELETED_KEY);
-  if (!raw) return [];
-  try {
-    const v: unknown = JSON.parse(raw);
-    return Array.isArray(v) ? (v as string[]) : [];
-  } catch {
-    return [];
-  }
-}
-export function addDeletedLectureId(id: string): void {
-  const cur = getDeletedLectureIds();
-  if (cur.includes(id)) return;
-  localStorage.setItem(DELETED_KEY, JSON.stringify([...cur, id]));
-}

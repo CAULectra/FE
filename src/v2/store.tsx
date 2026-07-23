@@ -7,8 +7,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Folder, Lecture } from "./types";
 import { SEED_FOLDERS, SEED_LECTURES } from "./data";
-import { getToken, getUser, setUser as persistUser, clearToken, clearUser, getRefreshToken, clearRefreshToken, getDeletedLectureIds, addDeletedLectureId, USE_MOCK, api, type LoginUser, type BackendStatus } from "../api";
-import { lectureFromListItem, excludeDeleted, jobToPatch, UNCATEGORIZED_FOLDER_ID, type JobPatch } from "./adapters";
+import { getToken, getUser, setUser as persistUser, clearToken, clearUser, getRefreshToken, clearRefreshToken, USE_MOCK, api, type LoginUser, type BackendStatus } from "../api";
+import { lectureFromListItem, jobToPatch, UNCATEGORIZED_FOLDER_ID, type JobPatch } from "./adapters";
 
 const MAX_CONCURRENT = 2;
 const RATE = 1.4; // %/초 — 데모용 처리 속도
@@ -91,8 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (USE_MOCK) return; // 목업은 SEED 유지
     try {
       const list = await api.getLectures();
-      // 클라이언트에서 삭제한 강의는 제외 — BE에 강의 DELETE가 없어 재요청 시 되살아나는 것 방지(BUG4)
-      setLectures(excludeDeleted(list.map(lectureFromListItem), getDeletedLectureIds()));
+      setLectures(list.map(lectureFromListItem)); // 삭제는 BE DELETE 실배선 — tombstone 우회(BUG4) 제거
     } catch (e) {
       console.warn("[store] getLectures 실패:", e);
       setLectures([]);
@@ -396,9 +395,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const removeLecture = useCallback((id: string) => {
-    addDeletedLectureId(id); // tombstone → 새로고침(재요청)해도 다시 안 나타남(BUG4)
-    setLectures((prev) => prev.filter((l) => l.id !== id));
-  }, []);
+    setLectures((prev) => prev.filter((l) => l.id !== id)); // 낙관적 제거
+    // 실서버: 소프트 삭제(휴지통 14일 보관·복구 가능). 실패 시 목록 재동기화로 복원.
+    if (!USE_MOCK) void api.deleteLecture(id).catch((e) => { console.warn("[store] 강의 삭제 실패:", e); void refreshLectures(); });
+  }, [refreshLectures]);
 
   const renameLecture = useCallback((id: string, title: string) => {
     setLectures((prev) => prev.map((l) => (l.id === id ? { ...l, title } : l)));
@@ -423,9 +423,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const cancelJob = useCallback((id: string) => {
-    addDeletedLectureId(id); // 처리중 취소=삭제 → tombstone으로 재요청에도 유지(BUG4)
-    setLectures((prev) => prev.filter((l) => l.id !== id));
-  }, []);
+    setLectures((prev) => prev.filter((l) => l.id !== id)); // 처리중 취소=삭제 (낙관적)
+    if (!USE_MOCK) void api.deleteLecture(id).catch((e) => { console.warn("[store] 취소(삭제) 실패:", e); void refreshLectures(); });
+  }, [refreshLectures]);
 
   const value = useMemo<AppStore>(() => ({
     folders, lectures, authed, user, login, logout, favorites, toggleFavorite, recentIds, markRecent,

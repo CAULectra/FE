@@ -394,7 +394,7 @@ export default function LibraryPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>강의를 삭제할까요?</AlertDialogTitle>
             <AlertDialogDescription>
-              삭제하면 이 강의가 목록에서 사라집니다. 되돌릴 수 없어요.
+              삭제하면 목록에서 사라지고 휴지통으로 이동합니다. 14일 후 완전 삭제돼요.
               {deleting && (deleting.status === "processing" || deleting.status === "queued") && (
                 <><br />처리 중인 강의는 job 취소 후 삭제됩니다.</>
               )}

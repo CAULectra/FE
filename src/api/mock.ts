@@ -6,7 +6,7 @@ import { ApiError } from "./client";
 
 const delay = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
 
-const MOCK_LECTURES: LectureListItem[] = [
+let MOCK_LECTURES: LectureListItem[] = [
   { id: "mock-lec-1", title: "소프트웨어 공학", status: "완료", created_at: "2026-06-30T09:00:00Z" },
   { id: "mock-lec-2", title: "자료구조",       status: "처리중", created_at: "2026-06-28T09:00:00Z" },
 ];
@@ -112,6 +112,11 @@ export const mockApi: LectraApi = {
   async updateLectureFolder(lectureId, folderId) {
     await delay(150);
     return { lecture_id: lectureId, folder_id: folderId };
+  },
+  async deleteLecture(lectureId) {
+    await delay(150);
+    // 목 목록에서도 실제 제거 — 목 단독 테스트에서 삭제 검증이 가능하도록 (리뷰 #43)
+    MOCK_LECTURES = MOCK_LECTURES.filter((l) => l.id !== lectureId);
   },
   async translateSlide(_lectureId, slideNumber, targetLanguage) {
     await delay(500);
